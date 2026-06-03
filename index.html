@@ -588,14 +588,14 @@ function parseCSV(text) {
       row[key] = val;
     });
 
-    // parse tanggal
+    // parse tanggal — format M/DD/YYYY atau MM/DD/YYYY
     const rawDate = row['TANGGAL'];
     let parsed = null;
     if (rawDate) {
-      // try DD/MM/YYYY
       const parts = rawDate.split('/');
       if (parts.length === 3) {
-        parsed = new Date(parts[2], parts[1] - 1, parts[0]);
+        // M/DD/YYYY → new Date(year, month-1, day)
+        parsed = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
       } else {
         parsed = new Date(rawDate);
       }
@@ -603,7 +603,7 @@ function parseCSV(text) {
     if (!parsed || isNaN(parsed)) continue;
     row.TANGGAL = parsed;
 
-    // parse numerik
+    // parse numerik — angka raw tanpa format
     const numCols = ['GMV','ADT STORE','AT STORE','OFFLINE SALES','ADT OFFLINE','AT OFFLINE',
       'ONLINE SALES','ADT ONLINE','AT ONLINE','GOFOOD SALES','ADT GOFOOD','AT GOFOOD',
       'GRABFOOD SALES','ADT GRABFOOD','AT GRABFOOD','SHOPE FOOD SALES','ADT SHOPEFOOD','AT SHOPPE',
