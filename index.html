@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales Dashboard — Fore Coffee</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface2: #1a1a26;
+      --border: #2a2a3a;
+      --accent: #00e5a0;
+      --accent2: #7c6fff;
+      --accent3: #ff6b6b;
+      --accent4: #ffd166;
+      --text: #e8e8f0;
+      --text2: #8888a8;
+      --text3: #55556a;
+      --online: #00e5a0;
+      --offline: #7c6fff;
+      --gofood: #ff6b6b;
+      --grabfood: #00d26a;
+      --shopefood: #ff6600;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    header {
+      padding: 20px 28px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .logo span { color: var(--text2); }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    #last-updated {
+      font-size: 11px;
+      color: var(--text3);
+      font-family: 'Space Mono', monospace;
+    }
+    #refresh-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      transition: all 0.2s;
+    }
+    #refresh-btn:hover { background: var(--accent); color: var(--bg); }
+
+    /* NAV TABS */
+    nav {
+      display: flex;
+      gap: 0;
+      padding: 0 28px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    nav button {
+      background: none;
+      border: none;
+      color: var(--text2);
+      padding: 12px 18px;
+      font-size: 12px;
+      font-family: 'Space Mono', monospace;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+    nav button:hover { color: var(--text); }
+    nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* MAIN */
+    main { padding: 24px 28px; max-width: 1400px; margin: 0 auto; }
+
+    /* LOADING */
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 60vh;
+      gap: 16px;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading p { color: var(--text2); font-size: 13px; font-family: 'Space Mono', monospace; }
+
+    /* PAGES */
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* SECTION TITLE */
+    .section-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 14px;
+      margin-top: 28px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    /* DATE FILTER */
+    .date-filter {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .date-filter label { font-size: 12px; color: var(--text2); }
+    .date-filter input, .date-filter select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+    }
+    .date-filter input:focus, .date-filter select:focus { border-color: var(--accent); }
+    .filter-btn {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .filter-btn:hover { opacity: 0.85; }
+
+    /* KPI CARDS */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .kpi-card:hover { border-color: var(--accent); }
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--card-accent, var(--accent));
+    }
+    .kpi-label {
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      font-family: 'Space Mono', monospace;
+    }
+    .kpi-value {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--text3);
+    }
+    .kpi-badge {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: 'Space Mono', monospace;
+      margin-top: 4px;
+    }
+    .badge-up { background: rgba(0,229,160,0.12); color: var(--accent); }
+    .badge-down { background: rgba(255,107,107,0.12); color: var(--accent3); }
+
+    /* CHART CARDS */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    .chart-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .chart-card.full { grid-column: 1 / -1; }
+    .chart-title {
+      font-size: 11px;
+      font-family: 'Space Mono', monospace;
+      color: var(--text2);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .chart-wrap { position: relative; height: 220px; }
+    .chart-wrap.tall { height: 300px; }
+
+    /* TABLE */
+    .table-wrap {
+      overflow-x: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    thead th {
+      background: var(--surface2);
+      padding: 10px 14px;
+      text-align: left;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--text2);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 9px 14px;
+      border-bottom: 1px solid rgba(42,42,58,0.5);
+      white-space: nowrap;
+      color: var(--text);
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--surface2); }
+    .td-num { font-family: 'Space Mono', monospace; font-size: 11px; }
+    .td-accent { color: var(--accent); font-weight: 600; }
+
+    /* CHANNEL BREAKDOWN */
+    .channel-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .channel-row:last-child { border-bottom: none; }
+    .ch-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .ch-name { font-size: 12px; color: var(--text); flex: 1; }
+    .ch-bar-wrap { flex: 3; background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; }
+    .ch-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+    .ch-val { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text2); min-width: 80px; text-align: right; }
+    .ch-pct { font-size: 11px; color: var(--text3); min-width: 36px; text-align: right; }
+
+    /* EMPTY STATE */
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: var(--text3);
+      font-size: 13px;
+    }
+
+    @media (max-width: 768px) {
+      header { padding: 14px 16px; }
+      main { padding: 16px; }
+      nav { padding: 0 16px; }
+      nav button { padding: 10px 12px; font-size: 11px; }
+      .chart-grid, .chart-grid-3 { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">FORE COFFEE <span>/ DASHBOARD</span></div>
+  <div class="header-right">
+    <span id="last-updated">—</span>
+    <button id="refresh-btn" onclick="loadData()">↺ REFRESH</button>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showPage('kpi', this)">KPI HARIAN</button>
+  <button onclick="showPage('channel', this)">CHANNEL</button>
+  <button onclick="showPage('produk', this)">PRODUK</button>
+  <button onclick="showPage('trend', this)">TREND</button>
+  <button onclick="showPage('adt', this)">ADT & IPT</button>
+</nav>
+
+<main>
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Fetching data dari Sheets...</p>
+  </div>
+
+  <!-- PAGE: KPI HARIAN -->
+  <div id="page-kpi" class="page">
+    <div class="date-filter">
+      <label>Dari</label>
+      <input type="date" id="f-start" />
+      <label>Sampai</label>
+      <input type="date" id="f-end" />
+      <button class="filter-btn" onclick="applyFilter()">Terapkan</button>
+      <button class="filter-btn" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)" onclick="resetFilter()">Reset</button>
+    </div>
+
+    <div class="section-title">Overview Periode</div>
+    <div class="kpi-grid" id="kpi-overview"></div>
+
+    <div class="section-title">Data Harian</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>TANGGAL</th>
+            <th>GMV</th>
+            <th>OFFLINE SALES</th>
+            <th>ONLINE SALES</th>
+            <th>TOTAL CUP</th>
+            <th>IPT</th>
+            <th>ADT STORE</th>
+          </tr>
+        </thead>
+        <tbody id="daily-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAGE: CHANNEL -->
+  <div id="page-channel" class="page">
+    <div class="section-title">Sales per Channel (Periode Filter)</div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-title">Komposisi Sales Channel</div>
+        <div class="chart-wrap">
+          <canvas id="chart-channel-pie"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Sales Channel — Bar Comparison</div>
+        <div class="chart-wrap">
+          <canvas id="chart-channel-bar"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Detail Channel Breakdown</div>
+    <div class="chart-card">
+      <div id="channel-breakdown-list"></div>
+    </div>
+
+    <div class="section-title">ADT per Channel</div>
+    <div class="chart-card">
+      <div class="chart-wrap">
+        <canvas id="chart-adt-channel"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: PRODUK -->
+  <div id="page-produk" class="page">
+    <div class="section-title">Komposisi Produk</div>
+    <div class="chart-grid-3">
+      <div class="chart-card">
+        <div class="chart-title">Cup Breakdown</div>
+        <div class="chart-wrap">
+          <canvas id="chart-cup-pie"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Produk Terjual Mix</div>
+        <div class="chart-wrap">
+          <canvas id="chart-produk-mix"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Food Sales vs Qty</div>
+        <div class="chart-wrap">
+          <canvas id="chart-food"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Summary Produk</div>
+    <div class="kpi-grid" id="kpi-produk"></div>
+  </div>
+
+  <!-- PAGE: TREND -->
+  <div id="page-trend" class="page">
+    <div class="section-title">Trend GMV Harian</div>
+    <div class="chart-card">
+      <div class="chart-wrap tall">
+        <canvas id="chart-gmv-trend"></canvas>
+      </div>
+    </div>
+
+    <div class="section-title">Trend Offline vs Online</div>
+    <div class="chart-card">
+      <div class="chart-wrap tall">
+        <canvas id="chart-offline-online-trend"></canvas>
+      </div>
+    </div>
+
+    <div class="section-title">Trend Total Cup Terjual</div>
+    <div class="chart-card">
+      <div class="chart-wrap tall">
+        <canvas id="chart-cup-trend"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: ADT & IPT -->
+  <div id="page-adt" class="page">
+    <div class="section-title">KPI ADT & IPT</div>
+    <div class="kpi-grid" id="kpi-adt"></div>
+
+    <div class="section-title">Trend ADT Store Harian</div>
+    <div class="chart-card">
+      <div class="chart-wrap tall">
+        <canvas id="chart-adt-trend"></canvas>
+      </div>
+    </div>
+
+    <div class="section-title">Trend IPT Harian</div>
+    <div class="chart-card">
+      <div class="chart-wrap tall">
+        <canvas id="chart-ipt-trend"></canvas>
+      </div>
+    </div>
+
+    <div class="section-title">ADT Comparison per Channel</div>
+    <div class="chart-card">
+      <div class="chart-wrap">
+        <canvas id="chart-adt-compare"></canvas>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────
+const SHEET_ID = '1Y49X7Gj2Zy8XaX85ONHQTXnd3ItrmwPZHA2MXlRy4gU';
+const SHEET_NAME = 'bacot';
+const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+// ─── STATE ────────────────────────────────────────────────
+let allData = [];
+let filteredData = [];
+let charts = {};
+
+// ─── UTILS ────────────────────────────────────────────────
+const fmt = (n) => {
+  if (isNaN(n) || n === null) return '—';
+  if (n >= 1_000_000) return 'Rp ' + (n / 1_000_000).toFixed(1) + 'jt';
+  if (n >= 1_000) return 'Rp ' + (n / 1_000).toFixed(0) + 'rb';
+  return 'Rp ' + n.toFixed(0);
+};
+const fmtNum = (n) => isNaN(n) ? '—' : Number(n).toLocaleString('id-ID');
+const fmtDate = (d) => {
+  if (!d) return '—';
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+const parseNum = (s) => {
+  if (!s || s.trim() === '') return 0;
+  return parseFloat(s.replace(/[^0-9.-]/g, '')) || 0;
+};
+const sum = (arr, key) => arr.reduce((a, b) => a + (b[key] || 0), 0);
+const avg = (arr, key) => arr.length ? sum(arr, key) / arr.length : 0;
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+const CHART_DEFAULTS = {
+  color: '#8888a8',
+  font: { family: 'DM Sans', size: 11 },
+};
+Chart.defaults.color = CHART_DEFAULTS.color;
+Chart.defaults.font = CHART_DEFAULTS.font;
+
+// ─── LOAD DATA ────────────────────────────────────────────
+async function loadData() {
+  document.getElementById('loading').style.display = 'flex';
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+  try {
+    const res = await fetch(CSV_URL + '&t=' + Date.now());
+    const text = await res.text();
+    allData = parseCSV(text);
+    filteredData = [...allData];
+
+    if (allData.length > 0) {
+      const dates = allData.map(r => r.TANGGAL).filter(Boolean).sort();
+      document.getElementById('f-start').value = toInputDate(dates[0]);
+      document.getElementById('f-end').value = toInputDate(dates[dates.length - 1]);
+    }
+
+    document.getElementById('last-updated').textContent = 'Updated: ' + new Date().toLocaleTimeString('id-ID');
+    document.getElementById('loading').style.display = 'none';
+    showPage('kpi', document.querySelector('nav button'));
+  } catch (e) {
+    document.getElementById('loading').innerHTML = `
+      <p style="color:var(--accent3)">Gagal load data. Pastikan sheet sudah public.</p>
+      <p style="color:var(--text3);font-size:11px;margin-top:8px">${e.message}</p>
+      <button class="filter-btn" style="margin-top:16px" onclick="loadData()">Coba Lagi</button>
+    `;
+  }
+}
+
+function toInputDate(d) {
+  if (!d) return '';
+  const dd = d.getDate().toString().padStart(2, '0');
+  const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+// ─── PARSE CSV ────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = parseCSVLine(lines[0]);
+  const rows = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const vals = parseCSVLine(lines[i]);
+    if (!vals[0] || vals[0].trim() === '') continue;
+    const row = {};
+    headers.forEach((h, idx) => {
+      const key = h.trim().replace(/^"|"$/g, '').toUpperCase().trim();
+      const val = (vals[idx] || '').trim().replace(/^"|"$/g, '');
+      row[key] = val;
+    });
+
+    // parse tanggal
+    const rawDate = row['TANGGAL'];
+    let parsed = null;
+    if (rawDate) {
+      // try DD/MM/YYYY
+      const parts = rawDate.split('/');
+      if (parts.length === 3) {
+        parsed = new Date(parts[2], parts[1] - 1, parts[0]);
+      } else {
+        parsed = new Date(rawDate);
+      }
+    }
+    if (!parsed || isNaN(parsed)) continue;
+    row.TANGGAL = parsed;
+
+    // parse numerik
+    const numCols = ['GMV','ADT STORE','AT STORE','OFFLINE SALES','ADT OFFLINE','AT OFFLINE',
+      'ONLINE SALES','ADT ONLINE','AT ONLINE','GOFOOD SALES','ADT GOFOOD','AT GOFOOD',
+      'GRABFOOD SALES','ADT GRABFOOD','AT GRABFOOD','SHOPE FOOD SALES','ADT SHOPEFOOD','AT SHOPPE',
+      'TOTAL SOLD CUP OFFLINE','FOOD SOLD QTY','FOOD SOLD SALES','FOOD OFFLINE',
+      'LARGE OFFLINE','DIARY OFFLINE','TOPPING OFFLINE','TOTAL SOLD RTD','RTD OFFLINE',
+      'SEASONAL SOLD','TOTAL PRODUK TERJUAL','MERCHENDISE','TANPA MERCHENDISE','IPT'];
+    numCols.forEach(c => { row[c] = parseNum(row[c] || '0'); });
+
+    rows.push(row);
+  }
+  return rows.sort((a, b) => a.TANGGAL - b.TANGGAL);
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '"') { inQ = !inQ; }
+    else if (line[i] === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += line[i]; }
+  }
+  result.push(cur);
+  return result;
+}
+
+// ─── FILTER ───────────────────────────────────────────────
+function applyFilter() {
+  const start = new Date(document.getElementById('f-start').value);
+  const end = new Date(document.getElementById('f-end').value);
+  end.setHours(23, 59, 59);
+  filteredData = allData.filter(r => r.TANGGAL >= start && r.TANGGAL <= end);
+  renderCurrentPage();
+}
+
+function resetFilter() {
+  filteredData = [...allData];
+  if (allData.length > 0) {
+    const dates = allData.map(r => r.TANGGAL).sort((a,b)=>a-b);
+    document.getElementById('f-start').value = toInputDate(dates[0]);
+    document.getElementById('f-end').value = toInputDate(dates[dates.length - 1]);
+  }
+  renderCurrentPage();
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────
+let currentPage = 'kpi';
+
+function showPage(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  currentPage = page;
+  const el = document.getElementById('page-' + page);
+  if (el) el.classList.add('active');
+  renderPage(page);
+}
+
+function renderCurrentPage() { renderPage(currentPage); }
+
+function renderPage(page) {
+  if (page === 'kpi') renderKPI();
+  else if (page === 'channel') renderChannel();
+  else if (page === 'produk') renderProduk();
+  else if (page === 'trend') renderTrend();
+  else if (page === 'adt') renderADT();
+}
+
+// ─── PAGE: KPI HARIAN ─────────────────────────────────────
+function renderKPI() {
+  const d = filteredData;
+  if (!d.length) { document.getElementById('kpi-overview').innerHTML = '<div class="empty">Tidak ada data</div>'; return; }
+
+  const totalGMV = sum(d, 'GMV');
+  const totalOffline = sum(d, 'OFFLINE SALES');
+  const totalOnline = sum(d, 'ONLINE SALES');
+  const totalCup = sum(d, 'TOTAL SOLD CUP OFFLINE');
+  const avgIPT = avg(d, 'IPT');
+  const avgADT = avg(d, 'ADT STORE');
+  const avgGMV = totalGMV / d.length;
+
+  const kpis = [
+    { label: 'Total GMV', value: fmt(totalGMV), sub: `${d.length} hari`, accent: '#00e5a0' },
+    { label: 'Avg GMV/Hari', value: fmt(avgGMV), sub: 'rata-rata harian', accent: '#7c6fff' },
+    { label: 'Offline Sales', value: fmt(totalOffline), sub: pct(totalOffline, totalGMV) + '% dari GMV', accent: '#7c6fff' },
+    { label: 'Online Sales', value: fmt(totalOnline), sub: pct(totalOnline, totalGMV) + '% dari GMV', accent: '#00e5a0' },
+    { label: 'Total Cup', value: fmtNum(totalCup), sub: 'cup offline terjual', accent: '#ffd166' },
+    { label: 'Avg IPT', value: avgIPT.toFixed(2), sub: 'item per transaksi', accent: '#ff6b6b' },
+    { label: 'Avg ADT Store', value: fmt(avgADT), sub: 'avg daily transaction', accent: '#00e5a0' },
+    { label: 'Total Transaksi', value: fmtNum(sum(d, 'AT STORE')), sub: 'all transactions', accent: '#ffd166' },
+  ];
+
+  document.getElementById('kpi-overview').innerHTML = kpis.map(k => `
+    <div class="kpi-card" style="--card-accent:${k.accent}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+
+  // Daily table
+  const tbody = document.getElementById('daily-table');
+  tbody.innerHTML = [...d].reverse().map(r => `
+    <tr>
+      <td>${fmtDate(r.TANGGAL)}</td>
+      <td class="td-num td-accent">${fmt(r.GMV)}</td>
+      <td class="td-num">${fmt(r['OFFLINE SALES'])}</td>
+      <td class="td-num">${fmt(r['ONLINE SALES'])}</td>
+      <td class="td-num">${fmtNum(r['TOTAL SOLD CUP OFFLINE'])}</td>
+      <td class="td-num">${r.IPT ? r.IPT.toFixed(2) : '—'}</td>
+      <td class="td-num">${fmt(r['ADT STORE'])}</td>
+    </tr>
+  `).join('');
+}
+
+function pct(a, b) { return b ? ((a / b) * 100).toFixed(1) : 0; }
+
+// ─── PAGE: CHANNEL ────────────────────────────────────────
+function renderChannel() {
+  const d = filteredData;
+  if (!d.length) return;
+
+  const offline = sum(d, 'OFFLINE SALES');
+  const online = sum(d, 'ONLINE SALES');
+  const gofood = sum(d, 'GOFOOD SALES');
+  const grabfood = sum(d, 'GRABFOOD SALES');
+  const shopefood = sum(d, 'SHOPE FOOD SALES');
+  const total = offline + gofood + grabfood + shopefood;
+
+  const channels = [
+    { name: 'Offline', val: offline, color: '#7c6fff' },
+    { name: 'GoFood', val: gofood, color: '#ff6b6b' },
+    { name: 'GrabFood', val: grabfood, color: '#00d26a' },
+    { name: 'ShopeFood', val: shopefood, color: '#ff6600' },
+    { name: 'Online (Total)', val: online, color: '#00e5a0' },
+  ];
+
+  // Pie
+  destroyChart('channel-pie');
+  charts['channel-pie'] = new Chart(document.getElementById('chart-channel-pie'), {
+    type: 'doughnut',
+    data: {
+      labels: channels.slice(0,4).map(c => c.name),
+      datasets: [{ data: channels.slice(0,4).map(c => c.val), backgroundColor: channels.slice(0,4).map(c => c.color), borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 11 }, padding: 12 } } } }
+  });
+
+  // Bar
+  destroyChart('channel-bar');
+  charts['channel-bar'] = new Chart(document.getElementById('chart-channel-bar'), {
+    type: 'bar',
+    data: {
+      labels: channels.slice(0,4).map(c => c.name),
+      datasets: [{ data: channels.slice(0,4).map(c => c.val), backgroundColor: channels.slice(0,4).map(c => c.color + 'cc'), borderRadius: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#2a2a3a' } },
+        y: { grid: { color: '#2a2a3a' }, ticks: { callback: v => fmt(v) } }
+      }
+    }
+  });
+
+  // Breakdown list
+  const maxVal = Math.max(...channels.slice(0,4).map(c => c.val));
+  document.getElementById('channel-breakdown-list').innerHTML = channels.slice(0,4).map(c => `
+    <div class="channel-row">
+      <div class="ch-dot" style="background:${c.color}"></div>
+      <div class="ch-name">${c.name}</div>
+      <div class="ch-bar-wrap"><div class="ch-bar" style="width:${maxVal ? (c.val/maxVal*100) : 0}%;background:${c.color}"></div></div>
+      <div class="ch-val">${fmt(c.val)}</div>
+      <div class="ch-pct">${pct(c.val, total)}%</div>
+    </div>
+  `).join('');
+
+  // ADT per channel
+  const adtData = [
+    { name: 'Store', val: avg(d, 'ADT STORE'), color: '#00e5a0' },
+    { name: 'Offline', val: avg(d, 'ADT OFFLINE'), color: '#7c6fff' },
+    { name: 'Online', val: avg(d, 'ADT ONLINE'), color: '#00e5a0' },
+    { name: 'GoFood', val: avg(d, 'ADT GOFOOD'), color: '#ff6b6b' },
+    { name: 'GrabFood', val: avg(d, 'ADT GRABFOOD'), color: '#00d26a' },
+    { name: 'ShopeFood', val: avg(d, 'ADT SHOPEFOOD'), color: '#ff6600' },
+  ];
+
+  destroyChart('adt-channel');
+  charts['adt-channel'] = new Chart(document.getElementById('chart-adt-channel'), {
+    type: 'bar',
+    data: {
+      labels: adtData.map(c => c.name),
+      datasets: [{ label: 'Avg ADT', data: adtData.map(c => c.val), backgroundColor: adtData.map(c => c.color + 'cc'), borderRadius: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#2a2a3a' } },
+        y: { grid: { color: '#2a2a3a' }, ticks: { callback: v => fmt(v) } }
+      }
+    }
+  });
+}
+
+// ─── PAGE: PRODUK ─────────────────────────────────────────
+function renderProduk() {
+  const d = filteredData;
+  if (!d.length) return;
+
+  const largeCup = sum(d, 'LARGE OFFLINE');
+  const diary = sum(d, 'DIARY OFFLINE');
+  const topping = sum(d, 'TOPPING OFFLINE');
+  const rtd = sum(d, 'TOTAL SOLD RTD');
+  const seasonal = sum(d, 'SEASONAL SOLD');
+  const merch = sum(d, 'MERCHENDISE');
+  const food = sum(d, 'FOOD SOLD QTY');
+  const foodSales = sum(d, 'FOOD SOLD SALES');
+  const totalCup = sum(d, 'TOTAL SOLD CUP OFFLINE');
+  const totalProduk = sum(d, 'TOTAL PRODUK TERJUAL');
+
+  // Cup pie
+  destroyChart('cup-pie');
+  charts['cup-pie'] = new Chart(document.getElementById('chart-cup-pie'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Large', 'Diary', 'Topping'],
+      datasets: [{ data: [largeCup, diary, topping], backgroundColor: ['#7c6fff','#00e5a0','#ffd166'], borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } } } }
+  });
+
+  // Produk mix
+  destroyChart('produk-mix');
+  charts['produk-mix'] = new Chart(document.getElementById('chart-produk-mix'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Cup Offline', 'RTD', 'Food (Qty)', 'Seasonal', 'Merch'],
+      datasets: [{ data: [totalCup, rtd, food, seasonal, merch], backgroundColor: ['#7c6fff','#00e5a0','#ff6b6b','#ffd166','#00d26a'], borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } } } }
+  });
+
+  // Food chart
+  destroyChart('food');
+  charts['food'] = new Chart(document.getElementById('chart-food'), {
+    type: 'bar',
+    data: {
+      labels: ['Food Qty', 'Food Sales (rb)'],
+      datasets: [{ data: [food, foodSales / 1000], backgroundColor: ['#ff6b6bcc', '#ffd166cc'], borderRadius: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: '#2a2a3a' } }, y: { grid: { color: '#2a2a3a' } } }
+    }
+  });
+
+  // KPI Produk
+  const kpis = [
+    { label: 'Total Cup Offline', value: fmtNum(totalCup), sub: 'cup terjual', accent: '#7c6fff' },
+    { label: 'Large Cup', value: fmtNum(largeCup), sub: pct(largeCup, totalCup) + '% dari cup', accent: '#7c6fff' },
+    { label: 'Diary Cup', value: fmtNum(diary), sub: pct(diary, totalCup) + '% dari cup', accent: '#00e5a0' },
+    { label: 'Total RTD', value: fmtNum(rtd), sub: 'RTD terjual', accent: '#00e5a0' },
+    { label: 'Food Qty', value: fmtNum(food), sub: 'item food terjual', accent: '#ff6b6b' },
+    { label: 'Food Sales', value: fmt(foodSales), sub: 'revenue food', accent: '#ffd166' },
+    { label: 'Seasonal', value: fmtNum(seasonal), sub: 'seasonal sold', accent: '#ffd166' },
+    { label: 'Merch', value: fmtNum(merch), sub: 'merchandise sold', accent: '#00d26a' },
+    { label: 'Total Produk', value: fmtNum(totalProduk), sub: 'semua produk', accent: '#00e5a0' },
+  ];
+
+  document.getElementById('kpi-produk').innerHTML = kpis.map(k => `
+    <div class="kpi-card" style="--card-accent:${k.accent}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+// ─── PAGE: TREND ──────────────────────────────────────────
+function renderTrend() {
+  const d = filteredData;
+  if (!d.length) return;
+
+  const labels = d.map(r => fmtDate(r.TANGGAL));
+
+  destroyChart('gmv-trend');
+  charts['gmv-trend'] = new Chart(document.getElementById('chart-gmv-trend'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'GMV', data: d.map(r => r.GMV),
+        borderColor: '#00e5a0', backgroundColor: 'rgba(0,229,160,0.08)',
+        fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 6, borderWidth: 2
+      }]
+    },
+    options: trendOptions('GMV')
+  });
+
+  destroyChart('offline-online-trend');
+  charts['offline-online-trend'] = new Chart(document.getElementById('chart-offline-online-trend'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Offline', data: d.map(r => r['OFFLINE SALES']), borderColor: '#7c6fff', backgroundColor: 'rgba(124,111,255,0.08)', fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2 },
+        { label: 'GoFood', data: d.map(r => r['GOFOOD SALES']), borderColor: '#ff6b6b', backgroundColor: 'transparent', tension: 0.4, pointRadius: 2, borderWidth: 2 },
+        { label: 'GrabFood', data: d.map(r => r['GRABFOOD SALES']), borderColor: '#00d26a', backgroundColor: 'transparent', tension: 0.4, pointRadius: 2, borderWidth: 2 },
+        { label: 'ShopeFood', data: d.map(r => r['SHOPE FOOD SALES']), borderColor: '#ff6600', backgroundColor: 'transparent', tension: 0.4, pointRadius: 2, borderWidth: 2 },
+      ]
+    },
+    options: trendOptions('Sales')
+  });
+
+  destroyChart('cup-trend');
+  charts['cup-trend'] = new Chart(document.getElementById('chart-cup-trend'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Total Cup', data: d.map(r => r['TOTAL SOLD CUP OFFLINE']),
+        backgroundColor: 'rgba(124,111,255,0.7)', borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#2a2a3a' }, ticks: { maxTicksLimit: 12 } },
+        y: { grid: { color: '#2a2a3a' } }
+      }
+    }
+  });
+}
+
+function trendOptions(label) {
+  return {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { labels: { font: { size: 11 }, padding: 12 } } },
+    scales: {
+      x: { grid: { color: '#2a2a3a' }, ticks: { maxTicksLimit: 12, font: { size: 10 } } },
+      y: { grid: { color: '#2a2a3a' }, ticks: { callback: v => fmt(v) } }
+    }
+  };
+}
+
+// ─── PAGE: ADT & IPT ──────────────────────────────────────
+function renderADT() {
+  const d = filteredData;
+  if (!d.length) return;
+
+  const avgADTStore = avg(d, 'ADT STORE');
+  const avgADTOffline = avg(d, 'ADT OFFLINE');
+  const avgADTOnline = avg(d, 'ADT ONLINE');
+  const avgADTGofood = avg(d, 'ADT GOFOOD');
+  const avgADTGrab = avg(d, 'ADT GRABFOOD');
+  const avgADTShope = avg(d, 'ADT SHOPEFOOD');
+  const avgIPT = avg(d, 'IPT');
+  const maxIPT = Math.max(...d.map(r => r.IPT));
+  const minIPT = Math.min(...d.filter(r => r.IPT > 0).map(r => r.IPT));
+
+  const kpis = [
+    { label: 'Avg ADT Store', value: fmt(avgADTStore), sub: 'rata-rata harian', accent: '#00e5a0' },
+    { label: 'Avg ADT Offline', value: fmt(avgADTOffline), sub: 'per hari', accent: '#7c6fff' },
+    { label: 'Avg ADT Online', value: fmt(avgADTOnline), sub: 'per hari', accent: '#00e5a0' },
+    { label: 'Avg ADT GoFood', value: fmt(avgADTGofood), sub: 'per hari', accent: '#ff6b6b' },
+    { label: 'Avg ADT Grab', value: fmt(avgADTGrab), sub: 'per hari', accent: '#00d26a' },
+    { label: 'Avg ADT Shope', value: fmt(avgADTShope), sub: 'per hari', accent: '#ff6600' },
+    { label: 'Avg IPT', value: avgIPT.toFixed(2), sub: 'item per transaksi', accent: '#ffd166' },
+    { label: 'Max IPT', value: maxIPT.toFixed(2), sub: 'tertinggi', accent: '#00e5a0' },
+    { label: 'Min IPT', value: minIPT.toFixed(2), sub: 'terendah', accent: '#ff6b6b' },
+  ];
+
+  document.getElementById('kpi-adt').innerHTML = kpis.map(k => `
+    <div class="kpi-card" style="--card-accent:${k.accent}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+
+  const labels = d.map(r => fmtDate(r.TANGGAL));
+
+  destroyChart('adt-trend');
+  charts['adt-trend'] = new Chart(document.getElementById('chart-adt-trend'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'ADT Store', data: d.map(r => r['ADT STORE']),
+        borderColor: '#00e5a0', backgroundColor: 'rgba(0,229,160,0.08)',
+        fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2
+      }]
+    },
+    options: trendOptions('ADT')
+  });
+
+  destroyChart('ipt-trend');
+  charts['ipt-trend'] = new Chart(document.getElementById('chart-ipt-trend'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'IPT', data: d.map(r => r.IPT),
+        borderColor: '#ffd166', backgroundColor: 'rgba(255,209,102,0.08)',
+        fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#2a2a3a' }, ticks: { maxTicksLimit: 12, font: { size: 10 } } },
+        y: { grid: { color: '#2a2a3a' }, ticks: { callback: v => v.toFixed(2) } }
+      }
+    }
+  });
+
+  destroyChart('adt-compare');
+  charts['adt-compare'] = new Chart(document.getElementById('chart-adt-compare'), {
+    type: 'bar',
+    data: {
+      labels: ['Store', 'Offline', 'Online', 'GoFood', 'GrabFood', 'ShopeFood'],
+      datasets: [{
+        label: 'Avg ADT',
+        data: [avgADTStore, avgADTOffline, avgADTOnline, avgADTGofood, avgADTGrab, avgADTShope],
+        backgroundColor: ['#00e5a0cc','#7c6fffcc','#00e5a0cc','#ff6b6bcc','#00d26acc','#ff6600cc'],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#2a2a3a' } },
+        y: { grid: { color: '#2a2a3a' }, ticks: { callback: v => fmt(v) } }
+      }
+    }
+  });
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>
