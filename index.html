@@ -1,1053 +1,1604 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sales Dashboard — Fore Coffee</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <style>
-    :root {
-      --bg: #0a0a0f;
-      --surface: #12121a;
-      --surface2: #1a1a26;
-      --border: #2a2a3a;
-      --accent: #00e5a0;
-      --accent2: #7c6fff;
-      --accent3: #ff6b6b;
-      --accent4: #ffd166;
-      --text: #e8e8f0;
-      --text2: #8888a8;
-      --text3: #55556a;
-      --online: #00e5a0;
-      --offline: #7c6fff;
-      --gofood: #ff6b6b;
-      --grabfood: #00d26a;
-      --shopefood: #ff6600;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Sales Dashboard — Fore Coffee</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#070a0e;--bg2:#0d1117;--bg3:#141b22;--surface:#141b22;--surface2:#1c2530;
+  --border:#1e2d3d;--border2:#243040;
+  --accent:#00e5ff;--accent2:#00ff9d;--accent3:#ff4d6d;--accent4:#ffc233;--accent5:#a78bfa;
+  --gmv:#f472b6;--offline:#60a5fa;--online:#34d399;--gofood:#fb923c;--grabfood:#4ade80;--shopee:#f87171;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;--text4:#2d3f52;
+  --amber:#ffc233;--blue:#60a5fa;--red:#ff4d6d;--purple:#a78bfa;--green:#4ade80;
+  --grid-line:rgba(30,45,61,0.8);
+  --card-shadow:0 4px 24px rgba(0,0,0,0.4);
+  --glow-accent:0 0 20px rgba(0,229,255,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
 
-    /* HEADER */
-    header {
-      padding: 20px 28px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--surface);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .logo {
-      font-family: 'Space Mono', monospace;
-      font-size: 13px;
-      color: var(--accent);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-    .logo span { color: var(--text2); }
-    .header-right { display: flex; align-items: center; gap: 12px; }
-    #last-updated {
-      font-size: 11px;
-      color: var(--text3);
-      font-family: 'Space Mono', monospace;
-    }
-    #refresh-btn {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--accent);
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      font-family: 'Space Mono', monospace;
-      transition: all 0.2s;
-    }
-    #refresh-btn:hover { background: var(--accent); color: var(--bg); }
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 
-    /* NAV TABS */
-    nav {
-      display: flex;
-      gap: 0;
-      padding: 0 28px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      overflow-x: auto;
-    }
-    nav button {
-      background: none;
-      border: none;
-      color: var(--text2);
-      padding: 12px 18px;
-      font-size: 12px;
-      font-family: 'Space Mono', monospace;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      white-space: nowrap;
-      transition: all 0.2s;
-      letter-spacing: 0.5px;
-    }
-    nav button:hover { color: var(--text); }
-    nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+/* HEADER */
+.header{
+  height:52px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;
+  position:relative;z-index:100;
+}
+.header-logo{
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:800;
+  letter-spacing:3px;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  white-space:nowrap;
+}
+.header-sep{width:1px;height:20px;background:var(--border2);}
+.header-store{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:1px;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.header-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);}
+.header-status{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--accent2);font-family:'JetBrains Mono',monospace;}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.btn-refresh{
+  background:transparent;border:1px solid var(--border2);color:var(--accent);
+  padding:5px 12px;border-radius:6px;font-size:10px;font-family:'JetBrains Mono',monospace;
+  cursor:pointer;letter-spacing:1px;transition:all .2s;
+}
+.btn-refresh:hover{background:rgba(0,229,255,0.08);border-color:var(--accent);}
 
-    /* MAIN */
-    main { padding: 24px 28px; max-width: 1400px; margin: 0 auto; }
+/* NAV */
+.nav{
+  height:40px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:stretch;padding:0 12px;gap:2px;flex-shrink:0;
+  overflow-x:auto;
+}
+.nav::-webkit-scrollbar{display:none;}
+.nav-btn{
+  background:none;border:none;color:var(--text3);
+  padding:0 14px;font-size:11px;font-family:'Syne',sans-serif;font-weight:600;
+  letter-spacing:.5px;cursor:pointer;white-space:nowrap;
+  border-bottom:2px solid transparent;transition:all .2s;
+  display:flex;align-items:center;gap:6px;
+}
+.nav-btn:hover{color:var(--text2);}
+.nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.nav-icon{font-size:12px;}
 
-    /* LOADING */
-    #loading {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 60vh;
-      gap: 16px;
-    }
-    .spinner {
-      width: 40px; height: 40px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #loading p { color: var(--text2); font-size: 13px; font-family: 'Space Mono', monospace; }
+/* LAYOUT */
+.app-body{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.page{display:none;flex:1;overflow-y:auto;padding:20px;}
+.page.active{display:block;}
 
-    /* PAGES */
-    .page { display: none; }
-    .page.active { display: block; animation: fadeIn 0.3s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* CARDS */
+.card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  padding:18px 20px;position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,229,255,0.2),transparent);
+}
 
-    /* SECTION TITLE */
-    .section-title {
-      font-family: 'Space Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text3);
-      margin-bottom: 14px;
-      margin-top: 28px;
-    }
-    .section-title:first-child { margin-top: 0; }
+/* SECTION LABELS */
+.sec-label{
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:24px;
+}
+.sec-label:first-child{margin-top:0;}
+.sec-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;box-shadow:0 0 8px var(--accent);}
+.sec-text{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);}
+.sec-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
 
-    /* DATE FILTER */
-    .date-filter {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    .date-filter label { font-size: 12px; color: var(--text2); }
-    .date-filter input, .date-filter select {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 7px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-family: 'DM Sans', sans-serif;
-      outline: none;
-    }
-    .date-filter input:focus, .date-filter select:focus { border-color: var(--accent); }
-    .filter-btn {
-      background: var(--accent);
-      color: var(--bg);
-      border: none;
-      padding: 7px 16px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .filter-btn:hover { opacity: 0.85; }
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px;}
+.kpi-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:14px 16px;position:relative;overflow:hidden;transition:border-color .2s;
+}
+.kpi-card:hover{border-color:var(--accent);}
+.kpi-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--kpi-color,var(--accent));
+}
+.kpi-lbl{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px;}
+.kpi-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--text);line-height:1;margin-bottom:4px;}
+.kpi-sub{font-size:10px;color:var(--text3);}
+.kpi-badge{display:inline-block;font-size:9px;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;margin-top:4px;}
+.badge-up{background:rgba(0,255,157,0.1);color:var(--accent2);}
+.badge-dn{background:rgba(255,77,109,0.1);color:var(--accent3);}
+.badge-neu{background:rgba(148,163,184,0.1);color:var(--text2);}
 
-    /* KPI CARDS */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 8px;
-    }
-    .kpi-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      position: relative;
-      overflow: hidden;
-      transition: border-color 0.2s;
-    }
-    .kpi-card:hover { border-color: var(--accent); }
-    .kpi-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: var(--card-accent, var(--accent));
-    }
-    .kpi-label {
-      font-size: 10px;
-      color: var(--text2);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      font-family: 'Space Mono', monospace;
-    }
-    .kpi-value {
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--text);
-      line-height: 1;
-      margin-bottom: 4px;
-    }
-    .kpi-sub {
-      font-size: 11px;
-      color: var(--text3);
-    }
-    .kpi-badge {
-      display: inline-block;
-      font-size: 10px;
-      padding: 2px 7px;
-      border-radius: 4px;
-      font-family: 'Space Mono', monospace;
-      margin-top: 4px;
-    }
-    .badge-up { background: rgba(0,229,160,0.12); color: var(--accent); }
-    .badge-down { background: rgba(255,107,107,0.12); color: var(--accent3); }
+/* CHART CARDS */
+.chart-row{display:grid;gap:12px;margin-bottom:12px;}
+.chart-row-2{grid-template-columns:1fr 1fr;}
+.chart-row-3{grid-template-columns:1fr 1fr 1fr;}
+.chart-title{font-size:10px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:14px;}
+.chart-wrap{position:relative;}
+.chart-wrap canvas{width:100%!important;}
+.h200{height:200px;}
+.h260{height:260px;}
+.h300{height:300px;}
+.h340{height:340px;}
+.full{grid-column:1/-1;}
 
-    /* CHART CARDS */
-    .chart-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-      gap: 16px;
-      margin-bottom: 8px;
-    }
-    .chart-grid-3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 16px;
-      margin-bottom: 8px;
-    }
-    .chart-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-    }
-    .chart-card.full { grid-column: 1 / -1; }
-    .chart-title {
-      font-size: 11px;
-      font-family: 'Space Mono', monospace;
-      color: var(--text2);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 16px;
-    }
-    .chart-wrap { position: relative; height: 220px; }
-    .chart-wrap.tall { height: 300px; }
+/* TARGET ROW */
+.target-row{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:12px 16px;margin-bottom:16px;
+}
+.target-row label{font-size:10px;color:var(--text3);font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
+.inp{
+  background:var(--bg);border:1px solid var(--border2);color:var(--text);
+  padding:7px 12px;border-radius:8px;font-size:12px;font-family:'DM Sans',sans-serif;
+  outline:none;min-width:160px;transition:border-color .2s;
+}
+.inp:focus{border-color:var(--accent);}
+.inp-sm{min-width:80px;}
+.btn{
+  background:var(--accent);color:#000;border:none;
+  padding:8px 18px;border-radius:8px;font-size:11px;font-weight:700;
+  font-family:'Syne',sans-serif;letter-spacing:1px;cursor:pointer;
+  transition:all .2s;white-space:nowrap;
+}
+.btn:hover{opacity:.85;transform:translateY(-1px);}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+.btn-ghost:hover{border-color:var(--text2);background:rgba(148,163,184,.08);}
 
-    /* TABLE */
-    .table-wrap {
-      overflow-x: auto;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-    thead th {
-      background: var(--surface2);
-      padding: 10px 14px;
-      text-align: left;
-      font-family: 'Space Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 1px;
-      color: var(--text2);
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-    tbody td {
-      padding: 9px 14px;
-      border-bottom: 1px solid rgba(42,42,58,0.5);
-      white-space: nowrap;
-      color: var(--text);
-    }
-    tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover td { background: var(--surface2); }
-    .td-num { font-family: 'Space Mono', monospace; font-size: 11px; }
-    .td-accent { color: var(--accent); font-weight: 600; }
+/* GAUGE */
+.gauge-wrap{position:relative;display:flex;flex-direction:column;align-items:center;}
+.gauge-center{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);text-align:center;}
+.gauge-pct{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;line-height:1;}
+.gauge-lbl{font-size:10px;color:var(--text3);margin-top:2px;}
 
-    /* CHANNEL BREAKDOWN */
-    .channel-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .channel-row:last-child { border-bottom: none; }
-    .ch-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .ch-name { font-size: 12px; color: var(--text); flex: 1; }
-    .ch-bar-wrap { flex: 3; background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; }
-    .ch-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
-    .ch-val { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--text2); min-width: 80px; text-align: right; }
-    .ch-pct { font-size: 11px; color: var(--text3); min-width: 36px; text-align: right; }
+/* PACE BAR */
+.pace-bar-wrap{margin-top:8px;}
+.pace-bg{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;}
+.pace-fill{height:100%;border-radius:3px;transition:width .8s ease;}
 
-    /* EMPTY STATE */
-    .empty {
-      text-align: center;
-      padding: 40px;
-      color: var(--text3);
-      font-size: 13px;
-    }
+/* CHANNEL CONTRIB */
+.chan-contrib{display:flex;flex-direction:column;gap:10px;}
+.chan-item{display:flex;align-items:center;gap:10px;}
+.chan-name{font-size:11px;color:var(--text);min-width:70px;}
+.chan-track{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;}
+.chan-fill{height:100%;border-radius:3px;transition:width .8s ease;}
+.chan-pct{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);min-width:40px;text-align:right;}
 
-    @media (max-width: 768px) {
-      header { padding: 14px 16px; }
-      main { padding: 16px; }
-      nav { padding: 0 16px; }
-      nav button { padding: 10px 12px; font-size: 11px; }
-      .chart-grid, .chart-grid-3 { grid-template-columns: 1fr; }
-      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-  </style>
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{border-collapse:collapse;width:100%;font-size:11px;}
+thead th{
+  background:var(--bg3);padding:9px 12px;text-align:left;
+  font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+tbody td{padding:9px 12px;border-bottom:1px solid rgba(30,45,61,.5);white-space:nowrap;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:rgba(20,27,34,.8);}
+.td-mono{font-family:'JetBrains Mono',monospace;font-size:10px;}
+.td-accent{color:var(--accent);font-weight:700;}
+.sticky{position:sticky;left:0;z-index:2;background:var(--bg2);}
+
+/* ARROWS */
+.arr-up{color:var(--accent2);}
+.arr-dn{color:var(--accent3);}
+.arr-neu{color:var(--text3);}
+.inline-arr{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.inline-arr.arr-up{background:rgba(0,255,157,.1);}
+.inline-arr.arr-dn{background:rgba(255,77,109,.1);}
+
+/* MINI COMPARE */
+.mini-compare{width:100%;}
+.mini-compare thead th{background:var(--bg3);padding:8px 12px;font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+.mini-compare tbody td{padding:8px 12px;border-bottom:1px solid rgba(30,45,61,.4);font-size:11px;}
+.mini-compare .mc-total td{font-weight:700;color:var(--text);}
+.mc-chan{font-weight:600;color:var(--text2);}
+
+/* PERIOD CARDS */
+.period-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.period-grid-2{grid-template-columns:1fr 1fr;}
+.period-header{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.p1-color{color:var(--accent);}
+.p2-color{color:var(--amber);}
+.p3-color{color:var(--accent2);}
+
+/* FLDT CATS */
+.fldt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.fldt-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;border-top:2px solid var(--fc-color,var(--accent));}
+.fldt-icon{font-size:20px;margin-bottom:8px;}
+.fldt-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--fc-color,var(--accent));margin-bottom:4px;}
+.fldt-val{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.fldt-bar-wrap{height:4px;background:var(--bg);border-radius:2px;overflow:hidden;margin-bottom:8px;}
+.fldt-bar{height:100%;border-radius:2px;background:var(--fc-color,var(--accent));transition:width .8s ease;}
+.fldt-weeks{display:flex;flex-direction:column;gap:5px;}
+.fldt-week-row{display:flex;align-items:center;gap:8px;font-size:10px;}
+.fldt-week-lbl{color:var(--text3);width:20px;font-family:'JetBrains Mono',monospace;}
+.fldt-week-bar-wrap{flex:1;height:14px;background:var(--bg);border-radius:3px;overflow:hidden;}
+.fldt-week-bar{height:100%;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;transition:width .8s ease;}
+.fldt-week-num{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:rgba(0,0,0,.75);}
+
+/* MODE TOGGLE */
+.mode-toggle{display:flex;gap:6px;margin-left:auto;}
+.mode-btn{
+  background:transparent;border:1px solid var(--border2);color:var(--text3);
+  padding:5px 12px;border-radius:6px;font-size:10px;font-family:'Syne',sans-serif;
+  font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .2s;
+}
+.mode-btn.active{background:rgba(0,229,255,.1);border-color:var(--accent);color:var(--accent);}
+
+/* CHAN TABS */
+.chan-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;}
+.chan-tab{
+  background:transparent;border:1px solid var(--border);color:var(--text3);
+  padding:4px 10px;border-radius:6px;font-size:10px;font-family:'Syne',sans-serif;
+  font-weight:600;cursor:pointer;transition:all .2s;
+}
+.chan-tab.active{background:rgba(0,229,255,.1);border-color:var(--accent);color:var(--accent);}
+
+/* CHANNEL RANK */
+.chan-rank{display:flex;flex-direction:column;gap:10px;}
+.chan-rank-item{display:flex;align-items:center;gap:12px;}
+.rank-num{
+  width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  background:var(--bg3);color:var(--text3);flex-shrink:0;
+}
+.rank-1{background:rgba(255,194,51,.15);color:var(--amber);}
+.rank-2{background:rgba(148,163,184,.1);color:var(--text2);}
+.rank-3{background:rgba(251,146,60,.1);color:var(--gofood);}
+.rank-info{flex:1;min-width:0;}
+.rank-name{font-size:12px;font-weight:600;color:var(--text);}
+.rank-val{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+.rank-bar-wrap{flex:2;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;}
+.rank-bar{height:100%;border-radius:3px;transition:width .8s ease;}
+.rank-pct{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;min-width:44px;text-align:right;}
+
+/* SUMMARY KPI */
+.summ-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
+.summ-kpi-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+.summ-kpi-label{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:6px;}
+.summ-kpi-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;margin-bottom:3px;}
+.summ-kpi-sub{font-size:10px;color:var(--text3);}
+.c-gmv{color:var(--gmv);}
+.c-at{color:var(--blue);}
+.c-adt{color:var(--amber);}
+
+/* D2D TABLE */
+.d2d-group-header{
+  background:var(--bg3);padding:8px 12px;font-family:'Syne',sans-serif;
+  font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  border-left:3px solid var(--group-color,var(--accent));
+}
+
+/* LOADING */
+.loading-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;gap:14px;}
+.spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px;color:var(--text3);font-size:12px;}
+
+/* GRID HELPERS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+.mb12{margin-bottom:12px;}
+.mb16{margin-bottom:16px;}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+/* COMPARE TABLE */
+.cmp-table thead th{background:var(--bg3);}
+.cmp-total{background:rgba(0,229,255,.03)!important;}
+.cmp-total td{font-weight:700;}
+.sg-chan{font-size:11px;font-weight:600;color:var(--text2);}
+.arrow-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;}
+
+@media(max-width:768px){
+  .period-grid,.period-grid-2,.fldt-grid,.g2,.g3,.chart-row-2,.chart-row-3{grid-template-columns:1fr;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .summ-kpi-row{grid-template-columns:1fr;}
+}
+</style>
 </head>
 <body>
 
-<header>
-  <div class="logo">FORE COFFEE <span>/ DASHBOARD</span></div>
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">FORE COFFEE</div>
+  <div class="header-sep"></div>
+  <div class="header-store">KEMANG RAYA</div>
   <div class="header-right">
-    <span id="last-updated">—</span>
-    <button id="refresh-btn" onclick="loadData()">↺ REFRESH</button>
+    <div class="header-time" id="clock"></div>
+    <div class="header-status"><div class="status-dot"></div><span id="last-updated">LIVE</span></div>
+    <button class="btn-refresh" onclick="loadData()">↺ REFRESH</button>
   </div>
-</header>
+</div>
 
-<nav>
-  <button class="active" onclick="showPage('kpi', this)">KPI HARIAN</button>
-  <button onclick="showPage('channel', this)">CHANNEL</button>
-  <button onclick="showPage('produk', this)">PRODUK</button>
-  <button onclick="showPage('trend', this)">TREND</button>
-  <button onclick="showPage('adt', this)">ADT & IPT</button>
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('kpi',this)"><span class="nav-icon">◈</span>KPI SUMMARY</button>
+  <button class="nav-btn" onclick="showPage('channel',this)"><span class="nav-icon">◉</span>CHANNEL</button>
+  <button class="nav-btn" onclick="showPage('period',this)"><span class="nav-icon">⊞</span>WEEK TO WEEK</button>
+  <button class="nav-btn" onclick="showPage('fldt',this)"><span class="nav-icon">◧</span>FLDT</button>
+  <button class="nav-btn" onclick="showPage('allsumm',this)"><span class="nav-icon">◫</span>ALL SUMMARY</button>
+  <button class="nav-btn" onclick="showPage('d2d',this)"><span class="nav-icon">◈</span>DAY TO DAY</button>
 </nav>
 
-<main>
-  <div id="loading">
-    <div class="spinner"></div>
-    <p>Fetching data dari Sheets...</p>
+<div class="app-body">
+
+<!-- ═══ PAGE: KPI SUMMARY ═══ -->
+<div class="page active" id="page-kpi">
+  <div class="target-row">
+    <label>Periode</label>
+    <input class="inp" type="date" id="kpi-start"/>
+    <label>—</label>
+    <input class="inp" type="date" id="kpi-end"/>
+    <label>Target GMV</label>
+    <input class="inp" type="text" id="kpi-target" placeholder="700000000"/>
+    <label>Total Hari</label>
+    <input class="inp inp-sm" type="text" id="kpi-days" placeholder="30"/>
+    <button class="btn" onclick="calcKpi()">▶ HITUNG</button>
   </div>
 
-  <!-- PAGE: KPI HARIAN -->
-  <div id="page-kpi" class="page">
-    <div class="date-filter">
-      <label>Dari</label>
-      <input type="date" id="f-start" />
-      <label>Sampai</label>
-      <input type="date" id="f-end" />
-      <button class="filter-btn" onclick="applyFilter()">Terapkan</button>
-      <button class="filter-btn" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border)" onclick="resetFilter()">Reset</button>
+  <div class="kpi-grid" id="kpi-cards"></div>
+
+  <div class="g3 mb12">
+    <div class="card gauge-wrap" style="min-height:220px;">
+      <div class="chart-title">GMV Achievement</div>
+      <canvas id="gaugeChart" style="height:160px!important;"></canvas>
+      <div class="gauge-center">
+        <div class="gauge-pct" id="gauge-pct" style="color:var(--accent)">0%</div>
+        <div class="gauge-lbl">dari target</div>
+      </div>
     </div>
-
-    <div class="section-title">Overview Periode</div>
-    <div class="kpi-grid" id="kpi-overview"></div>
-
-    <div class="section-title">Data Harian</div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>TANGGAL</th>
-            <th>GMV</th>
-            <th>OFFLINE SALES</th>
-            <th>ONLINE SALES</th>
-            <th>TOTAL CUP</th>
-            <th>IPT</th>
-            <th>ADT STORE</th>
-          </tr>
-        </thead>
-        <tbody id="daily-table"></tbody>
-      </table>
+    <div class="card">
+      <div class="chart-title">Channel Contribution</div>
+      <div class="chan-contrib" id="kpi-contrib"></div>
+    </div>
+    <div class="card">
+      <div class="chart-title">Pace vs Target</div>
+      <div id="pace-info"></div>
     </div>
   </div>
 
-  <!-- PAGE: CHANNEL -->
-  <div id="page-channel" class="page">
-    <div class="section-title">Sales per Channel (Periode Filter)</div>
-    <div class="chart-grid">
-      <div class="chart-card">
-        <div class="chart-title">Komposisi Sales Channel</div>
-        <div class="chart-wrap">
-          <canvas id="chart-channel-pie"></canvas>
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="chart-title">Daily GMV Trend + 7D MA</div>
+      <div class="chart-wrap h260"><canvas id="kpi-trend-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="chart-title">Channel Stacked — Daily</div>
+      <div class="chart-wrap h260"><canvas id="kpi-stacked-chart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: CHANNEL ═══ -->
+<div class="page" id="page-channel">
+  <div class="target-row">
+    <label>Dari</label><input class="inp" type="date" id="ch-start"/>
+    <label>Sampai</label><input class="inp" type="date" id="ch-end"/>
+    <button class="btn" onclick="applyChannelFilter()">▶ TERAPKAN</button>
+    <button class="btn btn-ghost" onclick="resetChannelFilter()">RESET</button>
+  </div>
+
+  <div class="kpi-grid" id="ch-kpi-cards"></div>
+
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="chart-title">Komposisi Channel</div>
+      <div class="chart-wrap h260"><canvas id="ch-pie-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="chart-title">Sales per Channel</div>
+      <div class="chart-wrap h260"><canvas id="ch-bar-chart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="chart-title">Channel Breakdown Detail</div>
+    <div id="ch-breakdown-list"></div>
+  </div>
+
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="chart-title">Avg ADT per Channel</div>
+      <div class="chart-wrap h220"><canvas id="ch-adt-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="chart-title">Trend Harian per Channel</div>
+      <div class="chan-tabs" id="ch-tabs">
+        <button class="chan-tab active" onclick="setChTrend('offline',this)">Offline</button>
+        <button class="chan-tab" onclick="setChTrend('gofood',this)">GoFood</button>
+        <button class="chan-tab" onclick="setChTrend('grabfood',this)">GrabFood</button>
+        <button class="chan-tab" onclick="setChTrend('shopee',this)">Shopee</button>
+      </div>
+      <div class="chart-wrap h200"><canvas id="ch-trend-chart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: PERIOD ═══ -->
+<div class="page" id="page-period">
+  <div class="row mb16" style="justify-content:space-between;">
+    <div class="row">
+      <div class="sec-dot"></div>
+      <span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);">Period Comparison</span>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mode-weekly" onclick="setPeriodMode('weekly')">📅 Weekly</button>
+      <button class="mode-btn" id="mode-custom" onclick="setPeriodMode('custom')">🔧 Custom</button>
+    </div>
+  </div>
+
+  <div id="weekly-mode">
+    <div class="period-grid mb12">
+      <div class="card">
+        <div class="period-header p1-color">2 Minggu Lalu</div>
+        <div class="row mb12">
+          <input class="inp" style="flex:1" type="date" id="range1s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="range1e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadPeriod(1)">Apply</button>
+        </div>
+        <div class="chart-wrap h180"><canvas id="period-chart-1"></canvas></div>
+        <div id="period-stats-1" class="mt8"></div>
+      </div>
+      <div class="card">
+        <div class="period-header p2-color">1 Minggu Lalu</div>
+        <div class="row mb12">
+          <input class="inp" style="flex:1" type="date" id="range2s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="range2e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadPeriod(2)">Apply</button>
+        </div>
+        <div class="chart-wrap h180"><canvas id="period-chart-2"></canvas></div>
+        <div id="period-stats-2" class="mt8"></div>
+      </div>
+      <div class="card">
+        <div class="period-header p3-color">Minggu Ini</div>
+        <div class="row mb12">
+          <input class="inp" style="flex:1" type="date" id="range3s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="range3e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadPeriod(3)">Apply</button>
+        </div>
+        <div class="chart-wrap h180"><canvas id="period-chart-3"></canvas></div>
+        <div id="period-stats-3" class="mt8"></div>
+      </div>
+    </div>
+
+    <div id="weekly-summary" style="display:none">
+      <div class="card mb12">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <div class="chart-title" style="margin:0">Tren 3 Minggu</div>
+          <div class="chan-tabs" id="weekly-chan-tabs" style="margin:0">
+            <button class="chan-tab active" onclick="setWeeklyChan('gmv',this)">GMV</button>
+            <button class="chan-tab" onclick="setWeeklyChan('offline',this)">Offline</button>
+            <button class="chan-tab" onclick="setWeeklyChan('online',this)">Online</button>
+            <button class="chan-tab" onclick="setWeeklyChan('gofood',this)">GoFood</button>
+            <button class="chan-tab" onclick="setWeeklyChan('grabfood',this)">GrabFood</button>
+            <button class="chan-tab" onclick="setWeeklyChan('shopee',this)">Shopee</button>
+          </div>
+        </div>
+        <div class="chart-wrap h260"><canvas id="weekly-trend-chart"></canvas></div>
+      </div>
+      <div class="g2 mb12">
+        <div class="card"><div class="chart-title">Minggu Ini vs 1 Minggu Lalu</div><div id="compare-w32"></div></div>
+        <div class="card"><div class="chart-title">Minggu Ini vs 2 Minggu Lalu</div><div id="compare-w31"></div></div>
+      </div>
+      <div class="card mb12">
+        <div class="chart-title">WoW Growth & CAGR</div>
+        <div id="cagr-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="custom-mode" style="display:none">
+    <div class="period-grid-2 mb12">
+      <div class="card">
+        <div class="period-header p1-color">Periode 1</div>
+        <div class="row mb12">
+          <input class="inp" style="flex:1" type="date" id="crange1s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="crange1e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadCustomPeriod(1)">Apply</button>
+        </div>
+        <div class="chart-wrap h200"><canvas id="custom-chart-1"></canvas></div>
+        <div id="custom-stats-1"></div>
+      </div>
+      <div class="card">
+        <div class="period-header p2-color">Periode 2</div>
+        <div class="row mb12">
+          <input class="inp" style="flex:1" type="date" id="crange2s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="crange2e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadCustomPeriod(2)">Apply</button>
+        </div>
+        <div class="chart-wrap h200"><canvas id="custom-chart-2"></canvas></div>
+        <div id="custom-stats-2"></div>
+      </div>
+    </div>
+    <div class="g2 mb12">
+      <div class="card"><div class="chart-title">Channel Comparison P1 vs P2</div><div class="chart-wrap h240"><canvas id="custom-compare-chart"></canvas></div><div id="custom-compare-desc" style="margin-top:12px;"></div></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <div class="chart-title" style="margin:0">Daily Comparison</div>
+          <div class="chan-tabs" id="custom-chan-tabs" style="margin:0">
+            <button class="chan-tab active" onclick="setCustomChan('gmv',this)">GMV</button>
+            <button class="chan-tab" onclick="setCustomChan('offline',this)">Offline</button>
+            <button class="chan-tab" onclick="setCustomChan('online',this)">Online</button>
+            <button class="chan-tab" onclick="setCustomChan('gofood',this)">GoFood</button>
+            <button class="chan-tab" onclick="setCustomChan('grabfood',this)">GrabFood</button>
+            <button class="chan-tab" onclick="setCustomChan('shopee',this)">Shopee</button>
+          </div>
+        </div>
+        <div class="chart-wrap h200"><canvas id="custom-daily-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: FLDT ═══ -->
+<div class="page" id="page-fldt">
+  <div class="row mb16" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <div class="row">
+      <div class="sec-dot"></div>
+      <span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);">FLDT Analysis</span>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="fldt-mode-weekly" onclick="setFldtMode('weekly')">📅 3 Minggu</button>
+      <button class="mode-btn" id="fldt-mode-custom" onclick="setFldtMode('custom')">🔧 Custom</button>
+    </div>
+  </div>
+
+  <div id="fldt-weekly">
+    <div class="fldt-grid mb12" id="fldt-cat-cards"></div>
+    <div class="card mb12">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <div class="chart-title" style="margin:0">Daily Trend — 3 Minggu</div>
+        <div class="chan-tabs" id="fldt-chan-tabs" style="margin:0">
+          <button class="chan-tab active" onclick="setFldtChan('cup_total',this)">Total Cup</button>
+          <button class="chan-tab" onclick="setFldtChan('food_off',this)">Food</button>
+          <button class="chan-tab" onclick="setFldtChan('large_off',this)">Large</button>
+          <button class="chan-tab" onclick="setFldtChan('diary_off',this)">Diary</button>
+          <button class="chan-tab" onclick="setFldtChan('rtd_off',this)">RTD</button>
+          <button class="chan-tab" onclick="setFldtChan('seasonal_sold',this)">Seasonal</button>
+          <button class="chan-tab" onclick="setFldtChan('offline_sales',this)">Offline Sales</button>
         </div>
       </div>
-      <div class="chart-card">
-        <div class="chart-title">Sales Channel — Bar Comparison</div>
-        <div class="chart-wrap">
-          <canvas id="chart-channel-bar"></canvas>
-        </div>
-      </div>
+      <div class="chart-wrap h260"><canvas id="fldt-line-chart"></canvas></div>
     </div>
-
-    <div class="section-title">Detail Channel Breakdown</div>
-    <div class="chart-card">
-      <div id="channel-breakdown-list"></div>
+    <div class="g2 mb12">
+      <div class="card"><div class="chart-title">Cup per Kategori (3 Minggu)</div><div class="chart-wrap h240"><canvas id="fldt-group-bar"></canvas></div></div>
+      <div class="card"><div class="chart-title">Komposisi Cup — Minggu Ini</div><div class="chart-wrap h240"><canvas id="fldt-doughnut"></canvas></div></div>
     </div>
-
-    <div class="section-title">ADT per Channel</div>
-    <div class="chart-card">
-      <div class="chart-wrap">
-        <canvas id="chart-adt-channel"></canvas>
-      </div>
+    <div class="card mb12">
+      <div class="chart-title">Tabel FLDT — 3 Minggu</div>
+      <div class="tbl-wrap"><table id="fldt-main-table"><thead><tr></tr></thead><tbody></tbody></table></div>
     </div>
   </div>
 
-  <!-- PAGE: PRODUK -->
-  <div id="page-produk" class="page">
-    <div class="section-title">Komposisi Produk</div>
-    <div class="chart-grid-3">
-      <div class="chart-card">
-        <div class="chart-title">Cup Breakdown</div>
-        <div class="chart-wrap">
-          <canvas id="chart-cup-pie"></canvas>
+  <div id="fldt-custom" style="display:none">
+    <div class="period-grid-2 mb12">
+      <div class="card" style="padding:14px 16px;">
+        <div class="period-header p1-color">Periode 1</div>
+        <div class="row">
+          <input class="inp" style="flex:1" type="date" id="fldt-c1s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="fldt-c1e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadFldtCustom(1)">Apply</button>
         </div>
       </div>
-      <div class="chart-card">
-        <div class="chart-title">Produk Terjual Mix</div>
-        <div class="chart-wrap">
-          <canvas id="chart-produk-mix"></canvas>
-        </div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">Food Sales vs Qty</div>
-        <div class="chart-wrap">
-          <canvas id="chart-food"></canvas>
+      <div class="card" style="padding:14px 16px;">
+        <div class="period-header p2-color">Periode 2</div>
+        <div class="row">
+          <input class="inp" style="flex:1" type="date" id="fldt-c2s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="fldt-c2e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadFldtCustom(2)">Apply</button>
         </div>
       </div>
     </div>
-
-    <div class="section-title">Summary Produk</div>
-    <div class="kpi-grid" id="kpi-produk"></div>
-  </div>
-
-  <!-- PAGE: TREND -->
-  <div id="page-trend" class="page">
-    <div class="section-title">Trend GMV Harian</div>
-    <div class="chart-card">
-      <div class="chart-wrap tall">
-        <canvas id="chart-gmv-trend"></canvas>
-      </div>
-    </div>
-
-    <div class="section-title">Trend Offline vs Online</div>
-    <div class="chart-card">
-      <div class="chart-wrap tall">
-        <canvas id="chart-offline-online-trend"></canvas>
-      </div>
-    </div>
-
-    <div class="section-title">Trend Total Cup Terjual</div>
-    <div class="chart-card">
-      <div class="chart-wrap tall">
-        <canvas id="chart-cup-trend"></canvas>
+    <div class="card mb12"><div class="chart-title">FLDT Comparison — P1 vs P2</div><div class="tbl-wrap"><table id="fldt-custom-table"><thead><tr></tr></thead><tbody></tbody></table></div></div>
+    <div class="g2 mb12">
+      <div class="card"><div class="chart-title">Cup per Kategori P1 vs P2</div><div class="chart-wrap h240"><canvas id="fldt-custom-bar"></canvas></div></div>
+      <div class="g2" style="margin:0;gap:8px;">
+        <div class="card" style="padding:14px;"><div class="chart-title">P1 Komposisi</div><div class="chart-wrap" style="height:180px;"><canvas id="fldt-custom-dough1"></canvas></div></div>
+        <div class="card" style="padding:14px;"><div class="chart-title">P2 Komposisi</div><div class="chart-wrap" style="height:180px;"><canvas id="fldt-custom-dough2"></canvas></div></div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- PAGE: ADT & IPT -->
-  <div id="page-adt" class="page">
-    <div class="section-title">KPI ADT & IPT</div>
-    <div class="kpi-grid" id="kpi-adt"></div>
-
-    <div class="section-title">Trend ADT Store Harian</div>
-    <div class="chart-card">
-      <div class="chart-wrap tall">
-        <canvas id="chart-adt-trend"></canvas>
-      </div>
-    </div>
-
-    <div class="section-title">Trend IPT Harian</div>
-    <div class="chart-card">
-      <div class="chart-wrap tall">
-        <canvas id="chart-ipt-trend"></canvas>
-      </div>
-    </div>
-
-    <div class="section-title">ADT Comparison per Channel</div>
-    <div class="chart-card">
-      <div class="chart-wrap">
-        <canvas id="chart-adt-compare"></canvas>
-      </div>
-    </div>
+<!-- ═══ PAGE: ALL SUMMARY ═══ -->
+<div class="page" id="page-allsumm">
+  <div class="target-row">
+    <label>Periode 1</label>
+    <input class="inp" type="date" id="summ-p1s"/><span style="color:var(--text3)">—</span>
+    <input class="inp" type="date" id="summ-p1e"/>
+    <label>Periode 2 (opt.)</label>
+    <input class="inp" type="date" id="summ-p2s"/><span style="color:var(--text3)">—</span>
+    <input class="inp" type="date" id="summ-p2e"/>
+    <button class="btn" onclick="loadAllSumm()">▶ TAMPILKAN</button>
   </div>
-</main>
+  <div id="summ-content" style="display:none">
+    <div class="summ-kpi-row" id="summ-kpi-row"></div>
+    <div class="g2 mb12">
+      <div class="card"><div class="chart-title">Daily GMV Comparison</div><div id="summ-daily-gmv"></div></div>
+      <div class="card"><div class="chart-title">Channel Ranking P1</div><div class="chan-rank" id="summ-chan-rank"></div></div>
+    </div>
+    <div class="card mb12"><div class="chart-title">FLDT per Kategori</div><div class="fldt-grid" id="summ-fldt-grid"></div></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: DAY TO DAY ═══ -->
+<div class="page" id="page-d2d">
+  <div class="target-row">
+    <label>Dari</label><input class="inp" type="date" id="d2d-start"/>
+    <label>Sampai</label><input class="inp" type="date" id="d2d-end"/>
+    <button class="btn" onclick="loadD2D()">▶ LOAD</button>
+  </div>
+  <div id="d2d-table-wrap">
+    <div class="empty">Pilih tanggal dan klik LOAD</div>
+  </div>
+</div>
+
+</div><!-- /app-body -->
 
 <script>
-// ─── CONFIG ───────────────────────────────────────────────
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
 const SHEET_ID = '1Y49X7Gj2Zy8XaX85ONHQTXnd3ItrmwPZHA2MXlRy4gU';
 const SHEET_NAME = 'bacot';
 const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
-// ─── STATE ────────────────────────────────────────────────
+// ═══════════════════════════════════════
+// GLOBALS
+// ═══════════════════════════════════════
 let allData = [];
-let filteredData = [];
 let charts = {};
+let periodData = {};
+let customPeriodData = {};
+let fldtData = {};
+let summData = {};
+let _weeklyChan = 'gmv';
+let _customChan = 'gmv';
+let _fldtChan = 'cup_total';
+let _chTrendChan = 'offline';
+let _periodMode = 'weekly';
+let _fldtMode = 'weekly';
 
-// ─── UTILS ────────────────────────────────────────────────
-const fmt = (n) => {
-  if (isNaN(n) || n === null) return '—';
-  if (n >= 1_000_000) return 'Rp ' + (n / 1_000_000).toFixed(1) + 'jt';
-  if (n >= 1_000) return 'Rp ' + (n / 1_000).toFixed(0) + 'rb';
-  return 'Rp ' + n.toFixed(0);
+const HARI = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+
+// ═══════════════════════════════════════
+// CHART COLORS
+// ═══════════════════════════════════════
+const TC = {
+  gmv:'#f472b6', offline:'#60a5fa', online:'#34d399',
+  gofood:'#fb923c', grabfood:'#4ade80', shopee:'#f87171',
+  accent:'#00e5ff', accent2:'#00ff9d', amber:'#ffc233',
+  text2:'#94a3b8', text3:'#475569', bg:'#070a0e', bg2:'#0d1117', bg3:'#141b22',
+  border:'#1e2d3d', grid:'rgba(30,45,61,0.8)',
 };
-const fmtNum = (n) => isNaN(n) ? '—' : Number(n).toLocaleString('id-ID');
-const fmtDate = (d) => {
-  if (!d) return '—';
-  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+const FLDT_COLORS = ['#00ff9d','#60a5fa','#a78bfa','#ffc233','#2dd4bf','#f472b6'];
+const FLDT_KEYS = ['food_off','large_off','diary_off','topping_off','rtd_off','seasonal_sold'];
+const FLDT_LABELS = ['Food','Large','Diary','Topping','RTD','Seasonal'];
+
+Chart.defaults.color = TC.text2;
+Chart.defaults.font = { family: "'DM Sans', sans-serif", size: 11 };
+
+// ═══════════════════════════════════════
+// FORMATTERS
+// ═══════════════════════════════════════
+const fmtRp = v => {
+  v = v || 0; const neg = v < 0, abs = Math.abs(v);
+  let s = abs >= 1e9 ? 'Rp '+(abs/1e9).toFixed(2)+'M'
+        : abs >= 1e6 ? 'Rp '+(abs/1e6).toFixed(1)+'jt'
+        : abs >= 1e3 ? 'Rp '+(abs/1e3).toFixed(0)+'rb'
+        : 'Rp '+Math.round(abs);
+  return neg ? '-'+s : s;
 };
-const parseNum = (s) => {
-  if (!s || s.trim() === '') return 0;
-  return parseFloat(s.replace(/[^0-9.-]/g, '')) || 0;
-};
-const sum = (arr, key) => arr.reduce((a, b) => a + (b[key] || 0), 0);
-const avg = (arr, key) => arr.length ? sum(arr, key) / arr.length : 0;
+const fmtNum = v => new Intl.NumberFormat('id-ID').format(Math.round(v||0));
+const fmtPct = v => (v||0).toFixed(1)+'%';
+const fmtDate = d => d ? d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+const fmtShortDate = s => { if(!s) return '—'; const [y,m,d]=s.split('-').map(Number); const dt=new Date(y,m-1,d); return String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0'); };
+const toInputDate = d => { const dd=String(d.getDate()).padStart(2,'0'), mm=String(d.getMonth()+1).padStart(2,'0'); return `${d.getFullYear()}-${mm}-${dd}`; };
+const parseNum = s => { if(!s||s.trim()==='') return 0; return parseFloat(s.replace(/[^0-9.-]/g,''))||0; };
+const sum = (arr,k) => arr.reduce((a,b)=>a+(b[k]||0),0);
+const avg = (arr,k) => arr.length ? sum(arr,k)/arr.length : 0;
+const pct = (a,b) => b ? a/b*100 : 0;
+const safePct = (a,b) => b>0 ? ((a-b)/b*100) : 0;
 
-function destroyChart(id) {
-  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
-}
-
-const CHART_DEFAULTS = {
-  color: '#8888a8',
-  font: { family: 'DM Sans', size: 11 },
-};
-Chart.defaults.color = CHART_DEFAULTS.color;
-Chart.defaults.font = CHART_DEFAULTS.font;
-
-// ─── LOAD DATA ────────────────────────────────────────────
-async function loadData() {
-  document.getElementById('loading').style.display = 'flex';
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-
-  try {
-    const res = await fetch(CSV_URL + '&t=' + Date.now());
-    const text = await res.text();
-    allData = parseCSV(text);
-    filteredData = [...allData];
-
-    if (allData.length > 0) {
-      const dates = allData.map(r => r.TANGGAL).filter(Boolean).sort();
-      document.getElementById('f-start').value = toInputDate(dates[0]);
-      document.getElementById('f-end').value = toInputDate(dates[dates.length - 1]);
-    }
-
-    document.getElementById('last-updated').textContent = 'Updated: ' + new Date().toLocaleTimeString('id-ID');
-    document.getElementById('loading').style.display = 'none';
-    showPage('kpi', document.querySelector('nav button'));
-  } catch (e) {
-    document.getElementById('loading').innerHTML = `
-      <p style="color:var(--accent3)">Gagal load data. Pastikan sheet sudah public.</p>
-      <p style="color:var(--text3);font-size:11px;margin-top:8px">${e.message}</p>
-      <button class="filter-btn" style="margin-top:16px" onclick="loadData()">Coba Lagi</button>
-    `;
-  }
-}
-
-function toInputDate(d) {
-  if (!d) return '';
-  const dd = d.getDate().toString().padStart(2, '0');
-  const mm = (d.getMonth() + 1).toString().padStart(2, '0');
-  return `${d.getFullYear()}-${mm}-${dd}`;
-}
-
-// ─── PARSE CSV ────────────────────────────────────────────
-function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  const headers = parseCSVLine(lines[0]);
-  const rows = [];
-
-  for (let i = 1; i < lines.length; i++) {
-    const vals = parseCSVLine(lines[i]);
-    if (!vals[0] || vals[0].trim() === '') continue;
-    const row = {};
-    headers.forEach((h, idx) => {
-      const key = h.trim().replace(/^"|"$/g, '').toUpperCase().trim();
-      const val = (vals[idx] || '').trim().replace(/^"|"$/g, '');
-      row[key] = val;
-    });
-
-    // parse tanggal — format M/DD/YYYY atau MM/DD/YYYY
-    const rawDate = row['TANGGAL'];
-    let parsed = null;
-    if (rawDate) {
-      const parts = rawDate.split('/');
-      if (parts.length === 3) {
-        // M/DD/YYYY → new Date(year, month-1, day)
-        parsed = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
-      } else {
-        parsed = new Date(rawDate);
-      }
-    }
-    if (!parsed || isNaN(parsed)) continue;
-    row.TANGGAL = parsed;
-
-    // parse numerik — angka raw tanpa format
-    const numCols = ['GMV','ADT STORE','AT STORE','OFFLINE SALES','ADT OFFLINE','AT OFFLINE',
-      'ONLINE SALES','ADT ONLINE','AT ONLINE','GOFOOD SALES','ADT GOFOOD','AT GOFOOD',
-      'GRABFOOD SALES','ADT GRABFOOD','AT GRABFOOD','SHOPE FOOD SALES','ADT SHOPEFOOD','AT SHOPPE',
-      'TOTAL SOLD CUP OFFLINE','FOOD SOLD QTY','FOOD SOLD SALES','FOOD OFFLINE',
-      'LARGE OFFLINE','DIARY OFFLINE','TOPPING OFFLINE','TOTAL SOLD RTD','RTD OFFLINE',
-      'SEASONAL SOLD','TOTAL PRODUK TERJUAL','MERCHENDISE','TANPA MERCHENDISE','IPT'];
-    numCols.forEach(c => { row[c] = parseNum(row[c] || '0'); });
-
-    rows.push(row);
-  }
-  return rows.sort((a, b) => a.TANGGAL - b.TANGGAL);
-}
-
-function parseCSVLine(line) {
-  const result = [];
-  let cur = '', inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    if (line[i] === '"') { inQ = !inQ; }
-    else if (line[i] === ',' && !inQ) { result.push(cur); cur = ''; }
-    else { cur += line[i]; }
-  }
-  result.push(cur);
-  return result;
-}
-
-// ─── FILTER ───────────────────────────────────────────────
-function applyFilter() {
-  const start = new Date(document.getElementById('f-start').value);
-  const end = new Date(document.getElementById('f-end').value);
-  end.setHours(23, 59, 59);
-  filteredData = allData.filter(r => r.TANGGAL >= start && r.TANGGAL <= end);
-  renderCurrentPage();
-}
-
-function resetFilter() {
-  filteredData = [...allData];
-  if (allData.length > 0) {
-    const dates = allData.map(r => r.TANGGAL).sort((a,b)=>a-b);
-    document.getElementById('f-start').value = toInputDate(dates[0]);
-    document.getElementById('f-end').value = toInputDate(dates[dates.length - 1]);
-  }
-  renderCurrentPage();
-}
-
-// ─── NAVIGATION ───────────────────────────────────────────
-let currentPage = 'kpi';
-
-function showPage(page, btn) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  currentPage = page;
-  const el = document.getElementById('page-' + page);
-  if (el) el.classList.add('active');
-  renderPage(page);
-}
-
-function renderCurrentPage() { renderPage(currentPage); }
-
-function renderPage(page) {
-  if (page === 'kpi') renderKPI();
-  else if (page === 'channel') renderChannel();
-  else if (page === 'produk') renderProduk();
-  else if (page === 'trend') renderTrend();
-  else if (page === 'adt') renderADT();
-}
-
-// ─── PAGE: KPI HARIAN ─────────────────────────────────────
-function renderKPI() {
-  const d = filteredData;
-  if (!d.length) { document.getElementById('kpi-overview').innerHTML = '<div class="empty">Tidak ada data</div>'; return; }
-
-  const totalGMV = sum(d, 'GMV');
-  const totalOffline = sum(d, 'OFFLINE SALES');
-  const totalOnline = sum(d, 'ONLINE SALES');
-  const totalCup = sum(d, 'TOTAL SOLD CUP OFFLINE');
-  const avgIPT = avg(d, 'IPT');
-  const avgADT = avg(d, 'ADT STORE');
-  const avgGMV = totalGMV / d.length;
-
-  const kpis = [
-    { label: 'Total GMV', value: fmt(totalGMV), sub: `${d.length} hari`, accent: '#00e5a0' },
-    { label: 'Avg GMV/Hari', value: fmt(avgGMV), sub: 'rata-rata harian', accent: '#7c6fff' },
-    { label: 'Offline Sales', value: fmt(totalOffline), sub: pct(totalOffline, totalGMV) + '% dari GMV', accent: '#7c6fff' },
-    { label: 'Online Sales', value: fmt(totalOnline), sub: pct(totalOnline, totalGMV) + '% dari GMV', accent: '#00e5a0' },
-    { label: 'Total Cup', value: fmtNum(totalCup), sub: 'cup offline terjual', accent: '#ffd166' },
-    { label: 'Avg IPT', value: avgIPT.toFixed(2), sub: 'item per transaksi', accent: '#ff6b6b' },
-    { label: 'Avg ADT Store', value: fmt(avgADT), sub: 'avg daily transaction', accent: '#00e5a0' },
-    { label: 'Total Transaksi', value: fmtNum(sum(d, 'AT STORE')), sub: 'all transactions', accent: '#ffd166' },
-  ];
-
-  document.getElementById('kpi-overview').innerHTML = kpis.map(k => `
-    <div class="kpi-card" style="--card-accent:${k.accent}">
-      <div class="kpi-label">${k.label}</div>
-      <div class="kpi-value">${k.value}</div>
-      <div class="kpi-sub">${k.sub}</div>
-    </div>
-  `).join('');
-
-  // Daily table
-  const tbody = document.getElementById('daily-table');
-  tbody.innerHTML = [...d].reverse().map(r => `
-    <tr>
-      <td>${fmtDate(r.TANGGAL)}</td>
-      <td class="td-num td-accent">${fmt(r.GMV)}</td>
-      <td class="td-num">${fmt(r['OFFLINE SALES'])}</td>
-      <td class="td-num">${fmt(r['ONLINE SALES'])}</td>
-      <td class="td-num">${fmtNum(r['TOTAL SOLD CUP OFFLINE'])}</td>
-      <td class="td-num">${r.IPT ? r.IPT.toFixed(2) : '—'}</td>
-      <td class="td-num">${fmt(r['ADT STORE'])}</td>
-    </tr>
-  `).join('');
-}
-
-function pct(a, b) { return b ? ((a / b) * 100).toFixed(1) : 0; }
-
-// ─── PAGE: CHANNEL ────────────────────────────────────────
-function renderChannel() {
-  const d = filteredData;
-  if (!d.length) return;
-
-  const offline = sum(d, 'OFFLINE SALES');
-  const online = sum(d, 'ONLINE SALES');
-  const gofood = sum(d, 'GOFOOD SALES');
-  const grabfood = sum(d, 'GRABFOOD SALES');
-  const shopefood = sum(d, 'SHOPE FOOD SALES');
-  const total = offline + gofood + grabfood + shopefood;
-
-  const channels = [
-    { name: 'Offline', val: offline, color: '#7c6fff' },
-    { name: 'GoFood', val: gofood, color: '#ff6b6b' },
-    { name: 'GrabFood', val: grabfood, color: '#00d26a' },
-    { name: 'ShopeFood', val: shopefood, color: '#ff6600' },
-    { name: 'Online (Total)', val: online, color: '#00e5a0' },
-  ];
-
-  // Pie
-  destroyChart('channel-pie');
-  charts['channel-pie'] = new Chart(document.getElementById('chart-channel-pie'), {
-    type: 'doughnut',
-    data: {
-      labels: channels.slice(0,4).map(c => c.name),
-      datasets: [{ data: channels.slice(0,4).map(c => c.val), backgroundColor: channels.slice(0,4).map(c => c.color), borderWidth: 0, hoverOffset: 8 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 11 }, padding: 12 } } } }
-  });
-
-  // Bar
-  destroyChart('channel-bar');
-  charts['channel-bar'] = new Chart(document.getElementById('chart-channel-bar'), {
-    type: 'bar',
-    data: {
-      labels: channels.slice(0,4).map(c => c.name),
-      datasets: [{ data: channels.slice(0,4).map(c => c.val), backgroundColor: channels.slice(0,4).map(c => c.color + 'cc'), borderRadius: 6 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: '#2a2a3a' } },
-        y: { grid: { color: '#2a2a3a' }, ticks: { callback: v => fmt(v) } }
-      }
-    }
-  });
-
-  // Breakdown list
-  const maxVal = Math.max(...channels.slice(0,4).map(c => c.val));
-  document.getElementById('channel-breakdown-list').innerHTML = channels.slice(0,4).map(c => `
-    <div class="channel-row">
-      <div class="ch-dot" style="background:${c.color}"></div>
-      <div class="ch-name">${c.name}</div>
-      <div class="ch-bar-wrap"><div class="ch-bar" style="width:${maxVal ? (c.val/maxVal*100) : 0}%;background:${c.color}"></div></div>
-      <div class="ch-val">${fmt(c.val)}</div>
-      <div class="ch-pct">${pct(c.val, total)}%</div>
-    </div>
-  `).join('');
-
-  // ADT per channel
-  const adtData = [
-    { name: 'Store', val: avg(d, 'ADT STORE'), color: '#00e5a0' },
-    { name: 'Offline', val: avg(d, 'ADT OFFLINE'), color: '#7c6fff' },
-    { name: 'Online', val: avg(d, 'ADT ONLINE'), color: '#00e5a0' },
-    { name: 'GoFood', val: avg(d, 'ADT GOFOOD'), color: '#ff6b6b' },
-    { name: 'GrabFood', val: avg(d, 'ADT GRABFOOD'), color: '#00d26a' },
-    { name: 'ShopeFood', val: avg(d, 'ADT SHOPEFOOD'), color: '#ff6600' },
-  ];
-
-  destroyChart('adt-channel');
-  charts['adt-channel'] = new Chart(document.getElementById('chart-adt-channel'), {
-    type: 'bar',
-    data: {
-      labels: adtData.map(c => c.name),
-      datasets: [{ label: 'Avg ADT', data: adtData.map(c => c.val), backgroundColor: adtData.map(c => c.color + 'cc'), borderRadius: 6 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: '#2a2a3a' } },
-        y: { grid: { color: '#2a2a3a' }, ticks: { callback: v => fmt(v) } }
-      }
-    }
-  });
-}
-
-// ─── PAGE: PRODUK ─────────────────────────────────────────
-function renderProduk() {
-  const d = filteredData;
-  if (!d.length) return;
-
-  const largeCup = sum(d, 'LARGE OFFLINE');
-  const diary = sum(d, 'DIARY OFFLINE');
-  const topping = sum(d, 'TOPPING OFFLINE');
-  const rtd = sum(d, 'TOTAL SOLD RTD');
-  const seasonal = sum(d, 'SEASONAL SOLD');
-  const merch = sum(d, 'MERCHENDISE');
-  const food = sum(d, 'FOOD SOLD QTY');
-  const foodSales = sum(d, 'FOOD SOLD SALES');
-  const totalCup = sum(d, 'TOTAL SOLD CUP OFFLINE');
-  const totalProduk = sum(d, 'TOTAL PRODUK TERJUAL');
-
-  // Cup pie
-  destroyChart('cup-pie');
-  charts['cup-pie'] = new Chart(document.getElementById('chart-cup-pie'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Large', 'Diary', 'Topping'],
-      datasets: [{ data: [largeCup, diary, topping], backgroundColor: ['#7c6fff','#00e5a0','#ffd166'], borderWidth: 0, hoverOffset: 8 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } } } }
-  });
-
-  // Produk mix
-  destroyChart('produk-mix');
-  charts['produk-mix'] = new Chart(document.getElementById('chart-produk-mix'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Cup Offline', 'RTD', 'Food (Qty)', 'Seasonal', 'Merch'],
-      datasets: [{ data: [totalCup, rtd, food, seasonal, merch], backgroundColor: ['#7c6fff','#00e5a0','#ff6b6b','#ffd166','#00d26a'], borderWidth: 0, hoverOffset: 8 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } } } }
-  });
-
-  // Food chart
-  destroyChart('food');
-  charts['food'] = new Chart(document.getElementById('chart-food'), {
-    type: 'bar',
-    data: {
-      labels: ['Food Qty', 'Food Sales (rb)'],
-      datasets: [{ data: [food, foodSales / 1000], backgroundColor: ['#ff6b6bcc', '#ffd166cc'], borderRadius: 6 }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { x: { grid: { color: '#2a2a3a' } }, y: { grid: { color: '#2a2a3a' } } }
-    }
-  });
-
-  // KPI Produk
-  const kpis = [
-    { label: 'Total Cup Offline', value: fmtNum(totalCup), sub: 'cup terjual', accent: '#7c6fff' },
-    { label: 'Large Cup', value: fmtNum(largeCup), sub: pct(largeCup, totalCup) + '% dari cup', accent: '#7c6fff' },
-    { label: 'Diary Cup', value: fmtNum(diary), sub: pct(diary, totalCup) + '% dari cup', accent: '#00e5a0' },
-    { label: 'Total RTD', value: fmtNum(rtd), sub: 'RTD terjual', accent: '#00e5a0' },
-    { label: 'Food Qty', value: fmtNum(food), sub: 'item food terjual', accent: '#ff6b6b' },
-    { label: 'Food Sales', value: fmt(foodSales), sub: 'revenue food', accent: '#ffd166' },
-    { label: 'Seasonal', value: fmtNum(seasonal), sub: 'seasonal sold', accent: '#ffd166' },
-    { label: 'Merch', value: fmtNum(merch), sub: 'merchandise sold', accent: '#00d26a' },
-    { label: 'Total Produk', value: fmtNum(totalProduk), sub: 'semua produk', accent: '#00e5a0' },
-  ];
-
-  document.getElementById('kpi-produk').innerHTML = kpis.map(k => `
-    <div class="kpi-card" style="--card-accent:${k.accent}">
-      <div class="kpi-label">${k.label}</div>
-      <div class="kpi-value">${k.value}</div>
-      <div class="kpi-sub">${k.sub}</div>
-    </div>
-  `).join('');
-}
-
-// ─── PAGE: TREND ──────────────────────────────────────────
-function renderTrend() {
-  const d = filteredData;
-  if (!d.length) return;
-
-  const labels = d.map(r => fmtDate(r.TANGGAL));
-
-  destroyChart('gmv-trend');
-  charts['gmv-trend'] = new Chart(document.getElementById('chart-gmv-trend'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'GMV', data: d.map(r => r.GMV),
-        borderColor: '#00e5a0', backgroundColor: 'rgba(0,229,160,0.08)',
-        fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 6, borderWidth: 2
-      }]
-    },
-    options: trendOptions('GMV')
-  });
-
-  destroyChart('offline-online-trend');
-  charts['offline-online-trend'] = new Chart(document.getElementById('chart-offline-online-trend'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Offline', data: d.map(r => r['OFFLINE SALES']), borderColor: '#7c6fff', backgroundColor: 'rgba(124,111,255,0.08)', fill: true, tension: 0.4, pointRadius: 2, borderWidth: 2 },
-        { label: 'GoFood', data: d.map(r => r['GOFOOD SALES']), borderColor: '#ff6b6b', backgroundColor: 'transparent', tension: 0.4, pointRadius: 2, borderWidth: 2 },
-        { label: 'GrabFood', data: d.map(r => r['GRABFOOD SALES']), borderColor: '#00d26a', backgroundColor: 'transparent', tension: 0.4, pointRadius: 2, borderWidth: 2 },
-        { label: 'ShopeFood', data: d.map(r => r['SHOPE FOOD SALES']), borderColor: '#ff6600', backgroundColor: 'transparent', tension: 0.4, pointRadius: 2, borderWidth: 2 },
-      ]
-    },
-    options: trendOptions('Sales')
-  });
-
-  destroyChart('cup-trend');
-  charts['cup-trend'] = new Chart(document.getElementById('chart-cup-trend'), {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Total Cup', data: d.map(r => r['TOTAL SOLD CUP OFFLINE']),
-        backgroundColor: 'rgba(124,111,255,0.7)', borderRadius: 4,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: '#2a2a3a' }, ticks: { maxTicksLimit: 12 } },
-        y: { grid: { color: '#2a2a3a' } }
-      }
-    }
-  });
-}
-
-function trendOptions(label) {
+// ═══════════════════════════════════════
+// CHART HELPERS
+// ═══════════════════════════════════════
+function destroyChart(id) { if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+function baseOptions(yFmt='rp') {
   return {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { labels: { font: { size: 11 }, padding: 12 } } },
-    scales: {
-      x: { grid: { color: '#2a2a3a' }, ticks: { maxTicksLimit: 12, font: { size: 10 } } },
-      y: { grid: { color: '#2a2a3a' }, ticks: { callback: v => fmt(v) } }
+    responsive:true, maintainAspectRatio:false,
+    animation:{ duration:700, easing:'easeOutQuart' },
+    plugins:{
+      legend:{ labels:{ color:TC.text2, font:{size:10}, boxWidth:10, boxHeight:10, padding:14, usePointStyle:true } },
+      tooltip:{
+        backgroundColor:'rgba(13,17,23,0.96)', titleColor:TC.text, bodyColor:TC.text2,
+        borderColor:'rgba(0,229,255,0.15)', borderWidth:1, cornerRadius:10, padding:12,
+        titleFont:{ family:"'Syne',sans-serif", weight:'700', size:12 },
+        bodyFont:{ family:"'JetBrains Mono',monospace", size:11 },
+        callbacks:{ label: yFmt==='rp' ? ctx=>' '+ctx.dataset.label+': '+fmtRp(ctx.parsed.y) : ctx=>' '+ctx.dataset.label+': '+fmtNum(ctx.parsed.y) }
+      }
+    },
+    scales:{
+      x:{ grid:{color:TC.grid, drawBorder:false}, ticks:{color:TC.text3, font:{family:"'JetBrains Mono',monospace",size:9}, maxTicksLimit:14}, border:{display:false} },
+      y:{ grid:{color:TC.grid, drawBorder:false}, ticks:{color:TC.text3, font:{family:"'JetBrains Mono',monospace",size:9}, callback: v=>yFmt==='rp'?fmtRp(v):fmtNum(v)}, border:{display:false} }
     }
   };
 }
+function grad(ctx, color, a1=0.3, a2=0) {
+  const {chartArea}=ctx.chart; if(!chartArea) return 'transparent';
+  const g=ctx.chart.ctx.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
+  const hex=color.startsWith('#')?color:'#00e5ff';
+  const r=parseInt(hex.slice(1,3),16), gb=parseInt(hex.slice(3,5),16), b2=parseInt(hex.slice(5,7),16);
+  g.addColorStop(0,`rgba(${r},${gb},${b2},${a1})`);
+  g.addColorStop(1,`rgba(${r},${gb},${b2},${a2})`);
+  return g;
+}
 
-// ─── PAGE: ADT & IPT ──────────────────────────────────────
-function renderADT() {
-  const d = filteredData;
-  if (!d.length) return;
+// ═══════════════════════════════════════
+// DATA LOAD & PARSE
+// ═══════════════════════════════════════
+async function loadData() {
+  document.getElementById('last-updated').textContent = 'LOADING...';
+  try {
+    const res = await fetch(CSV_URL+'&t='+Date.now());
+    const text = await res.text();
+    allData = parseCSV(text);
+    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('id-ID');
+    initDefaults();
+    renderCurrentPage();
+  } catch(e) {
+    document.getElementById('last-updated').textContent = 'ERROR';
+    console.error(e);
+  }
+}
 
-  const avgADTStore = avg(d, 'ADT STORE');
-  const avgADTOffline = avg(d, 'ADT OFFLINE');
-  const avgADTOnline = avg(d, 'ADT ONLINE');
-  const avgADTGofood = avg(d, 'ADT GOFOOD');
-  const avgADTGrab = avg(d, 'ADT GRABFOOD');
-  const avgADTShope = avg(d, 'ADT SHOPEFOOD');
-  const avgIPT = avg(d, 'IPT');
-  const maxIPT = Math.max(...d.map(r => r.IPT));
-  const minIPT = Math.min(...d.filter(r => r.IPT > 0).map(r => r.IPT));
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = parseCSVLine(lines[0]).map(h => h.trim().replace(/^"|"$/g,'').toUpperCase().trim());
+  const rows = [];
+  for(let i=1;i<lines.length;i++) {
+    const vals = parseCSVLine(lines[i]);
+    if(!vals[0]||vals[0].trim()==='') continue;
+    const row = {};
+    headers.forEach((h,idx)=>{ row[h]=(vals[idx]||'').trim().replace(/^"|"$/g,''); });
+    const raw = row['TANGGAL'];
+    let d = null;
+    if(raw) {
+      const parts = raw.split('/');
+      if(parts.length===3) d = new Date(parseInt(parts[2]),parseInt(parts[0])-1,parseInt(parts[1]));
+      else d = new Date(raw);
+    }
+    if(!d||isNaN(d)) continue;
+    row._date = d;
+    row._dateStr = toInputDate(d);
+    const numCols = ['GMV','ADT STORE','AT STORE','OFFLINE SALES','ADT OFFLINE','AT OFFLINE','ONLINE SALES','ADT ONLINE','AT ONLINE','GOFOOD SALES','ADT GOFOOD','AT GOFOOD','GRABFOOD SALES','ADT GRABFOOD','AT GRABFOOD','SHOPE FOOD SALES','ADT SHOPEFOOD','AT SHOPPE','TOTAL SOLD CUP OFFLINE','FOOD SOLD QTY','FOOD SOLD SALES','FOOD OFFLINE','LARGE OFFLINE','DIARY OFFLINE','TOPPING OFFLINE','TOTAL SOLD RTD','RTD OFFLINE','SEASONAL SOLD','TOTAL PRODUK TERJUAL','MERCHENDISE','TANPA MERCHENDISE','IPT'];
+    numCols.forEach(c=>{ row['_n_'+c]=parseNum(row[c]||'0'); });
+    rows.push(row);
+  }
+  return rows.sort((a,b)=>a._date-b._date);
+}
 
-  const kpis = [
-    { label: 'Avg ADT Store', value: fmt(avgADTStore), sub: 'rata-rata harian', accent: '#00e5a0' },
-    { label: 'Avg ADT Offline', value: fmt(avgADTOffline), sub: 'per hari', accent: '#7c6fff' },
-    { label: 'Avg ADT Online', value: fmt(avgADTOnline), sub: 'per hari', accent: '#00e5a0' },
-    { label: 'Avg ADT GoFood', value: fmt(avgADTGofood), sub: 'per hari', accent: '#ff6b6b' },
-    { label: 'Avg ADT Grab', value: fmt(avgADTGrab), sub: 'per hari', accent: '#00d26a' },
-    { label: 'Avg ADT Shope', value: fmt(avgADTShope), sub: 'per hari', accent: '#ff6600' },
-    { label: 'Avg IPT', value: avgIPT.toFixed(2), sub: 'item per transaksi', accent: '#ffd166' },
-    { label: 'Max IPT', value: maxIPT.toFixed(2), sub: 'tertinggi', accent: '#00e5a0' },
-    { label: 'Min IPT', value: minIPT.toFixed(2), sub: 'terendah', accent: '#ff6b6b' },
+function parseCSVLine(line) {
+  const result=[]; let cur='', inQ=false;
+  for(let i=0;i<line.length;i++){
+    if(line[i]==='"'){inQ=!inQ;}
+    else if(line[i]===','&&!inQ){result.push(cur);cur='';}
+    else{cur+=line[i];}
+  }
+  result.push(cur); return result;
+}
+
+// Map row to standard keys
+function mapRow(r) {
+  return {
+    date: r._dateStr,
+    _date: r._date,
+    gmv: r['_n_GMV'],
+    offline: r['_n_OFFLINE SALES'],
+    online: r['_n_ONLINE SALES'],
+    gofood: r['_n_GOFOOD SALES'],
+    grabfood: r['_n_GRABFOOD SALES'],
+    shopee: r['_n_SHOPE FOOD SALES'],
+    adt_store: r['_n_ADT STORE'],
+    adt_offline: r['_n_ADT OFFLINE'],
+    adt_online: r['_n_ADT ONLINE'],
+    adt_gofood: r['_n_ADT GOFOOD'],
+    adt_grabfood: r['_n_ADT GRABFOOD'],
+    adt_shopee: r['_n_ADT SHOPEFOOD'],
+    at_store: r['_n_AT STORE'],
+    at_offline: r['_n_AT OFFLINE'],
+    cup_total: r['_n_TOTAL SOLD CUP OFFLINE'],
+    food_off: r['_n_FOOD OFFLINE'],
+    large_off: r['_n_LARGE OFFLINE'],
+    diary_off: r['_n_DIARY OFFLINE'],
+    topping_off: r['_n_TOPPING OFFLINE'],
+    rtd_off: r['_n_RTD OFFLINE'],
+    seasonal_sold: r['_n_SEASONAL SOLD'],
+    food_qty_all: r['_n_FOOD SOLD QTY'],
+    food_sales: r['_n_FOOD SOLD SALES'],
+    rtd_qty_all: r['_n_TOTAL SOLD RTD'],
+    ipt: r['_n_IPT'],
+    offline_sales: r['_n_OFFLINE SALES'],
+  };
+}
+
+function filterData(startStr, endStr) {
+  const start = new Date(startStr); start.setHours(0,0,0,0);
+  const end = new Date(endStr); end.setHours(23,59,59,999);
+  return allData.filter(r=>r._date>=start&&r._date<=end).map(mapRow);
+}
+
+function aggregateData(rows) {
+  if(!rows.length) return null;
+  const s = k => rows.reduce((a,r)=>a+(r[k]||0),0);
+  const a = k => s(k)/rows.length;
+  return {
+    gmv: s('gmv'), offline: s('offline'), online: s('online'),
+    gofood: s('gofood'), grabfood: s('grabfood'), shopee: s('shopee'),
+    adt_store: s('adt_store'), adt_offline: s('adt_offline'),
+    adt_online: s('adt_online'), adt_gofood: s('adt_gofood'),
+    adt_grabfood: s('adt_grabfood'), adt_shopee: s('adt_shopee'),
+    at_store: s('gmv')/s('adt_store'),
+    at_offline: s('offline_sales')/s('adt_offline'),
+    cup_total: s('cup_total'), food_off: s('food_off'), large_off: s('large_off'),
+    diary_off: s('diary_off'), topping_off: s('topping_off'), rtd_off: s('rtd_off'),
+    seasonal_sold: s('seasonal_sold'), food_qty_all: s('food_qty_all'),
+    food_sales: s('food_sales'), rtd_qty_all: s('rtd_qty_all'),
+    offline_sales: s('offline_sales'),
+    daily: rows,
+  };
+}
+
+// ═══════════════════════════════════════
+// INIT DEFAULTS
+// ═══════════════════════════════════════
+function initDefaults() {
+  if(!allData.length) return;
+  const last = allData[allData.length-1]._dateStr;
+  const now = new Date();
+  const today = toInputDate(now);
+  const yesterday = toInputDate(new Date(now.getFullYear(),now.getMonth(),now.getDate()-1));
+  const monthStart = toInputDate(new Date(now.getFullYear(),now.getMonth(),1));
+  const dow = now.getDay();
+  const diffToMon = dow===0?-6:1-dow;
+  const monW3 = new Date(now); monW3.setDate(now.getDate()+diffToMon);
+  const monW2 = new Date(monW3); monW2.setDate(monW3.getDate()-7);
+  const monW1 = new Date(monW3); monW1.setDate(monW3.getDate()-14);
+  const endW3 = yesterday < monW3 ? monW3 : new Date(now.getFullYear(),now.getMonth(),now.getDate()-1);
+  const endW2 = new Date(endW3); endW2.setDate(endW3.getDate()-7);
+  const endW1 = new Date(endW3); endW1.setDate(endW3.getDate()-14);
+
+  setIfEmpty('kpi-start', monthStart); setIfEmpty('kpi-end', yesterday);
+  setIfEmpty('kpi-days', String(new Date(now.getFullYear(),now.getMonth()+1,0).getDate()));
+  setIfEmpty('kpi-target','700000000');
+  setIfEmpty('ch-start', monthStart); setIfEmpty('ch-end', yesterday);
+  setIfEmpty('range1s',toInputDate(monW1)); setIfEmpty('range1e',toInputDate(endW1));
+  setIfEmpty('range2s',toInputDate(monW2)); setIfEmpty('range2e',toInputDate(endW2));
+  setIfEmpty('range3s',toInputDate(monW3)); setIfEmpty('range3e',yesterday);
+  setIfEmpty('summ-p1s',monthStart); setIfEmpty('summ-p1e',yesterday);
+  setIfEmpty('d2d-start',monthStart); setIfEmpty('d2d-end',yesterday);
+}
+function setIfEmpty(id,val){ const el=document.getElementById(id); if(el&&!el.value) el.value=val; }
+function getVal(id){ return document.getElementById(id)?.value||''; }
+
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
+let currentPage='kpi';
+function showPage(p,btn){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+p)?.classList.add('active');
+  if(btn) btn.classList.add('active');
+  currentPage=p;
+  if(allData.length) renderPage(p);
+}
+function renderCurrentPage(){ renderPage(currentPage); }
+function renderPage(p){
+  if(p==='kpi') calcKpi();
+  else if(p==='channel') applyChannelFilter();
+  else if(p==='period') initPeriodPage();
+  else if(p==='fldt') initFldtPage();
+  else if(p==='allsumm') {}
+  else if(p==='d2d') {}
+}
+
+// ═══════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════
+function updateClock(){ document.getElementById('clock').textContent=new Date().toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'}); }
+updateClock(); setInterval(updateClock,30000);
+
+// ═══════════════════════════════════════
+// PAGE: KPI SUMMARY
+// ═══════════════════════════════════════
+function calcKpi() {
+  const s=getVal('kpi-start'), e=getVal('kpi-end');
+  if(!s||!e||!allData.length) return;
+  const rows=filterData(s,e); if(!rows.length) return;
+  const target=parseNum(getVal('kpi-target')||'0');
+  const totalDays=parseInt(getVal('kpi-days'))||30;
+  const data=aggregateData(rows);
+  const elapsed=rows.length;
+  const dailyTarget=target/totalDays;
+  const avgDaily=data.gmv/elapsed;
+  const remaining=Math.max(0,totalDays-elapsed);
+  const forecastEom=data.gmv+avgDaily*remaining;
+  const achPct=target?pct(data.gmv,target):0;
+  const idealPct=pct(elapsed,totalDays)*100;
+  const vsIdeal=achPct-idealPct;
+  const ma7=computeMA(rows,'gmv',7);
+  const total=data.offline+data.gofood+data.grabfood+data.shopee||1;
+  const contrib={offline:pct(data.offline,total),gofood:pct(data.gofood,total),grabfood:pct(data.grabfood,total),shopee:pct(data.shopee,total),online:pct(data.online,data.gmv)};
+
+  // KPI Cards
+  const kpis=[
+    {l:'Target GMV',v:fmtRp(target),s:'',c:'var(--accent)'},
+    {l:'Current GMV',v:fmtRp(data.gmv),s:elapsed+' hari data',c:'var(--gmv)'},
+    {l:'Gap to Target',v:fmtRp(Math.abs(target-data.gmv)),s:target-data.gmv<=0?'✓ Tercapai':'Kurang',c:target-data.gmv<=0?'var(--accent2)':'var(--accent3)'},
+    {l:'Achievement',v:fmtPct(achPct),s:'dari target',c:achPct>=100?'var(--accent2)':achPct>=80?'var(--amber)':'var(--accent3)'},
+    {l:'Ideal Achievement',v:fmtPct(idealPct),s:elapsed+'/'+totalDays+' hari',c:'var(--accent)'},
+    {l:'vs Ideal',v:(vsIdeal>=0?'+':'')+fmtPct(vsIdeal),s:vsIdeal>=0?'Ahead':'Behind',c:vsIdeal>=0?'var(--accent2)':'var(--accent3)'},
+    {l:'Daily Target',v:fmtRp(dailyTarget),s:'per hari',c:'var(--amber)'},
+    {l:'Avg Daily GMV',v:fmtRp(avgDaily),s:'aktual',c:'var(--offline)'},
+    {l:'Forecast EOM',v:fmtRp(forecastEom),s:(forecastEom>=target?'✓':'⚠')+' '+fmtRp(forecastEom-target)+' vs target',c:forecastEom>=target?'var(--accent2)':'var(--accent3)'},
+    {l:'Pace vs Target',v:fmtPct(target?pct(avgDaily,dailyTarget):0),s:'kecepatan saat ini',c:'var(--purple)'},
+    {l:'Total Transaksi',v:fmtNum(sum(rows,'adt_store')),s:'all transactions',c:'var(--online)'},
+    {l:'Avg IPT',v:avg(rows,'ipt').toFixed(2),s:'item per transaksi',c:'var(--amber)'},
   ];
+  document.getElementById('kpi-cards').innerHTML=kpis.map(k=>`
+    <div class="kpi-card" style="--kpi-color:${k.c}">
+      <div class="kpi-lbl">${k.l}</div>
+      <div class="kpi-val" style="color:${k.c}">${k.v}</div>
+      ${k.s?`<div class="kpi-sub">${k.s}</div>`:''}
+    </div>`).join('');
 
-  document.getElementById('kpi-adt').innerHTML = kpis.map(k => `
-    <div class="kpi-card" style="--card-accent:${k.accent}">
-      <div class="kpi-label">${k.label}</div>
-      <div class="kpi-value">${k.value}</div>
-      <div class="kpi-sub">${k.sub}</div>
+  // Gauge
+  buildGauge(achPct);
+
+  // Contrib
+  const contribItems=[
+    {name:'GoFood',val:contrib.gofood,color:TC.gofood},
+    {name:'Offline',val:contrib.offline,color:TC.offline},
+    {name:'GrabFood',val:contrib.grabfood,color:TC.grabfood},
+    {name:'Shopee',val:contrib.shopee,color:TC.shopee},
+    {name:'Online',val:contrib.online,color:TC.online},
+  ].sort((a,b)=>b.val-a.val);
+  document.getElementById('kpi-contrib').innerHTML=contribItems.map(c=>`
+    <div class="chan-item">
+      <div class="chan-name">${c.name}</div>
+      <div class="chan-track"><div class="chan-fill" style="width:${Math.min(c.val,100)}%;background:${c.color};"></div></div>
+      <div class="chan-pct">${fmtPct(c.val)}</div>
+    </div>`).join('');
+
+  // Pace info
+  const pacePct=target?pct(avgDaily,dailyTarget):0;
+  const paceColor=pacePct>=100?'var(--accent2)':pacePct>=80?'var(--amber)':'var(--accent3)';
+  document.getElementById('pace-info').innerHTML=`
+    <div style="margin-bottom:16px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:700;color:${paceColor};margin-bottom:4px;">${fmtPct(pacePct)}</div>
+      <div style="font-size:11px;color:var(--text3);">Pace vs Daily Target</div>
+      <div class="pace-bar-wrap" style="margin-top:12px;"><div class="pace-bg"><div class="pace-fill" style="width:${Math.min(pacePct,100)}%;background:${paceColor};box-shadow:0 0 8px ${paceColor};"></div></div></div>
     </div>
-  `).join('');
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      ${[
+        {l:'Daily Target',v:fmtRp(dailyTarget)},
+        {l:'Avg Daily',v:fmtRp(avgDaily)},
+        {l:'Sisa Hari',v:remaining+' hari'},
+        {l:'Forecast EOM',v:fmtRp(forecastEom)},
+      ].map(x=>`<div style="background:var(--bg3);border-radius:8px;padding:10px 12px;"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">${x.l}</div><div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--text);">${x.v}</div></div>`).join('')}
+    </div>`;
 
-  const labels = d.map(r => fmtDate(r.TANGGAL));
+  // Trend chart
+  buildKpiTrend(rows, ma7);
+  // Stacked chart
+  buildKpiStacked(rows);
+}
 
-  destroyChart('adt-trend');
-  charts['adt-trend'] = new Chart(document.getElementById('chart-adt-trend'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'ADT Store', data: d.map(r => r['ADT STORE']),
-        borderColor: '#00e5a0', backgroundColor: 'rgba(0,229,160,0.08)',
-        fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2
-      }]
-    },
-    options: trendOptions('ADT')
-  });
-
-  destroyChart('ipt-trend');
-  charts['ipt-trend'] = new Chart(document.getElementById('chart-ipt-trend'), {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'IPT', data: d.map(r => r.IPT),
-        borderColor: '#ffd166', backgroundColor: 'rgba(255,209,102,0.08)',
-        fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: '#2a2a3a' }, ticks: { maxTicksLimit: 12, font: { size: 10 } } },
-        y: { grid: { color: '#2a2a3a' }, ticks: { callback: v => v.toFixed(2) } }
-      }
-    }
-  });
-
-  destroyChart('adt-compare');
-  charts['adt-compare'] = new Chart(document.getElementById('chart-adt-compare'), {
-    type: 'bar',
-    data: {
-      labels: ['Store', 'Offline', 'Online', 'GoFood', 'GrabFood', 'ShopeFood'],
-      datasets: [{
-        label: 'Avg ADT',
-        data: [avgADTStore, avgADTOffline, avgADTOnline, avgADTGofood, avgADTGrab, avgADTShope],
-        backgroundColor: ['#00e5a0cc','#7c6fffcc','#00e5a0cc','#ff6b6bcc','#00d26acc','#ff6600cc'],
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: '#2a2a3a' } },
-        y: { grid: { color: '#2a2a3a' }, ticks: { callback: v => fmt(v) } }
-      }
-    }
+function computeMA(rows, key, w) {
+  return rows.map((d,i)=>{
+    const sl=rows.slice(Math.max(0,i-w+1),i+1);
+    return {date:d.date, value:sl.reduce((a,r)=>a+(r[key]||0),0)/sl.length};
   });
 }
 
-// ─── INIT ─────────────────────────────────────────────────
+function buildGauge(pct2) {
+  destroyChart('gauge');
+  const clamped=Math.min(pct2,100);
+  const color=pct2>=100?TC.accent2:pct2>=80?TC.amber:'#ff4d6d';
+  charts.gauge=new Chart(document.getElementById('gaugeChart'),{
+    type:'doughnut',
+    data:{datasets:[{data:[clamped,100-clamped],backgroundColor:[color,'rgba(255,255,255,0.04)'],borderWidth:0,circumference:220,rotation:-110}]},
+    options:{responsive:true,cutout:'80%',animation:{duration:900,easing:'easeInOutQuart'},plugins:{legend:{display:false},tooltip:{enabled:false}}}
+  });
+  document.getElementById('gauge-pct').textContent=fmtPct(pct2);
+  document.getElementById('gauge-pct').style.color=color;
+}
+
+function buildKpiTrend(rows, ma7) {
+  destroyChart('kpiTrend');
+  const labels=rows.map(r=>fmtShortDate(r.date));
+  charts.kpiTrend=new Chart(document.getElementById('kpi-trend-chart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Daily GMV',data:rows.map(r=>r.gmv),borderColor:TC.gmv,backgroundColor:ctx=>grad(ctx,'#f472b6',0.25),fill:true,tension:.4,pointRadius:3,pointHoverRadius:6,pointBackgroundColor:TC.gmv,pointBorderColor:TC.bg2,pointBorderWidth:2,borderWidth:2,cubicInterpolationMode:'monotone'},
+      {label:'7D MA',data:ma7.map(m=>m.value),borderColor:TC.amber,backgroundColor:'transparent',fill:false,tension:.4,borderDash:[6,4],pointRadius:0,borderWidth:2}
+    ]},
+    options:{...baseOptions(),interaction:{mode:'index',intersect:false}}
+  });
+}
+
+function buildKpiStacked(rows) {
+  destroyChart('kpiStacked');
+  const labels=rows.map(r=>fmtShortDate(r.date));
+  const mk=(label,key,color)=>({label,data:rows.map(r=>r[key]||0),backgroundColor:color+'bb',borderRadius:{topLeft:3,topRight:3},borderSkipped:false,barPercentage:.8,categoryPercentage:.9});
+  charts.kpiStacked=new Chart(document.getElementById('kpi-stacked-chart'),{
+    type:'bar',
+    data:{labels,datasets:[mk('Offline','offline',TC.offline),mk('GoFood','gofood',TC.gofood),mk('GrabFood','grabfood',TC.grabfood),mk('Shopee','shopee',TC.shopee)]},
+    options:{...baseOptions(),interaction:{mode:'index',intersect:false},scales:{...baseOptions().scales,x:{...baseOptions().scales.x,stacked:true},y:{...baseOptions().scales.y,stacked:true}}}
+  });
+}
+
+// ═══════════════════════════════════════
+// PAGE: CHANNEL
+// ═══════════════════════════════════════
+let _chRows=[];
+function applyChannelFilter() {
+  const s=getVal('ch-start'), e=getVal('ch-end');
+  if(!s||!e||!allData.length) return;
+  _chRows=filterData(s,e); if(!_chRows.length) return;
+  const d=aggregateData(_chRows);
+  const total=d.offline+d.gofood+d.grabfood+d.shopee||1;
+
+  // KPI
+  const kpis=[
+    {l:'Total GMV',v:fmtRp(d.gmv),c:'var(--gmv)'},{l:'Offline Sales',v:fmtRp(d.offline),c:'var(--offline)'},{l:'GoFood',v:fmtRp(d.gofood),c:'var(--gofood)'},
+    {l:'GrabFood',v:fmtRp(d.grabfood),c:'var(--grabfood)'},{l:'Shopee',v:fmtRp(d.shopee),c:'var(--shopee)'},{l:'Online (Total)',v:fmtRp(d.online),c:'var(--online)'},
+    {l:'ADT Store',v:fmtRp(d.adt_store),c:'var(--amber)'},{l:'AT Offline',v:fmtRp(d.at_offline),c:'var(--blue)'},{l:'Total Hari',v:_chRows.length,c:'var(--text2)'},
+  ];
+  document.getElementById('ch-kpi-cards').innerHTML=kpis.map(k=>`<div class="kpi-card" style="--kpi-color:${k.c}"><div class="kpi-lbl">${k.l}</div><div class="kpi-val" style="color:${k.c}">${k.v}</div></div>`).join('');
+
+  const channels=[{name:'Offline',val:d.offline,color:TC.offline},{name:'GoFood',val:d.gofood,color:TC.gofood},{name:'GrabFood',val:d.grabfood,color:TC.grabfood},{name:'Shopee',val:d.shopee,color:TC.shopee}];
+
+  // Pie
+  destroyChart('chPie');
+  charts.chPie=new Chart(document.getElementById('ch-pie-chart'),{
+    type:'doughnut',
+    data:{labels:channels.map(c=>c.name),datasets:[{data:channels.map(c=>c.val),backgroundColor:channels.map(c=>c.color+'cc'),borderWidth:0,hoverOffset:8}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',animation:{duration:700},plugins:{legend:{position:'right',labels:{color:TC.text2,font:{size:11},padding:14,usePointStyle:true}},tooltip:{backgroundColor:'rgba(13,17,23,.96)',titleColor:TC.text,bodyColor:TC.text2,borderColor:'rgba(0,229,255,.15)',borderWidth:1,cornerRadius:10,padding:12,callbacks:{label:ctx=>' '+ctx.label+': '+fmtRp(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,total))+')'}}}}
+  });
+
+  // Bar
+  destroyChart('chBar');
+  charts.chBar=new Chart(document.getElementById('ch-bar-chart'),{
+    type:'bar',
+    data:{labels:channels.map(c=>c.name),datasets:[{label:'Sales',data:channels.map(c=>c.val),backgroundColor:channels.map(c=>c.color+'cc'),borderRadius:{topLeft:6,topRight:6},borderSkipped:false}]},
+    options:{...baseOptions(),plugins:{...baseOptions().plugins,legend:{display:false}}}
+  });
+
+  // Breakdown list
+  const maxV=Math.max(...channels.map(c=>c.val),1);
+  document.getElementById('ch-breakdown-list').innerHTML=`<div style="display:flex;flex-direction:column;gap:12px;">`+channels.map(c=>`
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div style="width:10px;height:10px;border-radius:50%;background:${c.color};box-shadow:0 0 8px ${c.color};flex-shrink:0;"></div>
+      <div style="min-width:80px;font-size:12px;font-weight:600;color:var(--text);">${c.name}</div>
+      <div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${pct(c.val,maxV)}%;background:${c.color};border-radius:4px;transition:width .8s ease;"></div></div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);min-width:80px;text-align:right;">${fmtRp(c.val)}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);min-width:44px;text-align:right;">${fmtPct(pct(c.val,total))}</div>
+    </div>`).join('')+`</div>`;
+
+  // ADT chart
+  const adtData=[{n:'Store',v:d.adt_store,c:TC.accent},{n:'Offline',v:d.adt_offline,c:TC.offline},{n:'Online',v:d.adt_online,c:TC.online},{n:'GoFood',v:d.adt_gofood,c:TC.gofood},{n:'GrabFood',v:d.adt_grabfood,c:TC.grabfood},{n:'Shopee',v:d.adt_shopee,c:TC.shopee}];
+  destroyChart('chAdt');
+  charts.chAdt=new Chart(document.getElementById('ch-adt-chart'),{
+    type:'bar',
+    data:{labels:adtData.map(c=>c.n),datasets:[{label:'Avg ADT',data:adtData.map(c=>c.v),backgroundColor:adtData.map(c=>c.c+'cc'),borderRadius:{topLeft:6,topRight:6},borderSkipped:false}]},
+    options:{...baseOptions(),plugins:{...baseOptions().plugins,legend:{display:false}}}
+  });
+
+  buildChTrend();
+}
+function resetChannelFilter() {
+  const now=new Date();
+  document.getElementById('ch-start').value=toInputDate(new Date(now.getFullYear(),now.getMonth(),1));
+  document.getElementById('ch-end').value=toInputDate(new Date(now.getFullYear(),now.getMonth(),now.getDate()-1));
+  applyChannelFilter();
+}
+let _chTrendKey='offline';
+function setChTrend(key,btn) {
+  _chTrendKey=key;
+  document.querySelectorAll('#ch-tabs .chan-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  buildChTrend();
+}
+function buildChTrend() {
+  if(!_chRows.length) return;
+  destroyChart('chTrend');
+  const colorMap={offline:TC.offline,gofood:TC.gofood,grabfood:TC.grabfood,shopee:TC.shopee};
+  const color=colorMap[_chTrendKey]||TC.accent;
+  charts.chTrend=new Chart(document.getElementById('ch-trend-chart'),{
+    type:'line',
+    data:{labels:_chRows.map(r=>fmtShortDate(r.date)),datasets:[{label:_chTrendKey,data:_chRows.map(r=>r[_chTrendKey]||0),borderColor:color,backgroundColor:ctx=>grad(ctx,color,0.2),fill:true,tension:.4,pointRadius:3,borderWidth:2,cubicInterpolationMode:'monotone'}]},
+    options:{...baseOptions(),plugins:{...baseOptions().plugins,legend:{display:false}}}
+  });
+}
+
+// ═══════════════════════════════════════
+// PAGE: PERIOD COMPARISON
+// ═══════════════════════════════════════
+function setPeriodMode(m) {
+  _periodMode=m;
+  document.getElementById('weekly-mode').style.display=m==='weekly'?'':'none';
+  document.getElementById('custom-mode').style.display=m==='custom'?'':'none';
+  document.getElementById('mode-weekly').classList.toggle('active',m==='weekly');
+  document.getElementById('mode-custom').classList.toggle('active',m==='custom');
+}
+function initPeriodPage() {
+  if(periodData[1]&&periodData[2]&&periodData[3]) buildWeeklySummary();
+  else { loadPeriod(1); loadPeriod(2); loadPeriod(3); }
+}
+function loadPeriod(n) {
+  const s=getVal('range'+n+'s'), e=getVal('range'+n+'e');
+  if(!s||!e||!allData.length) return;
+  const rows=filterData(s,e); if(!rows.length) return;
+  periodData[n]=aggregateData(rows);
+  drawPeriodChart(n, periodData[n], 'period-chart-'+n, 'period-stats-'+n);
+  if(periodData[1]&&periodData[2]&&periodData[3]) buildWeeklySummary();
+}
+function drawPeriodChart(n, data, canvasId, statsId) {
+  destroyChart('period'+n);
+  const colors=[TC.offline,TC.gofood,TC.grabfood,TC.shopee,TC.online];
+  const keys=['offline','gofood','grabfood','shopee','online'];
+  const labels=['Offline','GoFood','GrabFood','Shopee','Online'];
+  charts['period'+n]=new Chart(document.getElementById(canvasId),{
+    type:'bar',
+    data:{labels:['GMV',...labels],datasets:[{label:'Sales',data:[data.gmv,...keys.map(k=>data[k]||0)],backgroundColor:[TC.gmv+'cc',...colors.map(c=>c+'cc')],borderRadius:{topLeft:6,topRight:6},borderSkipped:false}]},
+    options:{...baseOptions(),plugins:{...baseOptions().plugins,legend:{display:false}}}
+  });
+  const gmv=data.gmv||1;
+  if(statsId) document.getElementById(statsId).innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:4px;margin-top:10px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;padding:5px 8px;background:var(--bg3);border-radius:6px;"><span style="color:var(--text3)">GMV</span><span class="td-mono td-accent">${fmtRp(data.gmv)}</span></div>
+      ${keys.map((k,i)=>`<div style="display:flex;justify-content:space-between;font-size:10px;padding:4px 8px;border-radius:6px;"><span style="color:${colors[i]}">${labels[i]}</span><span class="td-mono" style="color:var(--text2)">${fmtRp(data[k])} <span style="color:var(--text3)">(${fmtPct(pct(data[k]||0,gmv))})</span></span></div>`).join('')}
+    </div>`;
+}
+
+function buildWeeklySummary() {
+  document.getElementById('weekly-summary').style.display='';
+  buildWeeklyTrend();
+  buildWeeklyMiniCompare('compare-w32',periodData[3],periodData[2],'Minggu Ini','1 Mgg Lalu');
+  buildWeeklyMiniCompare('compare-w31',periodData[3],periodData[1],'Minggu Ini','2 Mgg Lalu');
+  buildCagrTable();
+}
+function setWeeklyChan(k,btn) {
+  _weeklyChan=k;
+  document.querySelectorAll('#weekly-chan-tabs .chan-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  buildWeeklyTrend();
+}
+function buildWeeklyTrend() {
+  const [p1,p2,p3]=[periodData[1],periodData[2],periodData[3]];
+  if(!p1||!p2||!p3) return;
+  destroyChart('weeklyTrend');
+  const k=_weeklyChan;
+  const colorMap={gmv:TC.gmv,offline:TC.offline,online:TC.online,gofood:TC.gofood,grabfood:TC.grabfood,shopee:TC.shopee};
+  const c3=colorMap[k]||TC.accent;
+  const maxLen=Math.max(p1.daily.length,p2.daily.length,p3.daily.length);
+  const labels=Array.from({length:maxLen},(_,i)=>{ const s=p1.daily[i]||p2.daily[i]||p3.daily[i]; return s?HARI[new Date(s.date).getDay()]:'-'; });
+  const fmtR=d=>{if(!d||!d.length)return'';const f=fmtShortDate(d[0].date),l=fmtShortDate(d[d.length-1].date);return f===l?f:f+'–'+l;};
+  charts.weeklyTrend=new Chart(document.getElementById('weekly-trend-chart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:fmtR(p1.daily)||'W1',data:p1.daily.map(r=>r[k]||0),borderColor:'rgba(255,255,255,.3)',backgroundColor:ctx=>grad(ctx,'#888888',.06),fill:true,tension:.4,borderDash:[4,3],pointRadius:2,borderWidth:1.5,cubicInterpolationMode:'monotone'},
+      {label:fmtR(p2.daily)||'W2',data:p2.daily.map(r=>r[k]||0),borderColor:TC.amber,backgroundColor:ctx=>grad(ctx,'#ffc233',.1),fill:true,tension:.4,pointRadius:3,borderWidth:2,cubicInterpolationMode:'monotone'},
+      {label:fmtR(p3.daily)||'W3',data:p3.daily.map(r=>r[k]||0),borderColor:c3,backgroundColor:ctx=>grad(ctx,c3,.18),fill:true,tension:.4,pointRadius:4,borderWidth:2.5,cubicInterpolationMode:'monotone',pointBackgroundColor:c3,pointBorderColor:TC.bg2,pointBorderWidth:2}
+    ]},
+    options:{...baseOptions(),interaction:{mode:'index',intersect:false}}
+  });
+}
+function buildWeeklyMiniCompare(id,curr,ref,lc,lr) {
+  if(!curr||!ref) return;
+  const keys=['gmv','offline','online','grabfood','gofood','shopee'];
+  const names=['GMV','Offline','Online','GrabFood','GoFood','Shopee'];
+  const rows=keys.map((k,i)=>{
+    const v1=ref[k]||0,v2=curr[k]||0,diff=v2-v1,base=v1||1,p2=Math.abs(diff/base*100).toFixed(1),up=diff>=0;
+    return `<tr class="${i===0?'cmp-total':''}"><td class="mc-chan">${names[i]}</td><td class="td-mono">${fmtRp(v1)}</td><td class="td-mono">${fmtRp(v2)}</td><td><span class="inline-arr ${up?'arr-up':'arr-dn'}">${up?'↑':'↓'} ${p2}%</span></td></tr>`;
+  }).join('');
+  document.getElementById(id).innerHTML=`<table class="mini-compare" style="width:100%;"><thead><tr><th>Channel</th><th>${lr}</th><th>${lc}</th><th>Δ</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function buildCagrTable() {
+  const [p1,p2,p3]=[periodData[1],periodData[2],periodData[3]];
+  if(!p1||!p2||!p3) return;
+  const keys=['gmv','offline','online','grabfood','gofood','shopee'];
+  const names=['GMV','Offline','Online','GrabFood','GoFood','Shopee'];
+  const cagr=(a,b,n)=>(!a||a<=0||!b||b<=0)?null:(Math.pow(b/a,1/n)-1)*100;
+  const rows=keys.map((k,i)=>{
+    const [w1,w2,w3]=[p1[k]||0,p2[k]||0,p3[k]||0];
+    const w12=safePct(w2,w1),w23=safePct(w3,w2),c=cagr(w1,w3,2);
+    const arr=v=>{const up=v>=0;return `<span class="inline-arr ${up?'arr-up':'arr-dn'}">${up?'↑':'↓'} ${Math.abs(v).toFixed(1)}%</span>`;};
+    return `<tr class="${i===0?'cmp-total':''}"><td class="mc-chan">${names[i]}</td><td class="td-mono">${fmtRp(w1)}</td><td class="td-mono">${fmtRp(w2)}</td><td class="td-mono">${fmtRp(w3)}</td><td>${arr(w12)}</td><td>${arr(w23)}</td><td>${c!==null?arr(c):'—'}</td></tr>`;
+  }).join('');
+  document.getElementById('cagr-table').innerHTML=`<table class="mini-compare" style="width:100%;"><thead><tr><th>Channel</th><th>W1</th><th>W2</th><th>W3</th><th>W1→W2</th><th>W2→W3</th><th>CAGR/Wk</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// Custom period
+function loadCustomPeriod(n) {
+  const s=getVal('crange'+n+'s'), e=getVal('crange'+n+'e');
+  if(!s||!e||!allData.length) return;
+  const rows=filterData(s,e); if(!rows.length) return;
+  customPeriodData[n]=aggregateData(rows);
+  drawPeriodChart(n, customPeriodData[n], 'custom-chart-'+n, 'custom-stats-'+n);
+  if(customPeriodData[1]&&customPeriodData[2]) buildCustomCompare();
+}
+let _customChanKey='gmv';
+function setCustomChan(k,btn) {
+  _customChanKey=k;
+  document.querySelectorAll('#custom-chan-tabs .chan-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  buildCustomDailyChart();
+}
+function buildCustomCompare() {
+  const [p1,p2]=[customPeriodData[1],customPeriodData[2]]; if(!p1||!p2) return;
+  const keys=['offline','online','gofood','grabfood','shopee'];
+  const labels=['Offline','Online','GoFood','GrabFood','Shopee'];
+  const colors=[TC.offline,TC.online,TC.gofood,TC.grabfood,TC.shopee];
+  destroyChart('custCompare');
+  charts.custCompare=new Chart(document.getElementById('custom-compare-chart'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Periode 1',data:keys.map(k=>p1[k]||0),backgroundColor:'rgba(255,255,255,.12)',borderRadius:{topLeft:6,topRight:6},borderSkipped:false},
+      {label:'Periode 2',data:keys.map(k=>p2[k]||0),backgroundColor:colors.map(c=>c+'cc'),borderRadius:{topLeft:6,topRight:6},borderSkipped:false}
+    ]},
+    options:{...baseOptions(),interaction:{mode:'index',intersect:false}}
+  });
+  const rows=['gmv','offline','online','gofood','grabfood','shopee'].map((k,i)=>{
+    const v1=p1[k]||0,v2=p2[k]||0,diff=v2-v1,up=diff>=0,p2pct=safePct(v2,v1);
+    return `<tr><td class="mc-chan">${['GMV','Offline','Online','GoFood','GrabFood','Shopee'][i]}</td><td class="td-mono">${fmtRp(v1)}</td><td class="td-mono">${fmtRp(v2)}</td><td><span class="inline-arr ${up?'arr-up':'arr-dn'}">${up?'↑':'↓'} ${Math.abs(p2pct).toFixed(1)}%</span></td></tr>`;
+  }).join('');
+  document.getElementById('custom-compare-desc').innerHTML=`<table class="mini-compare" style="width:100%;"><thead><tr><th>Channel</th><th>P1</th><th>P2</th><th>Δ</th></tr></thead><tbody>${rows}</tbody></table>`;
+  buildCustomDailyChart();
+}
+function buildCustomDailyChart() {
+  const [p1,p2]=[customPeriodData[1],customPeriodData[2]]; if(!p1||!p2) return;
+  destroyChart('custDaily');
+  const k=_customChanKey;
+  const maxLen=Math.max(p1.daily.length,p2.daily.length);
+  const labels=Array.from({length:maxLen},(_,i)=>{ const s=p1.daily[i]||p2.daily[i]; return s?HARI[new Date(s.date).getDay()]:'-'; });
+  charts.custDaily=new Chart(document.getElementById('custom-daily-chart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'Periode 1',data:p1.daily.map(r=>r[k]||0),borderColor:'rgba(255,255,255,.35)',backgroundColor:ctx=>grad(ctx,'#888888',.08),fill:true,tension:.4,pointRadius:3,borderDash:[4,3],borderWidth:1.5,cubicInterpolationMode:'monotone'},
+      {label:'Periode 2',data:p2.daily.map(r=>r[k]||0),borderColor:TC.accent,backgroundColor:ctx=>grad(ctx,'#00e5ff',.15),fill:true,tension:.4,pointRadius:4,borderWidth:2.5,cubicInterpolationMode:'monotone',pointBackgroundColor:TC.accent,pointBorderColor:TC.bg2,pointBorderWidth:2}
+    ]},
+    options:{...baseOptions(),interaction:{mode:'index',intersect:false}}
+  });
+}
+
+// ═══════════════════════════════════════
+// PAGE: FLDT
+// ═══════════════════════════════════════
+const FLDT_META=[
+  {key:'food_off',label:'Food',icon:'🍱',color:'#00ff9d'},
+  {key:'large_off',label:'Large',icon:'☕',color:'#60a5fa'},
+  {key:'diary_off',label:'Diary',icon:'📖',color:'#a78bfa'},
+  {key:'topping_off',label:'Topping',icon:'🍡',color:'#ffc233'},
+  {key:'rtd_off',label:'RTD',icon:'🥤',color:'#2dd4bf'},
+  {key:'seasonal_sold',label:'Seasonal',icon:'🌸',color:'#f472b6'},
+];
+function setFldtMode(m) {
+  _fldtMode=m;
+  document.getElementById('fldt-weekly').style.display=m==='weekly'?'':'none';
+  document.getElementById('fldt-custom').style.display=m==='custom'?'':'none';
+  document.getElementById('fldt-mode-weekly').classList.toggle('active',m==='weekly');
+  document.getElementById('fldt-mode-custom').classList.toggle('active',m==='custom');
+}
+function initFldtPage() {
+  const w=document.getElementById('range1s');
+  if(!w||!w.value||!allData.length) return;
+  if(!fldtData[1]||!fldtData[2]||!fldtData[3]) {
+    fldtData[1]=aggregateData(filterData(getVal('range1s'),getVal('range1e')));
+    fldtData[2]=aggregateData(filterData(getVal('range2s'),getVal('range2e')));
+    fldtData[3]=aggregateData(filterData(getVal('range3s'),getVal('range3e')));
+    if(fldtData[1]&&fldtData[2]&&fldtData[3]) renderFldtWeekly();
+  }
+}
+function renderFldtWeekly() {
+  const [p1,p2,p3]=[fldtData[1],fldtData[2],fldtData[3]];
+  if(!p1||!p2||!p3) return;
+  const fmtR=d=>{if(!d||!d.length)return'';const f=fmtShortDate(d[0].date),l=fmtShortDate(d[d.length-1].date);return f===l?f:f+'–'+l;};
+  const labels=[fmtR(p1.daily)||'W1',fmtR(p2.daily)||'W2',fmtR(p3.daily)||'W3'];
+  const maxAll=Math.max(...FLDT_META.map(m=>Math.max(p1[m.key]||0,p2[m.key]||0,p3[m.key]||0)),1);
+
+  // Category cards
+  document.getElementById('fldt-cat-cards').innerHTML=FLDT_META.map((m,mi)=>{
+    const [v1,v2,v3]=[p1[m.key]||0,p2[m.key]||0,p3[m.key]||0];
+    const wow=v2>0?safePct(v3,v2):0;
+    const up=wow>=0;
+    const pctDen=m.key==='food_off'?(p3.adt_offline||1):(p3.cup_total||1);
+    const pct3=(v3/pctDen*100).toFixed(1);
+    const bw1=(v1/maxAll*100).toFixed(1),bw2=(v2/maxAll*100).toFixed(1),bw3=(v3/maxAll*100).toFixed(1);
+    return `<div class="fldt-card" style="--fc-color:${m.color}">
+      <div class="fldt-icon">${m.icon}</div>
+      <div class="fldt-title">${m.label}</div>
+      <div class="fldt-val">${fmtNum(v3)}</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">${pct3}% · <span class="${up?'arr-up':'arr-dn'}">${up?'↑':'↓'}${Math.abs(wow).toFixed(1)}% WoW</span></div>
+      <div class="fldt-weeks">
+        ${[{l:'W1',v:v1,w:bw1,bg:'rgba(255,255,255,.12)'},{l:'W2',v:v2,w:bw2,bg:'rgba(255,255,255,.2)'},{l:'W3',v:v3,w:bw3,bg:m.color}].map(wk=>`
+          <div class="fldt-week-row">
+            <span class="fldt-week-lbl" style="color:${wk.l==='W3'?m.color:'var(--text3)'}">${wk.l}</span>
+            <div class="fldt-week-bar-wrap"><div class="fldt-week-bar" style="width:${wk.w}%;background:${wk.bg};"><span class="fldt-week-num" style="color:${wk.l==='W3'?'rgba(0,0,0,.8)':'var(--text2)'};">${fmtNum(wk.v)}</span></div></div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  buildFldtLineChart();
+  buildFldtGroupBar(p1,p2,p3,labels);
+  buildFldtDoughnut('fldt-doughnut',p3);
+  buildFldtMainTable([p1,p2,p3],labels);
+}
+
+function setFldtChan(k,btn) {
+  _fldtChan=k;
+  document.querySelectorAll('#fldt-chan-tabs .chan-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  buildFldtLineChart();
+}
+function buildFldtLineChart() {
+  const [p1,p2,p3]=[fldtData[1],fldtData[2],fldtData[3]]; if(!p1||!p2||!p3) return;
+  destroyChart('fldtLine');
+  const k=_fldtChan, isSales=k==='offline_sales'||k==='food_sales';
+  const maxLen=Math.max(p1.daily.length,p2.daily.length,p3.daily.length);
+  const labels=Array.from({length:maxLen},(_,i)=>{ const s=p1.daily[i]||p2.daily[i]||p3.daily[i]; return s?HARI[new Date(s.date).getDay()]:'-'; });
+  const fmtR=d=>{if(!d||!d.length)return'';const f=fmtShortDate(d[0].date),l=fmtShortDate(d[d.length-1].date);return f===l?f:f+'–'+l;};
+  charts.fldtLine=new Chart(document.getElementById('fldt-line-chart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:fmtR(p1.daily)||'W1',data:p1.daily.map(r=>r[k]||0),borderColor:'rgba(255,255,255,.25)',backgroundColor:ctx=>grad(ctx,'#888888',.06),fill:true,tension:.4,borderDash:[4,3],pointRadius:2,borderWidth:1.5,cubicInterpolationMode:'monotone'},
+      {label:fmtR(p2.daily)||'W2',data:p2.daily.map(r=>r[k]||0),borderColor:TC.amber,backgroundColor:ctx=>grad(ctx,'#ffc233',.1),fill:true,tension:.4,pointRadius:3,borderWidth:2,cubicInterpolationMode:'monotone'},
+      {label:fmtR(p3.daily)||'W3',data:p3.daily.map(r=>r[k]||0),borderColor:TC.accent2,backgroundColor:ctx=>grad(ctx,'#00ff9d',.16),fill:true,tension:.4,pointRadius:4,borderWidth:2.5,cubicInterpolationMode:'monotone',pointBackgroundColor:TC.accent2,pointBorderColor:TC.bg2,pointBorderWidth:2}
+    ]},
+    options:{...baseOptions(isSales?'rp':'num'),interaction:{mode:'index',intersect:false}}
+  });
+}
+function buildFldtGroupBar(p1,p2,p3,labels) {
+  destroyChart('fldtGroupBar');
+  charts.fldtGroupBar=new Chart(document.getElementById('fldt-group-bar'),{
+    type:'bar',
+    data:{labels:FLDT_LABELS,datasets:[
+      {label:labels[0],data:FLDT_KEYS.map(k=>p1[k]||0),backgroundColor:'rgba(255,255,255,.1)',borderRadius:{topLeft:4,topRight:4},borderSkipped:false},
+      {label:labels[1],data:FLDT_KEYS.map(k=>p2[k]||0),backgroundColor:TC.amber+'88',borderRadius:{topLeft:4,topRight:4},borderSkipped:false},
+      {label:labels[2],data:FLDT_KEYS.map(k=>p3[k]||0),backgroundColor:FLDT_COLORS.map(c=>c+'cc'),borderRadius:{topLeft:4,topRight:4},borderSkipped:false}
+    ]},
+    options:{...baseOptions('num'),interaction:{mode:'index',intersect:false},plugins:{...baseOptions('num').plugins,tooltip:{...baseOptions('num').plugins.tooltip,callbacks:{label:ctx=>ctx.dataset.label+': '+fmtNum(ctx.parsed.y)+' cup'}}}}
+  });
+}
+function buildFldtDoughnut(id,data) {
+  const key='fldtDough_'+id; destroyChart(key);
+  charts[key]=new Chart(document.getElementById(id),{
+    type:'doughnut',
+    data:{labels:FLDT_LABELS,datasets:[{data:FLDT_KEYS.map(k=>data[k]||0),backgroundColor:FLDT_COLORS.map(c=>c+'cc'),borderColor:FLDT_COLORS,borderWidth:1.5,hoverOffset:8}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',animation:{duration:700},plugins:{legend:{position:'right',labels:{color:TC.text2,font:{size:10},padding:12,usePointStyle:true}},tooltip:{backgroundColor:'rgba(13,17,23,.96)',titleColor:TC.text,bodyColor:TC.text2,borderColor:'rgba(0,229,255,.15)',borderWidth:1,cornerRadius:10,padding:12,callbacks:{label:ctx=>' '+ctx.label+': '+fmtNum(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,data.cup_total||1))+')' }}}}
+  });
+}
+function buildFldtMainTable(periods,labels) {
+  const tbl=document.getElementById('fldt-main-table'); if(!tbl) return;
+  const metrics=[
+    {l:'Offline Sales',k:'offline_sales',rp:true},{l:'Total Cup',k:'cup_total'},{l:'Food Cup',k:'food_off'},{l:'Large Cup',k:'large_off'},
+    {l:'Diary Cup',k:'diary_off'},{l:'Topping Cup',k:'topping_off'},{l:'RTD Cup',k:'rtd_off'},{l:'Seasonal',k:'seasonal_sold'},
+    {l:'Food Qty (All Ch.)',k:'food_qty_all'},{l:'ADT Offline',k:'adt_offline'},{l:'AT Offline',k:'at_offline',rp:true},
+  ];
+  const fmtA=(v,isRp)=>isRp?fmtRp(v):fmtNum(v);
+  const arrowFn=(v1,v2)=>{if(!v1&&!v2)return'—';if(!v1)return'<span class="inline-arr arr-up">↑ new</span>';const d=v2-v1,p2=Math.abs(d/v1*100).toFixed(1),up=d>=0;return`<span class="inline-arr ${up?'arr-up':'arr-dn'}">${up?'↑':'↓'} ${p2}%</span>`;};
+  let thead=`<tr><th>Metrik</th>${labels.map(l=>`<th>${l}</th>`).join('')}${periods.length>1?'<th>W2→W3</th><th>CAGR/Wk</th>':''}</tr>`;
+  let tbody=metrics.map(m=>{
+    const vals=periods.map(p=>p[m.k]||0);
+    const tds=vals.map(v=>`<td class="td-mono">${fmtA(v,m.rp)}</td>`).join('');
+    const wow=periods.length>1?`<td>${arrowFn(vals[1],vals[2]||vals[1])}</td>`:'' ;
+    const cagr=periods.length>=3&&vals[0]&&vals[2]?(()=>{const r=(Math.pow(vals[2]/vals[0],.5)-1)*100,up=r>=0;return`<td><span class="inline-arr ${up?'arr-up':'arr-dn'}">${up?'↑':'↓'} ${Math.abs(r).toFixed(1)}%</span></td>`;})():(periods.length>1?'<td>—</td>':'');
+    return `<tr><td style="font-weight:600;color:var(--text2);white-space:nowrap;">${m.l}</td>${tds}${wow}${cagr}</tr>`;
+  }).join('');
+  tbl.querySelector('thead').innerHTML=thead;
+  tbl.querySelector('tbody').innerHTML=tbody;
+}
+
+// FLDT custom
+function loadFldtCustom(n) {
+  const s=getVal('fldt-c'+n+'s'), e=getVal('fldt-c'+n+'e');
+  if(!s||!e||!allData.length) return;
+  const rows=filterData(s,e); if(!rows.length) return;
+  const key='p'+n; fldtData[key]=aggregateData(rows);
+  if(fldtData.p1&&fldtData.p2) renderFldtCustom();
+}
+function renderFldtCustom() {
+  const [p1,p2]=[fldtData.p1,fldtData.p2];
+  const fmtR=d=>{if(!d||!d.length)return'';const f=fmtShortDate(d[0].date),l=fmtShortDate(d[d.length-1].date);return f===l?f:f+'–'+l;};
+  const labels=[fmtR(p1.daily)||'P1',fmtR(p2.daily)||'P2'];
+  buildFldtMainTable([p1,p2],labels);
+  destroyChart('fldtCustBar');
+  charts.fldtCustBar=new Chart(document.getElementById('fldt-custom-bar'),{
+    type:'bar',
+    data:{labels:FLDT_LABELS,datasets:[
+      {label:labels[0],data:FLDT_KEYS.map(k=>p1[k]||0),backgroundColor:'rgba(255,255,255,.12)',borderRadius:{topLeft:4,topRight:4},borderSkipped:false},
+      {label:labels[1],data:FLDT_KEYS.map(k=>p2[k]||0),backgroundColor:FLDT_COLORS.map(c=>c+'cc'),borderRadius:{topLeft:4,topRight:4},borderSkipped:false}
+    ]},
+    options:{...baseOptions('num'),interaction:{mode:'index',intersect:false},plugins:{...baseOptions('num').plugins,tooltip:{...baseOptions('num').plugins.tooltip,callbacks:{label:ctx=>ctx.dataset.label+': '+fmtNum(ctx.parsed.y)+' cup'}}}}
+  });
+  buildFldtDoughnut('fldt-custom-dough1',p1);
+  buildFldtDoughnut('fldt-custom-dough2',p2);
+}
+
+// ═══════════════════════════════════════
+// PAGE: ALL SUMMARY
+// ═══════════════════════════════════════
+function loadAllSumm() {
+  const s1=getVal('summ-p1s'),e1=getVal('summ-p1e'); if(!s1||!e1||!allData.length) return;
+  const rows1=filterData(s1,e1); if(!rows1.length) return;
+  const d1=aggregateData(rows1);
+  const s2=getVal('summ-p2s'),e2=getVal('summ-p2e');
+  const d2=(s2&&e2)?aggregateData(filterData(s2,e2)):null;
+  summData={p1:d1,p2:d2};
+  document.getElementById('summ-content').style.display='';
+  renderAllSumm(d1,d2);
+}
+function renderAllSumm(d1,d2) {
+  const diff=(v1,v2)=>v2?safePct(v1,v2):null;
+  const badge=(d)=>d===null?'':`<span class="kpi-badge ${d>=0?'badge-up':'badge-dn'}">${d>=0?'↑':'↓'}${Math.abs(d).toFixed(1)}%</span>`;
+  document.getElementById('summ-kpi-row').innerHTML=[
+    {l:'Total GMV',v:fmtRp(d1.gmv),c:'var(--gmv)',d:diff(d1.gmv,d2?.gmv)},
+    {l:'AT Store',v:fmtRp(d1.at_store),c:'var(--blue)',d:diff(d1.at_store,d2?.at_store)},
+    {l:'ADT Store',v:fmtNum(d1.adt_store),c:'var(--amber)',d:diff(d1.adt_store,d2?.adt_store)},
+  ].map(k=>`<div class="summ-kpi-card"><div class="summ-kpi-label">${k.l}</div><div class="summ-kpi-val ${k.c===''?'':''}" style="color:${k.c}">${k.v}</div>${badge(k.d)}</div>`).join('');
+
+  // Daily GMV
+  const maxV=Math.max(...d1.daily.map(r=>r.gmv|0),...(d2?d2.daily.map(r=>r.gmv||0):[]),1);
+  document.getElementById('summ-daily-gmv').innerHTML=`<div style="max-height:360px;overflow-y:auto;">`+d1.daily.map((r,i)=>{
+    const v1=r.gmv||0,v2=d2?.daily[i]?.gmv||0,w1=(v1/maxV*100).toFixed(1),w2=d2?(v2/maxV*100).toFixed(1):0;
+    const diffP=d2&&v2?safePct(v1,v2):null;
+    return `<div style="display:grid;grid-template-columns:60px 1fr ${d2?'1fr ':''} 55px;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:10px;font-family:'JetBrains Mono',monospace;"><div style="color:var(--text)">${HARI[new Date(r.date).getDay()]}</div><div style="color:var(--text3)">${fmtShortDate(r.date)}</div></div>
+      <div style="background:var(--bg3);border-radius:4px;overflow:hidden;height:20px;"><div style="height:100%;width:${w1}%;background:linear-gradient(90deg,${TC.gmv}88,${TC.gmv});border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;transition:width .8s ease;"><span style="font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;color:rgba(0,0,0,.8);">${fmtRp(v1)}</span></div></div>
+      ${d2?`<div style="background:var(--bg3);border-radius:4px;overflow:hidden;height:20px;"><div style="height:100%;width:${w2}%;background:rgba(255,255,255,.18);border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;transition:width .8s ease;"><span style="font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text2);">${fmtRp(v2)}</span></div></div>`:''}
+      <div style="text-align:right;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${diffP===null?'transparent':diffP>=0?'var(--accent2)':'var(--accent3)'};">${diffP!==null?(diffP>=0?'+':'')+diffP.toFixed(1)+'%':''}</div>
+    </div>`;
+  }).join('')+'</div>';
+
+  // Channel ranking
+  const chans=[{n:'Offline',k:'offline',c:TC.offline},{n:'GoFood',k:'gofood',c:TC.gofood},{n:'GrabFood',k:'grabfood',c:TC.grabfood},{n:'Shopee',k:'shopee',c:TC.shopee},{n:'Online',k:'online',c:TC.online}].sort((a,b)=>(d1[b.k]||0)-(d1[a.k]||0));
+  const totCh=chans.reduce((a,c)=>a+(d1[c.k]||0),0)||1, maxCh=d1[chans[0].k]||1;
+  document.getElementById('summ-chan-rank').innerHTML=chans.map((c,i)=>{
+    const v=d1[c.k]||0,w=(v/maxCh*100).toFixed(1);
+    const wow=d2?safePct(v,d2[c.k]||0):null;
+    const cls=['rank-1','rank-2','rank-3','',''][i]||'';
+    return `<div class="chan-rank-item">
+      <div class="rank-num ${cls}">${i+1}</div>
+      <div class="rank-info"><div class="rank-name">${c.n} ${wow!==null?`<span class="${wow>=0?'arr-up':'arr-dn'}" style="font-size:10px;">${wow>=0?'↑':'↓'}${Math.abs(wow).toFixed(1)}%</span>`:''}</div><div class="rank-val">${fmtRp(v)}</div></div>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${w}%;background:${c.c};"></div></div>
+      <div class="rank-pct" style="color:${c.c}">${fmtPct(pct(v,totCh))}</div>
+    </div>`;
+  }).join('');
+
+  // FLDT cards
+  document.getElementById('summ-fldt-grid').innerHTML=FLDT_META.map(m=>{
+    const v1=d1[m.key]||0, v2=d2?d2[m.key]||0:null;
+    const cup1=d1.cup_total||1, adt1=d1.adt_offline||1;
+    const pctDen=m.key==='food_off'?adt1:cup1;
+    const pct1=(v1/pctDen*100).toFixed(1);
+    const wow=v2!==null?safePct(v1,v2):null;
+    return `<div class="fldt-card" style="--fc-color:${m.color}">
+      <div class="fldt-icon">${m.icon}</div>
+      <div class="fldt-title">${m.label}</div>
+      <div class="fldt-val">${fmtNum(v1)}</div>
+      <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">${pct1}%${wow!==null?` · <span class="${wow>=0?'arr-up':'arr-dn'}">${wow>=0?'↑':'↓'}${Math.abs(wow).toFixed(1)}%</span>`:''}</div>
+      ${v2!==null?`<div style="font-size:10px;color:var(--text3);">P2: ${fmtNum(v2)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════
+// PAGE: DAY TO DAY
+// ═══════════════════════════════════════
+function loadD2D() {
+  const s=getVal('d2d-start'), e=getVal('d2d-end');
+  if(!s||!e||!allData.length) return;
+  const extStart=new Date(s); extStart.setDate(extStart.getDate()-8);
+  const rows=filterData(toInputDate(extStart),e);
+  if(!rows.length){ document.getElementById('d2d-table-wrap').innerHTML='<div class="empty">Tidak ada data</div>'; return; }
+  const byDate={};
+  rows.forEach(r=>{ byDate[r.date]=r; });
+  const displayRows=rows.filter(r=>r.date>=s&&r.date<=e);
+  renderD2D(displayRows,byDate);
+}
+function renderD2D(rows, byDate) {
+  const prevDate=(ds,n)=>{ const d=new Date(ds); d.setDate(d.getDate()-n); return toInputDate(d); };
+  const pctFmt=(v1,v2)=>{ if(!v2||v2===0) return '—'; const p=safePct(v1,v2),up=p>=0; return `<span style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10px;color:${up?'var(--accent2)':'var(--accent3)'}">${up?'+':''}${p.toFixed(1)}%</span>`; };
+  const groups=[
+    {label:'GMV',color:TC.gmv,cols:[
+      {h:'GMV',fn:r=>`<span class="td-mono" style="color:var(--gmv)">${fmtRp(r.gmv)}</span>`},
+      {h:'vs Kemarin',fn:r=>pctFmt(r.gmv,byDate[prevDate(r.date,1)]?.gmv)},
+      {h:'vs Minggu Lalu',fn:r=>pctFmt(r.gmv,byDate[prevDate(r.date,7)]?.gmv)},
+      {h:'Δ Kemarin',fn:r=>{ const p=byDate[prevDate(r.date,1)]; if(!p) return '—'; const d=r.gmv-(p.gmv||0),up=d>=0; return `<span style="font-size:10px;font-weight:700;color:${up?'var(--accent2)':'var(--accent3)'}">${up?'+':''}${fmtRp(d)}</span>`; }},
+    ]},
+    {label:'OFFLINE',color:TC.offline,cols:[
+      {h:'Offline',fn:r=>`<span class="td-mono">${fmtRp(r.offline)}</span>`},
+      {h:'vs Kemarin',fn:r=>pctFmt(r.offline,byDate[prevDate(r.date,1)]?.offline)},
+      {h:'vs MingguLalu',fn:r=>pctFmt(r.offline,byDate[prevDate(r.date,7)]?.offline)},
+    ]},
+    {label:'ADT',color:TC.amber,cols:[
+      {h:'ADT Offline',fn:r=>`<span class="td-mono">${fmtNum(r.adt_offline)}</span>`},
+      {h:'vs Kemarin',fn:r=>pctFmt(r.adt_offline,byDate[prevDate(r.date,1)]?.adt_offline)},
+      {h:'vs MingguLalu',fn:r=>pctFmt(r.adt_offline,byDate[prevDate(r.date,7)]?.adt_offline)},
+    ]},
+    {label:'GOFOOD',color:TC.gofood,cols:[
+      {h:'GoFood',fn:r=>`<span class="td-mono">${fmtRp(r.gofood)}</span>`},
+      {h:'vs Kemarin',fn:r=>pctFmt(r.gofood,byDate[prevDate(r.date,1)]?.gofood)},
+      {h:'vs MingguLalu',fn:r=>pctFmt(r.gofood,byDate[prevDate(r.date,7)]?.gofood)},
+    ]},
+    {label:'GRABFOOD',color:TC.grabfood,cols:[
+      {h:'GrabFood',fn:r=>`<span class="td-mono">${fmtRp(r.grabfood)}</span>`},
+      {h:'vs Kemarin',fn:r=>pctFmt(r.grabfood,byDate[prevDate(r.date,1)]?.grabfood)},
+      {h:'vs MingguLalu',fn:r=>pctFmt(r.grabfood,byDate[prevDate(r.date,7)]?.grabfood)},
+    ]},
+    {label:'SHOPEE',color:TC.shopee,cols:[
+      {h:'Shopee',fn:r=>`<span class="td-mono">${fmtRp(r.shopee)}</span>`},
+      {h:'vs Kemarin',fn:r=>pctFmt(r.shopee,byDate[prevDate(r.date,1)]?.shopee)},
+      {h:'vs MingguLalu',fn:r=>pctFmt(r.shopee,byDate[prevDate(r.date,7)]?.shopee)},
+    ]},
+    {label:'FOOD CUP',color:'#a78bfa',cols:[
+      {h:'Food',fn:r=>`<span class="td-mono">${fmtNum(r.food_off)}</span>`},
+      {h:'vs Kemarin',fn:r=>pctFmt(r.food_off,byDate[prevDate(r.date,1)]?.food_off)},
+    ]},
+    {label:'LARGE',color:'#60a5fa',cols:[
+      {h:'Large',fn:r=>`<span class="td-mono">${fmtNum(r.large_off)}</span>`},
+      {h:'vs Kemarin',fn:r=>pctFmt(r.large_off,byDate[prevDate(r.date,1)]?.large_off)},
+    ]},
+    {label:'IPT',color:TC.amber,cols:[
+      {h:'IPT',fn:r=>`<span class="td-mono">${(r.ipt||0).toFixed(2)}</span>`},
+      {h:'vs Kemarin',fn:r=>pctFmt(r.ipt,byDate[prevDate(r.date,1)]?.ipt)},
+    ]},
+  ];
+
+  let thGrp=`<th class="sticky" style="background:var(--bg3);z-index:4;min-width:80px;white-space:nowrap;border-right:1px solid var(--border);">Tanggal</th>`;
+  let thCol=`<th class="sticky" style="background:var(--bg3);z-index:4;border-right:1px solid var(--border);"></th>`;
+  groups.forEach(g=>{
+    thGrp+=`<th colspan="${g.cols.length}" style="background:var(--bg3);border-left:2px solid ${g.color}44;border-bottom:2px solid ${g.color}44;color:${g.color};font-size:9px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-align:center;padding:7px 10px;">${g.label}</th>`;
+    g.cols.forEach((c,ci)=>{ thCol+=`<th style="background:var(--bg3);${ci===0?'border-left:2px solid '+g.color+'33;':''}font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:7px 10px;white-space:nowrap;text-align:center;">${c.h}</th>`; });
+  });
+
+  const bodyRows=[...rows].reverse().map((r,ri)=>{
+    const isWeekend=[0,6].includes(new Date(r.date).getDay());
+    const bg=ri%2===0?'background:var(--bg);':'background:rgba(20,27,34,.6);';
+    let tds=`<td class="sticky" style="${bg}border-right:1px solid var(--border);padding:9px 12px;z-index:2;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:var(--text);opacity:${isWeekend?.7:1}">${HARI[new Date(r.date).getDay()]}</div>
+      <div style="font-size:10px;color:var(--text3);">${fmtShortDate(r.date)}</div>
+    </td>`;
+    groups.forEach((g,gi)=>{ g.cols.forEach((c,ci)=>{ tds+=`<td style="${bg}${ci===0?'border-left:2px solid '+g.color+'22;':''}padding:7px 10px;text-align:center;">${c.fn(r)}</td>`; }); });
+    return `<tr>${tds}</tr>`;
+  }).join('');
+
+  document.getElementById('d2d-table-wrap').innerHTML=`<div style="overflow-x:auto;border-radius:10px;border:1px solid var(--border);max-height:70vh;overflow-y:auto;">
+    <table style="border-collapse:collapse;min-width:100%;font-size:11px;">
+      <thead style="position:sticky;top:0;z-index:5;"><tr>${thGrp}</tr><tr>${thCol}</tr></thead>
+      <tbody>${bodyRows}</tbody>
+    </table>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
 loadData();
 </script>
 </body>
