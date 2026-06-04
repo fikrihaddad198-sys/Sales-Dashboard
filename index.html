@@ -272,7 +272,7 @@ tbody tr:hover td{background:var(--surface2);}
 .fldt-bar{height:100%;border-radius:2px;background:var(--fc-color,var(--accent));transition:width .8s ease;}
 .fldt-weeks{display:flex;flex-direction:column;gap:5px;}
 .fldt-week-row{display:flex;align-items:center;gap:8px;font-size:10px;}
-.fldt-week-lbl{color:var(--text3);width:20px;font-family:'JetBrains Mono',monospace;}
+.fldt-week-lbl{color:var(--text3);width:20px;font-family:'JetBrains Mono',monospace;flex-shrink:0;}
 .fldt-week-bar-wrap{flex:1;height:14px;background:var(--bg);border-radius:3px;overflow:hidden;}
 .fldt-week-bar{height:100%;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;transition:width .8s ease;}
 .fldt-week-num{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:rgba(0,0,0,.75);}
@@ -1378,23 +1378,52 @@ function renderFldtWeekly() {
   const maxAll=Math.max(...FLDT_META.map(m=>Math.max(p1[m.key]||0,p2[m.key]||0,p3[m.key]||0)),1);
 
   // Category cards
+  // Helper: hitung kontribusi per periode berdasarkan rumus yg ditentukan
+  const getKont = (m, val, period) => {
+    if (m.key === 'food_off') {
+      // Food: food_off ÷ adt_offline × 100
+      const den = period.adt_offline || 0;
+      return den > 0 ? (val / den * 100) : null;
+    } else {
+      // Large/Diary/Topping: qty ÷ cup_total × 100
+      const den = period.cup_total || 0;
+      return den > 0 ? (val / den * 100) : null;
+    }
+  };
+
+  // Hanya tampilkan 4 kategori di card utama (Food, Large, Diary, Topping)
+  const TARGET_KEYS = ['food_off','large_off','diary_off','topping_off'];
+  const visibleMeta = FLDT_META.filter(m => TARGET_KEYS.includes(m.key));
+
   document.getElementById('fldt-cat-cards').innerHTML=FLDT_META.map((m,mi)=>{
     const [v1,v2,v3]=[p1[m.key]||0,p2[m.key]||0,p3[m.key]||0];
     const wow=v2>0?safePct(v3,v2):0;
     const up=wow>=0;
-    const pctDen=m.key==='food_off'?(p3.adt_offline||1):(p3.cup_total||1);
-    const pct3=(v3/pctDen*100).toFixed(1);
+    const k3=getKont(m,v3,p3);
+    const pct3=k3!==null?k3.toFixed(1):'—';
     const bw1=(v1/maxAll*100).toFixed(1),bw2=(v2/maxAll*100).toFixed(1),bw3=(v3/maxAll*100).toFixed(1);
+
+    const isTarget = TARGET_KEYS.includes(m.key);
+    const weeks=[
+      {l:'W1',v:v1,w:bw1,bg:'rgba(255,255,255,.12)',p:getKont(m,v1,p1)},
+      {l:'W2',v:v2,w:bw2,bg:'rgba(255,255,255,.2)',p:getKont(m,v2,p2)},
+      {l:'W3',v:v3,w:bw3,bg:m.color,p:getKont(m,v3,p3)},
+    ];
+
     return `<div class="fldt-card" style="--fc-color:${m.color}">
       <div class="fldt-icon">${m.icon}</div>
       <div class="fldt-title">${m.label}</div>
       <div class="fldt-val">${fmtNum(v3)}</div>
       <div style="font-size:10px;color:var(--text3);margin-bottom:8px;">${pct3}% · <span class="${up?'arr-up':'arr-dn'}">${up?'↑':'↓'}${Math.abs(wow).toFixed(1)}% WoW</span></div>
       <div class="fldt-weeks">
-        ${[{l:'W1',v:v1,w:bw1,bg:'rgba(255,255,255,.12)'},{l:'W2',v:v2,w:bw2,bg:'rgba(255,255,255,.2)'},{l:'W3',v:v3,w:bw3,bg:m.color}].map(wk=>`
+        ${weeks.map(wk=>`
           <div class="fldt-week-row">
             <span class="fldt-week-lbl" style="color:${wk.l==='W3'?m.color:'var(--text3)'}">${wk.l}</span>
-            <div class="fldt-week-bar-wrap"><div class="fldt-week-bar" style="width:${wk.w}%;background:${wk.bg};"><span class="fldt-week-num" style="color:${wk.l==='W3'?'rgba(0,0,0,.8)':'var(--text2)'};">${fmtNum(wk.v)}</span></div></div>
+            <div class="fldt-week-bar-wrap"><div class="fldt-week-bar" style="width:${wk.w}%;background:${wk.l==='W3'?wk.bg:wk.bg};"><span class="fldt-week-num" style="color:${wk.l==='W3'?'rgba(0,0,0,.8)':'var(--text2)'};">${fmtNum(wk.v)}</span></div></div>
+            ${isTarget && wk.p !== null
+              ? `<span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:${wk.l==='W3'?m.color:'var(--text3)'};min-width:38px;text-align:right;flex-shrink:0;">${wk.p.toFixed(1)}%</span>`
+              : `<span style="min-width:38px;"></span>`
+            }
           </div>`).join('')}
       </div>
     </div>`;
