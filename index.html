@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
@@ -7,8 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-/* ========== ORIGINAL STYLE (dipertahankan) ========== */
-:root{
+/* ═══ THEME TOKENS ═══ */
+:root,[data-theme="dark"]{
   --bg:#070a0e;--bg2:#0d1117;--bg3:#141b22;--surface:#141b22;--surface2:#1c2530;
   --border:#1e2d3d;--border2:#243040;
   --accent:#00e5ff;--accent2:#00ff9d;--accent3:#ff4d6d;--accent4:#ffc233;--accent5:#a78bfa;
@@ -18,44 +18,141 @@
   --grid-line:rgba(30,45,61,0.8);
   --card-shadow:0 4px 24px rgba(0,0,0,0.4);
   --glow-accent:0 0 20px rgba(0,229,255,0.15);
+  --inp-bg:#0a0f14;
+  --btn-text:#000;
+  --header-blur:blur(12px);
+  --theme-icon:"☀";
+}
+[data-theme="light"]{
+  --bg:#f0f4f8;--bg2:#ffffff;--bg3:#f8fafc;--surface:#ffffff;--surface2:#eef2f7;
+  --border:#d1dce8;--border2:#c0cdd9;
+  --accent:#0284c7;--accent2:#059669;--accent3:#e11d48;--accent4:#d97706;--accent5:#7c3aed;
+  --gmv:#db2777;--offline:#2563eb;--online:#047857;--gofood:#c2410c;--grabfood:#16a34a;--shopee:#dc2626;
+  --text:#0f172a;--text2:#334155;--text3:#64748b;--text4:#94a3b8;
+  --amber:#d97706;--blue:#2563eb;--red:#e11d48;--purple:#7c3aed;--green:#16a34a;
+  --grid-line:rgba(209,220,232,0.9);
+  --card-shadow:0 2px 16px rgba(15,23,42,0.08);
+  --glow-accent:0 0 20px rgba(2,132,199,0.12);
+  --inp-bg:#f8fafc;
+  --btn-text:#fff;
+  --header-blur:blur(12px);
+  --theme-icon:"🌙";
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;overflow:hidden;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
+body{
+  font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);
+  display:flex;flex-direction:column;
+  transition:background .35s ease,color .35s ease;
+}
+/* smooth theme transitions everywhere */
+*{transition:background-color .3s ease,border-color .3s ease,color .25s ease,box-shadow .3s ease;}
+
+/* SCROLLBAR */
 ::-webkit-scrollbar{width:4px;height:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-.header{height:52px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;position:relative;z-index:100;}
-.header-logo{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:3px;text-transform:uppercase;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap;}
-.header-sep{width:1px;height:20px;background:var(--border2);}
-.header-store{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:1px;}
-.header-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+::-webkit-scrollbar-thumb:hover{background:var(--text3);}
+
+/* PAGE FADE */
+@keyframes pageFade{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+
+/* HEADER */
+.header{
+  height:56px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;
+  position:relative;z-index:100;
+  backdrop-filter:var(--header-blur);
+  -webkit-backdrop-filter:var(--header-blur);
+}
+.header-logo{
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:800;
+  letter-spacing:3px;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  white-space:nowrap;
+}
+.header-sep{width:1px;height:20px;background:var(--border2);flex-shrink:0;}
+.header-store{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
 .header-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);}
 .header-status{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--accent2);font-family:'JetBrains Mono',monospace;}
 .status-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
-.btn-refresh{background:transparent;border:1px solid var(--border2);color:var(--accent);padding:5px 12px;border-radius:6px;font-size:10px;font-family:'JetBrains Mono',monospace;cursor:pointer;letter-spacing:1px;transition:all .2s;}
-.btn-refresh:hover{background:rgba(0,229,255,0.08);border-color:var(--accent);}
-.nav{height:40px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:stretch;padding:0 12px;gap:2px;flex-shrink:0;overflow-x:auto;}
+.btn-refresh{
+  background:transparent;border:1px solid var(--border2);color:var(--accent);
+  padding:5px 12px;border-radius:8px;font-size:10px;font-family:'JetBrains Mono',monospace;
+  cursor:pointer;letter-spacing:1px;transition:all .2s;
+}
+.btn-refresh:hover{background:rgba(0,229,255,0.08);border-color:var(--accent);box-shadow:0 0 12px rgba(0,229,255,0.1);}
+/* theme toggle */
+.btn-theme{
+  background:var(--bg3);border:1px solid var(--border2);color:var(--text2);
+  width:34px;height:34px;border-radius:10px;font-size:15px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .25s;flex-shrink:0;
+}
+.btn-theme:hover{border-color:var(--accent);background:var(--surface2);transform:rotate(20deg);}
+
+/* NAV */
+.nav{
+  height:44px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:stretch;padding:0 16px;gap:2px;flex-shrink:0;
+  overflow-x:auto;
+}
 .nav::-webkit-scrollbar{display:none;}
-.nav-btn{background:none;border:none;color:var(--text3);padding:0 14px;font-size:11px;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.5px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:6px;}
-.nav-btn:hover{color:var(--text2);}
+.nav-btn{
+  background:none;border:none;color:var(--text3);
+  padding:0 16px;font-size:11px;font-family:'Syne',sans-serif;font-weight:600;
+  letter-spacing:.5px;cursor:pointer;white-space:nowrap;
+  border-bottom:2px solid transparent;transition:all .2s;
+  display:flex;align-items:center;gap:6px;
+  border-radius:0;
+}
+.nav-btn:hover{color:var(--text2);background:rgba(128,128,128,0.05);}
 .nav-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
 .nav-icon{font-size:12px;}
+
+/* LAYOUT */
 .app-body{flex:1;overflow:hidden;display:flex;flex-direction:column;}
 .page{display:none;flex:1;overflow-y:auto;padding:20px;}
-.page.active{display:block;}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,229,255,0.2),transparent);}
-.sec-label{display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:24px;}
+.page.active{display:block;animation:pageFade .25s ease;}
+
+/* CARDS */
+.card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:18px 20px;position:relative;overflow:hidden;
+  box-shadow:var(--card-shadow);
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(128,200,255,0.15),transparent);
+}
+[data-theme="light"] .card::before{
+  background:linear-gradient(90deg,transparent,rgba(2,132,199,0.1),transparent);
+}
+
+/* SECTION LABELS */
+.sec-label{
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;margin-top:24px;
+}
 .sec-label:first-child{margin-top:0;}
 .sec-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;box-shadow:0 0 8px var(--accent);}
 .sec-text{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);}
 .sec-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+
+/* KPI GRID */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px;}
-.kpi-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;transition:border-color .2s;}
-.kpi-card:hover{border-color:var(--accent);}
-.kpi-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kpi-color,var(--accent));}
+.kpi-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:12px;
+  padding:14px 16px;position:relative;overflow:hidden;transition:border-color .25s,box-shadow .25s,transform .25s;
+}
+.kpi-card:hover{border-color:var(--accent);box-shadow:0 0 20px rgba(0,229,255,0.08);transform:translateY(-1px);}
+[data-theme="light"] .kpi-card:hover{box-shadow:0 4px 20px rgba(2,132,199,0.12);}
+.kpi-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--kpi-color,var(--accent));
+}
 .kpi-lbl{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px;}
 .kpi-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--text);line-height:1;margin-bottom:4px;}
 .kpi-sub{font-size:10px;color:var(--text3);}
@@ -63,6 +160,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .badge-up{background:rgba(0,255,157,0.1);color:var(--accent2);}
 .badge-dn{background:rgba(255,77,109,0.1);color:var(--accent3);}
 .badge-neu{background:rgba(148,163,184,0.1);color:var(--text2);}
+[data-theme="light"] .badge-up{background:rgba(5,150,105,0.1);color:var(--accent2);}
+[data-theme="light"] .badge-dn{background:rgba(225,29,72,0.1);color:var(--accent3);}
+[data-theme="light"] .badge-neu{background:rgba(100,116,139,0.1);color:var(--text2);}
+
+/* CHART CARDS */
 .chart-row{display:grid;gap:12px;margin-bottom:12px;}
 .chart-row-2{grid-template-columns:1fr 1fr;}
 .chart-row-3{grid-template-columns:1fr 1fr 1fr;}
@@ -74,54 +176,93 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);dis
 .h300{height:300px;}
 .h340{height:340px;}
 .full{grid-column:1/-1;}
-.target-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px;}
+
+/* TARGET ROW */
+.target-row{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--bg3);border:1px solid var(--border);border-radius:12px;
+  padding:12px 16px;margin-bottom:16px;
+}
 .target-row label{font-size:10px;color:var(--text3);font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
-.inp{background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:7px 12px;border-radius:8px;font-size:12px;font-family:'DM Sans',sans-serif;outline:none;min-width:160px;transition:border-color .2s;}
-.inp:focus{border-color:var(--accent);}
+.inp{
+  background:var(--inp-bg);border:1px solid var(--border2);color:var(--text);
+  padding:7px 12px;border-radius:10px;font-size:12px;font-family:'DM Sans',sans-serif;
+  outline:none;min-width:160px;transition:border-color .2s,box-shadow .2s;
+}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,255,0.08);}
+[data-theme="light"] .inp:focus{box-shadow:0 0 0 3px rgba(2,132,199,0.1);}
 .inp-sm{min-width:80px;}
-.btn{background:var(--accent);color:#000;border:none;padding:8px 18px;border-radius:8px;font-size:11px;font-weight:700;font-family:'Syne',sans-serif;letter-spacing:1px;cursor:pointer;transition:all .2s;white-space:nowrap;}
-.btn:hover{opacity:.85;transform:translateY(-1px);}
+.btn{
+  background:var(--accent);color:var(--btn-text);border:none;
+  padding:8px 18px;border-radius:10px;font-size:11px;font-weight:700;
+  font-family:'Syne',sans-serif;letter-spacing:1px;cursor:pointer;
+  transition:all .2s;white-space:nowrap;
+}
+.btn:hover{opacity:.85;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,229,255,0.25);}
+[data-theme="light"] .btn:hover{box-shadow:0 4px 12px rgba(2,132,199,0.25);}
 .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
-.btn-ghost:hover{border-color:var(--text2);background:rgba(148,163,184,.08);}
+.btn-ghost:hover{border-color:var(--text2);background:rgba(148,163,184,.08);box-shadow:none;}
+
+
+/* GAUGE */
 .gauge-wrap{position:relative;display:flex;flex-direction:column;align-items:center;}
 .gauge-center{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);text-align:center;}
 .gauge-pct{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;line-height:1;}
 .gauge-lbl{font-size:10px;color:var(--text3);margin-top:2px;}
+
+/* PACE BAR */
 .pace-bar-wrap{margin-top:8px;}
 .pace-bg{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;}
 .pace-fill{height:100%;border-radius:3px;transition:width .8s ease;}
+
+/* CHANNEL CONTRIB */
 .chan-contrib{display:flex;flex-direction:column;gap:10px;}
 .chan-item{display:flex;align-items:center;gap:10px;}
 .chan-name{font-size:11px;color:var(--text);min-width:70px;}
 .chan-track{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;}
 .chan-fill{height:100%;border-radius:3px;transition:width .8s ease;}
 .chan-pct{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);min-width:40px;text-align:right;}
-.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);}
 table{border-collapse:collapse;width:100%;font-size:11px;}
-thead th{background:var(--bg3);padding:9px 12px;text-align:left;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap;}
-tbody td{padding:9px 12px;border-bottom:1px solid rgba(30,45,61,.5);white-space:nowrap;}
+thead th{
+  background:var(--bg3);padding:9px 12px;text-align:left;
+  font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;color:var(--text);}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover td{background:rgba(20,27,34,.8);}
+tbody tr:hover td{background:var(--surface2);}
 .td-mono{font-family:'JetBrains Mono',monospace;font-size:10px;}
 .td-accent{color:var(--accent);font-weight:700;}
 .sticky{position:sticky;left:0;z-index:2;background:var(--bg2);}
+
+/* ARROWS */
 .arr-up{color:var(--accent2);}
 .arr-dn{color:var(--accent3);}
 .arr-neu{color:var(--text3);}
 .inline-arr{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;}
 .inline-arr.arr-up{background:rgba(0,255,157,.1);}
 .inline-arr.arr-dn{background:rgba(255,77,109,.1);}
+
+/* MINI COMPARE */
 .mini-compare{width:100%;}
 .mini-compare thead th{background:var(--bg3);padding:8px 12px;font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
 .mini-compare tbody td{padding:8px 12px;border-bottom:1px solid rgba(30,45,61,.4);font-size:11px;}
 .mini-compare .mc-total td{font-weight:700;color:var(--text);}
 .mc-chan{font-weight:600;color:var(--text2);}
+
+/* PERIOD CARDS */
 .period-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
 .period-grid-2{grid-template-columns:1fr 1fr;}
 .period-header{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border);}
 .p1-color{color:var(--accent);}
 .p2-color{color:var(--amber);}
 .p3-color{color:var(--accent2);}
+
+/* FLDT CATS */
 .fldt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
 .fldt-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;border-top:2px solid var(--fc-color,var(--accent));}
 .fldt-icon{font-size:20px;margin-bottom:8px;}
@@ -135,15 +276,36 @@ tbody tr:hover td{background:rgba(20,27,34,.8);}
 .fldt-week-bar-wrap{flex:1;height:14px;background:var(--bg);border-radius:3px;overflow:hidden;}
 .fldt-week-bar{height:100%;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;transition:width .8s ease;}
 .fldt-week-num{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;color:rgba(0,0,0,.75);}
+
+/* MODE TOGGLE */
 .mode-toggle{display:flex;gap:6px;margin-left:auto;}
-.mode-btn{background:transparent;border:1px solid var(--border2);color:var(--text3);padding:5px 12px;border-radius:6px;font-size:10px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .2s;}
+.mode-btn{
+  background:transparent;border:1px solid var(--border2);color:var(--text3);
+  padding:5px 14px;border-radius:8px;font-size:10px;font-family:'Syne',sans-serif;
+  font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .2s;
+}
 .mode-btn.active{background:rgba(0,229,255,.1);border-color:var(--accent);color:var(--accent);}
+[data-theme="light"] .mode-btn.active{background:rgba(2,132,199,.1);border-color:var(--accent);color:var(--accent);}
+
+/* CHAN TABS */
 .chan-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;}
-.chan-tab{background:transparent;border:1px solid var(--border);color:var(--text3);padding:4px 10px;border-radius:6px;font-size:10px;font-family:'Syne',sans-serif;font-weight:600;cursor:pointer;transition:all .2s;}
+.chan-tab{
+  background:transparent;border:1px solid var(--border);color:var(--text3);
+  padding:4px 10px;border-radius:8px;font-size:10px;font-family:'Syne',sans-serif;
+  font-weight:600;cursor:pointer;transition:all .2s;
+}
+.chan-tab:hover{border-color:var(--border2);color:var(--text2);}
 .chan-tab.active{background:rgba(0,229,255,.1);border-color:var(--accent);color:var(--accent);}
+[data-theme="light"] .chan-tab.active{background:rgba(2,132,199,.1);border-color:var(--accent);color:var(--accent);}
+
+/* CHANNEL RANK */
 .chan-rank{display:flex;flex-direction:column;gap:10px;}
 .chan-rank-item{display:flex;align-items:center;gap:12px;}
-.rank-num{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;background:var(--bg3);color:var(--text3);flex-shrink:0;}
+.rank-num{
+  width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;
+  background:var(--bg3);color:var(--text3);flex-shrink:0;
+}
 .rank-1{background:rgba(255,194,51,.15);color:var(--amber);}
 .rank-2{background:rgba(148,163,184,.1);color:var(--text2);}
 .rank-3{background:rgba(251,146,60,.1);color:var(--gofood);}
@@ -153,6 +315,8 @@ tbody tr:hover td{background:rgba(20,27,34,.8);}
 .rank-bar-wrap{flex:2;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;}
 .rank-bar{height:100%;border-radius:3px;transition:width .8s ease;}
 .rank-pct{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;min-width:44px;text-align:right;}
+
+/* SUMMARY KPI */
 .summ-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;}
 .summ-kpi-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
 .summ-kpi-label{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:6px;}
@@ -161,99 +325,60 @@ tbody tr:hover td{background:rgba(20,27,34,.8);}
 .c-gmv{color:var(--gmv);}
 .c-at{color:var(--blue);}
 .c-adt{color:var(--amber);}
-.d2d-group-header{background:var(--bg3);padding:8px 12px;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;border-left:3px solid var(--group-color,var(--accent));}
+
+/* D2D TABLE */
+.d2d-group-header{
+  background:var(--bg3);padding:8px 12px;font-family:'Syne',sans-serif;
+  font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  border-left:3px solid var(--group-color,var(--accent));
+}
+
+/* LOADING */
 .loading-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;gap:14px;}
 .spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .loading-text{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+
+/* EMPTY */
 .empty{text-align:center;padding:40px;color:var(--text3);font-size:12px;}
+
+/* GRID HELPERS */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
 .mb12{margin-bottom:12px;}
 .mb16{margin-bottom:16px;}
 .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+/* COMPARE TABLE */
 .cmp-table thead th{background:var(--bg3);}
 .cmp-total{background:rgba(0,229,255,.03)!important;}
 .cmp-total td{font-weight:700;}
 .sg-chan{font-size:11px;font-weight:600;color:var(--text2);}
 .arrow-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;}
+
 @media(max-width:768px){
   .period-grid,.period-grid-2,.fldt-grid,.g2,.g3,.chart-row-2,.chart-row-3{grid-template-columns:1fr;}
   .kpi-grid{grid-template-columns:repeat(2,1fr);}
   .summ-kpi-row{grid-template-columns:1fr;}
 }
-
-/* ========== LIQUID GLASS UPGRADE ========== */
-.aurora-bg {
-  position: fixed; top:0; left:0; width:100%; height:100%; z-index:-2;
-  background: radial-gradient(circle at 20% 30%, rgba(0,40,50,0.6), transparent 60%),
-              radial-gradient(circle at 80% 70%, rgba(0,255,157,0.12), transparent 70%);
-  animation: auroraShift 24s infinite alternate; pointer-events: none;
-}
-@keyframes auroraShift { 0%{opacity:0.5;} 100%{opacity:1;} }
-.noise-overlay {
-  position: fixed; top:0; left:0; width:100%; height:100%;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.028'/%3E%3C/svg%3E");
-  pointer-events: none; z-index:-1; opacity:0.4;
-}
-.glass-header { backdrop-filter: blur(32px); background: rgba(5, 5, 5, 0.55); border-bottom: 0.5px solid rgba(255,255,255,0.06); }
-.card, .kpi-card, .target-row, .fldt-card, .summ-kpi-card, .period-grid .card {
-  backdrop-filter: blur(16px); background: rgba(13, 17, 23, 0.75); border: 0.5px solid rgba(255,255,255,0.05);
-  transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-}
-.card:hover, .kpi-card:hover, .fldt-card:hover {
-  transform: translateY(-2px); border-color: rgba(0,229,255,0.3);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(0,229,255,0.1);
-}
-.floating-dock {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-  display: flex; gap: 8px; background: rgba(10, 12, 18, 0.75); backdrop-filter: blur(36px);
-  border: 0.5px solid rgba(255,255,255,0.1); border-radius: 60px; padding: 8px 20px; z-index: 200;
-}
-.dock-item {
-  background: transparent; border: none; padding: 8px 18px; border-radius: 40px;
-  font-size: 0.75rem; font-weight: 600; color: #b0b8c5; cursor: pointer; font-family: 'Syne', sans-serif;
-}
-.dock-item.active { background: rgba(0, 229, 255, 0.16); color: #00e5ff; box-shadow: 0 0 12px rgba(0,229,255,0.2); }
-.dock-item:hover { background: rgba(255,255,255,0.05); transform: translateY(-2px); }
-.cmd-modal {
-  position: fixed; top:0; left:0; width:100%; height:100%; backdrop-filter: blur(48px);
-  background: rgba(0,0,0,0.6); z-index:1000; display: flex; align-items: center; justify-content: center;
-  visibility: hidden; opacity: 0; transition: 0.2s;
-}
-.cmd-modal.active { visibility: visible; opacity: 1; }
-.cmd-panel { width: 560px; background: rgba(12, 16, 24, 0.88); backdrop-filter: blur(48px); border-radius: 48px; border: 0.5px solid rgba(255,255,255,0.1); padding: 20px; }
-.cmd-input { width: 100%; background: rgba(0,0,0,0.5); border: none; padding: 18px 20px; border-radius: 60px; font-size: 1rem; color: white; font-family: 'JetBrains Mono', monospace; outline: none; }
-.cmd-list { margin-top: 20px; max-height: 320px; overflow-y: auto; }
-.cmd-item { padding: 12px 16px; border-radius: 20px; cursor: pointer; color: #e2e8f0; font-family: 'DM Sans', sans-serif; }
-.cmd-item:hover, .cmd-item.selected { background: rgba(0,229,255,0.12); }
-.toast {
-  position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
-  background: rgba(0,0,0,0.7); backdrop-filter: blur(40px); border-radius: 60px;
-  padding: 10px 22px; color: white; font-size: 0.8rem; z-index: 300; opacity: 0; transition: 0.2s; pointer-events: none;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-@keyframes fadeSlideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-.kpi-card, .card, .fldt-card, .target-row { animation: fadeSlideUp 0.4s ease-out forwards; }
-@media (max-width: 768px) { .floating-dock { gap: 2px; padding: 6px 12px; } .dock-item { padding: 6px 12px; font-size: 0.65rem; } .cmd-panel { width: 90%; } }
 </style>
 </head>
 <body>
-<div class="aurora-bg"></div>
-<div class="noise-overlay"></div>
 
-<div class="header glass-header">
+<!-- HEADER -->
+<div class="header">
   <div class="header-logo">FORE COFFEE</div>
   <div class="header-sep"></div>
   <div class="header-store">KEMANG RAYA</div>
   <div class="header-right">
     <div class="header-time" id="clock"></div>
     <div class="header-status"><div class="status-dot"></div><span id="last-updated">LIVE</span></div>
-    <button class="btn-refresh" id="refreshBtn" onclick="loadData()">↺ REFRESH</button>
-    <button class="btn-refresh" id="cmdLauncher" style="margin-left:4px;">⌘K</button>
+    <button class="btn-refresh" onclick="loadData()">↺ REFRESH</button>
+    <button class="btn-theme" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light">☀️</button>
   </div>
 </div>
 
+<!-- NAV -->
 <nav class="nav">
   <button class="nav-btn active" onclick="showPage('kpi',this)"><span class="nav-icon">◈</span>KPI SUMMARY</button>
   <button class="nav-btn" onclick="showPage('channel',this)"><span class="nav-icon">◉</span>CHANNEL</button>
@@ -264,74 +389,331 @@ tbody tr:hover td{background:rgba(20,27,34,.8);}
 </nav>
 
 <div class="app-body">
-  <!-- ═══ PAGE: KPI SUMMARY ═══ (konten asli) -->
-  <div class="page active" id="page-kpi">
-    <div class="target-row">
-      <label>Periode</label><input class="inp" type="date" id="kpi-start"/>
-      <label>—</label><input class="inp" type="date" id="kpi-end"/>
-      <label>Target GMV</label><input class="inp" type="text" id="kpi-target" placeholder="700000000"/>
-      <label>Total Hari</label><input class="inp inp-sm" type="text" id="kpi-days" placeholder="30"/>
-      <button class="btn" onclick="calcKpi()">▶ HITUNG</button>
+
+<!-- ═══ PAGE: KPI SUMMARY ═══ -->
+<div class="page active" id="page-kpi">
+  <div class="target-row">
+    <label>Periode</label>
+    <input class="inp" type="date" id="kpi-start"/>
+    <label>—</label>
+    <input class="inp" type="date" id="kpi-end"/>
+    <label>Target GMV</label>
+    <input class="inp" type="text" id="kpi-target" placeholder="700000000"/>
+    <label>Total Hari</label>
+    <input class="inp inp-sm" type="text" id="kpi-days" placeholder="30"/>
+    <button class="btn" onclick="calcKpi()">▶ HITUNG</button>
+  </div>
+
+  <div class="kpi-grid" id="kpi-cards"></div>
+
+  <div class="g3 mb12">
+    <div class="card gauge-wrap" style="min-height:220px;">
+      <div class="chart-title">GMV Achievement</div>
+      <canvas id="gaugeChart" style="height:160px!important;"></canvas>
+      <div class="gauge-center">
+        <div class="gauge-pct" id="gauge-pct" style="color:var(--accent)">0%</div>
+        <div class="gauge-lbl">dari target</div>
+      </div>
     </div>
-    <div class="kpi-grid" id="kpi-cards"></div>
-    <div class="g3 mb12">
-      <div class="card gauge-wrap" style="min-height:220px;"><div class="chart-title">GMV Achievement</div><canvas id="gaugeChart" style="height:160px!important;"></canvas><div class="gauge-center"><div class="gauge-pct" id="gauge-pct" style="color:var(--accent)">0%</div><div class="gauge-lbl">dari target</div></div></div>
-      <div class="card"><div class="chart-title">Channel Contribution</div><div class="chan-contrib" id="kpi-contrib"></div></div>
-      <div class="card"><div class="chart-title">Pace vs Target</div><div id="pace-info"></div></div>
+    <div class="card">
+      <div class="chart-title">Channel Contribution</div>
+      <div class="chan-contrib" id="kpi-contrib"></div>
     </div>
-    <div class="g2 mb12">
-      <div class="card"><div class="chart-title">Daily GMV Trend + 7D MA</div><div class="chart-wrap h260"><canvas id="kpi-trend-chart"></canvas></div></div>
-      <div class="card"><div class="chart-title">Channel Stacked — Daily</div><div class="chart-wrap h260"><canvas id="kpi-stacked-chart"></canvas></div></div>
+    <div class="card">
+      <div class="chart-title">Pace vs Target</div>
+      <div id="pace-info"></div>
     </div>
   </div>
 
-  <!-- ═══ PAGE: CHANNEL ═══ (konten asli) -->
-  <div class="page" id="page-channel">
-    <div class="target-row"><label>Dari</label><input class="inp" type="date" id="ch-start"/><label>Sampai</label><input class="inp" type="date" id="ch-end"/><button class="btn" onclick="applyChannelFilter()">▶ TERAPKAN</button><button class="btn btn-ghost" onclick="resetChannelFilter()">RESET</button></div>
-    <div class="kpi-grid" id="ch-kpi-cards"></div>
-    <div class="g2 mb12"><div class="card"><div class="chart-title">Komposisi Channel</div><div class="chart-wrap h260"><canvas id="ch-pie-chart"></canvas></div></div><div class="card"><div class="chart-title">Sales per Channel</div><div class="chart-wrap h260"><canvas id="ch-bar-chart"></canvas></div></div></div>
-    <div class="card mb12"><div class="chart-title">Channel Breakdown Detail</div><div id="ch-breakdown-list"></div></div>
-    <div class="g2 mb12"><div class="card"><div class="chart-title">Avg ADT per Channel</div><div class="chart-wrap h220"><canvas id="ch-adt-chart"></canvas></div></div><div class="card"><div class="chart-title">Trend Harian per Channel</div><div class="chan-tabs" id="ch-tabs"><button class="chan-tab active" onclick="setChTrend('offline',this)">Offline</button><button class="chan-tab" onclick="setChTrend('gofood',this)">GoFood</button><button class="chan-tab" onclick="setChTrend('grabfood',this)">GrabFood</button><button class="chan-tab" onclick="setChTrend('shopee',this)">Shopee</button></div><div class="chart-wrap h200"><canvas id="ch-trend-chart"></canvas></div></div></div>
-  </div>
-
-  <!-- ═══ PAGE: PERIOD ═══ (konten asli) -->
-  <div class="page" id="page-period">
-    <div class="row mb16" style="justify-content:space-between;"><div class="row"><div class="sec-dot"></div><span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;">Period Comparison</span></div><div class="mode-toggle"><button class="mode-btn active" id="mode-weekly" onclick="setPeriodMode('weekly')">📅 Weekly</button><button class="mode-btn" id="mode-custom" onclick="setPeriodMode('custom')">🔧 Custom</button></div></div>
-    <div id="weekly-mode"><div class="period-grid mb12"><div class="card"><div class="period-header p1-color">2 Minggu Lalu</div><div class="row mb12"><input class="inp" style="flex:1" type="date" id="range1s"/><span>—</span><input class="inp" style="flex:1" type="date" id="range1e"/><button class="btn" style="padding:7px 12px;" onclick="loadPeriod(1)">Apply</button></div><div class="chart-wrap h180"><canvas id="period-chart-1"></canvas></div><div id="period-stats-1" class="mt8"></div></div><div class="card"><div class="period-header p2-color">1 Minggu Lalu</div><div class="row mb12"><input class="inp" style="flex:1" type="date" id="range2s"/><span>—</span><input class="inp" style="flex:1" type="date" id="range2e"/><button class="btn" style="padding:7px 12px;" onclick="loadPeriod(2)">Apply</button></div><div class="chart-wrap h180"><canvas id="period-chart-2"></canvas></div><div id="period-stats-2" class="mt8"></div></div><div class="card"><div class="period-header p3-color">Minggu Ini</div><div class="row mb12"><input class="inp" style="flex:1" type="date" id="range3s"/><span>—</span><input class="inp" style="flex:1" type="date" id="range3e"/><button class="btn" style="padding:7px 12px;" onclick="loadPeriod(3)">Apply</button></div><div class="chart-wrap h180"><canvas id="period-chart-3"></canvas></div><div id="period-stats-3" class="mt8"></div></div></div><div id="weekly-summary" style="display:none"><div class="card mb12"><div style="display:flex;align-items:center;justify-content:space-between;"><div class="chart-title">Tren 3 Minggu</div><div class="chan-tabs" id="weekly-chan-tabs"></div></div><div class="chart-wrap h260"><canvas id="weekly-trend-chart"></canvas></div></div><div class="g2 mb12"><div class="card"><div class="chart-title">Minggu Ini vs 1 Minggu Lalu</div><div id="compare-w32"></div></div><div class="card"><div class="chart-title">Minggu Ini vs 2 Minggu Lalu</div><div id="compare-w31"></div></div></div><div class="card mb12"><div class="chart-title">WoW Growth & CAGR</div><div id="cagr-table"></div></div></div></div>
-    <div id="custom-mode" style="display:none"><div class="period-grid-2 mb12"><div class="card"><div class="period-header p1-color">Periode 1</div><div class="row mb12"><input class="inp" style="flex:1" type="date" id="crange1s"/><span>—</span><input class="inp" style="flex:1" type="date" id="crange1e"/><button class="btn" style="padding:7px 12px;" onclick="loadCustomPeriod(1)">Apply</button></div><div class="chart-wrap h200"><canvas id="custom-chart-1"></canvas></div><div id="custom-stats-1"></div></div><div class="card"><div class="period-header p2-color">Periode 2</div><div class="row mb12"><input class="inp" style="flex:1" type="date" id="crange2s"/><span>—</span><input class="inp" style="flex:1" type="date" id="crange2e"/><button class="btn" style="padding:7px 12px;" onclick="loadCustomPeriod(2)">Apply</button></div><div class="chart-wrap h200"><canvas id="custom-chart-2"></canvas></div><div id="custom-stats-2"></div></div></div><div class="g2 mb12"><div class="card"><div class="chart-title">Channel Comparison P1 vs P2</div><div class="chart-wrap h240"><canvas id="custom-compare-chart"></canvas></div><div id="custom-compare-desc" style="margin-top:12px;"></div></div><div class="card"><div style="display:flex;align-items:center;justify-content:space-between;"><div class="chart-title">Daily Comparison</div><div class="chan-tabs" id="custom-chan-tabs"></div></div><div class="chart-wrap h200"><canvas id="custom-daily-chart"></canvas></div></div></div></div>
-  </div>
-
-  <!-- ═══ PAGE: FLDT ═══ (konten asli) -->
-  <div class="page" id="page-fldt">
-    <div class="row mb16" style="justify-content:space-between;"><div class="row"><div class="sec-dot"></div><span style="font-family:'Syne',sans-serif;">FLDT Analysis</span></div><div class="mode-toggle"><button class="mode-btn active" id="fldt-mode-weekly" onclick="setFldtMode('weekly')">📅 3 Minggu</button><button class="mode-btn" id="fldt-mode-custom" onclick="setFldtMode('custom')">🔧 Custom</button></div></div>
-    <div id="fldt-weekly"><div class="fldt-grid mb12" id="fldt-cat-cards"></div><div class="card mb12"><div style="display:flex;align-items:center;justify-content:space-between;"><div class="chart-title">Daily Trend — 3 Minggu</div><div class="chan-tabs" id="fldt-chan-tabs"></div></div><div class="chart-wrap h260"><canvas id="fldt-line-chart"></canvas></div></div><div class="g2 mb12"><div class="card"><div class="chart-title">Cup per Kategori (3 Minggu)</div><div class="chart-wrap h240"><canvas id="fldt-group-bar"></canvas></div></div><div class="card"><div class="chart-title">Komposisi Cup — Minggu Ini</div><div class="chart-wrap h240"><canvas id="fldt-doughnut"></canvas></div></div></div><div class="card mb12"><div class="chart-title">Tabel FLDT — 3 Minggu</div><div class="tbl-wrap"><table id="fldt-main-table"><thead></thead><tbody></tbody></table></div></div></div>
-    <div id="fldt-custom" style="display:none"><div class="period-grid-2 mb12"><div class="card"><div class="period-header p1-color">Periode 1</div><div class="row"><input class="inp" style="flex:1" type="date" id="fldt-c1s"/><span>—</span><input class="inp" style="flex:1" type="date" id="fldt-c1e"/><button class="btn" style="padding:7px 12px;" onclick="loadFldtCustom(1)">Apply</button></div></div><div class="card"><div class="period-header p2-color">Periode 2</div><div class="row"><input class="inp" style="flex:1" type="date" id="fldt-c2s"/><span>—</span><input class="inp" style="flex:1" type="date" id="fldt-c2e"/><button class="btn" style="padding:7px 12px;" onclick="loadFldtCustom(2)">Apply</button></div></div></div><div class="card mb12"><div class="chart-title">FLDT Comparison — P1 vs P2</div><div class="tbl-wrap"><table id="fldt-custom-table"><thead></thead><tbody></tbody></table></div></div><div class="g2 mb12"><div class="card"><div class="chart-title">Cup per Kategori P1 vs P2</div><div class="chart-wrap h240"><canvas id="fldt-custom-bar"></canvas></div></div><div class="g2" style="margin:0;gap:8px;"><div class="card"><div class="chart-title">P1 Komposisi</div><div class="chart-wrap" style="height:180px;"><canvas id="fldt-custom-dough1"></canvas></div></div><div class="card"><div class="chart-title">P2 Komposisi</div><div class="chart-wrap" style="height:180px;"><canvas id="fldt-custom-dough2"></canvas></div></div></div></div></div>
-  </div>
-
-  <!-- ═══ PAGE: ALL SUMMARY ═══ (konten asli) -->
-  <div class="page" id="page-allsumm">
-    <div class="target-row"><label>Periode 1</label><input class="inp" type="date" id="summ-p1s"/><span>—</span><input class="inp" type="date" id="summ-p1e"/><label>Periode 2 (opt.)</label><input class="inp" type="date" id="summ-p2s"/><span>—</span><input class="inp" type="date" id="summ-p2e"/><button class="btn" onclick="loadAllSumm()">▶ TAMPILKAN</button></div>
-    <div id="summ-content" style="display:none"><div class="summ-kpi-row" id="summ-kpi-row"></div><div class="g2 mb12"><div class="card"><div class="chart-title">Daily GMV Comparison</div><div id="summ-daily-gmv"></div></div><div class="card"><div class="chart-title">Channel Ranking P1</div><div class="chan-rank" id="summ-chan-rank"></div></div></div><div class="card mb12"><div class="chart-title">FLDT per Kategori</div><div class="fldt-grid" id="summ-fldt-grid"></div></div></div>
-  </div>
-
-  <!-- ═══ PAGE: DAY TO DAY ═══ (konten asli) -->
-  <div class="page" id="page-d2d">
-    <div class="target-row"><label>Dari</label><input class="inp" type="date" id="d2d-start"/><label>Sampai</label><input class="inp" type="date" id="d2d-end"/><button class="btn" onclick="loadD2D()">▶ LOAD</button></div>
-    <div id="d2d-table-wrap"><div class="empty">Pilih tanggal dan klik LOAD</div></div>
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="chart-title">Daily GMV Trend + 7D MA</div>
+      <div class="chart-wrap h260"><canvas id="kpi-trend-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="chart-title">Channel Stacked — Daily</div>
+      <div class="chart-wrap h260"><canvas id="kpi-stacked-chart"></canvas></div>
+    </div>
   </div>
 </div>
 
-<nav class="floating-dock" id="floatingDock"></nav>
-<div class="cmd-modal" id="cmdModal"><div class="cmd-panel"><input type="text" class="cmd-input" id="cmdInput" placeholder="Search page or command..."/><div class="cmd-list" id="cmdList"></div></div></div>
-<div class="toast" id="toastMsg">✨ Data refreshed</div>
+<!-- ═══ PAGE: CHANNEL ═══ -->
+<div class="page" id="page-channel">
+  <div class="target-row">
+    <label>Dari</label><input class="inp" type="date" id="ch-start"/>
+    <label>Sampai</label><input class="inp" type="date" id="ch-end"/>
+    <button class="btn" onclick="applyChannelFilter()">▶ TERAPKAN</button>
+    <button class="btn btn-ghost" onclick="resetChannelFilter()">RESET</button>
+  </div>
+
+  <div class="kpi-grid" id="ch-kpi-cards"></div>
+
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="chart-title">Komposisi Channel</div>
+      <div class="chart-wrap h260"><canvas id="ch-pie-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="chart-title">Sales per Channel</div>
+      <div class="chart-wrap h260"><canvas id="ch-bar-chart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card mb12">
+    <div class="chart-title">Channel Breakdown Detail</div>
+    <div id="ch-breakdown-list"></div>
+  </div>
+
+  <div class="g2 mb12">
+    <div class="card">
+      <div class="chart-title">Avg ADT per Channel</div>
+      <div class="chart-wrap h220"><canvas id="ch-adt-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="chart-title">Trend Harian per Channel</div>
+      <div class="chan-tabs" id="ch-tabs">
+        <button class="chan-tab active" onclick="setChTrend('offline',this)">Offline</button>
+        <button class="chan-tab" onclick="setChTrend('gofood',this)">GoFood</button>
+        <button class="chan-tab" onclick="setChTrend('grabfood',this)">GrabFood</button>
+        <button class="chan-tab" onclick="setChTrend('shopee',this)">Shopee</button>
+      </div>
+      <div class="chart-wrap h200"><canvas id="ch-trend-chart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: PERIOD ═══ -->
+<div class="page" id="page-period">
+  <div class="row mb16" style="justify-content:space-between;">
+    <div class="row">
+      <div class="sec-dot"></div>
+      <span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);">Period Comparison</span>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="mode-weekly" onclick="setPeriodMode('weekly')">📅 Weekly</button>
+      <button class="mode-btn" id="mode-custom" onclick="setPeriodMode('custom')">🔧 Custom</button>
+    </div>
+  </div>
+
+  <div id="weekly-mode">
+    <div class="period-grid mb12">
+      <div class="card">
+        <div class="period-header p1-color">2 Minggu Lalu</div>
+        <div class="row mb12">
+          <input class="inp" style="flex:1" type="date" id="range1s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="range1e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadPeriod(1)">Apply</button>
+        </div>
+        <div class="chart-wrap h180"><canvas id="period-chart-1"></canvas></div>
+        <div id="period-stats-1" class="mt8"></div>
+      </div>
+      <div class="card">
+        <div class="period-header p2-color">1 Minggu Lalu</div>
+        <div class="row mb12">
+          <input class="inp" style="flex:1" type="date" id="range2s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="range2e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadPeriod(2)">Apply</button>
+        </div>
+        <div class="chart-wrap h180"><canvas id="period-chart-2"></canvas></div>
+        <div id="period-stats-2" class="mt8"></div>
+      </div>
+      <div class="card">
+        <div class="period-header p3-color">Minggu Ini</div>
+        <div class="row mb12">
+          <input class="inp" style="flex:1" type="date" id="range3s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="range3e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadPeriod(3)">Apply</button>
+        </div>
+        <div class="chart-wrap h180"><canvas id="period-chart-3"></canvas></div>
+        <div id="period-stats-3" class="mt8"></div>
+      </div>
+    </div>
+
+    <div id="weekly-summary" style="display:none">
+      <div class="card mb12">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <div class="chart-title" style="margin:0">Tren 3 Minggu</div>
+          <div class="chan-tabs" id="weekly-chan-tabs" style="margin:0">
+            <button class="chan-tab active" onclick="setWeeklyChan('gmv',this)">GMV</button>
+            <button class="chan-tab" onclick="setWeeklyChan('offline',this)">Offline</button>
+            <button class="chan-tab" onclick="setWeeklyChan('online',this)">Online</button>
+            <button class="chan-tab" onclick="setWeeklyChan('gofood',this)">GoFood</button>
+            <button class="chan-tab" onclick="setWeeklyChan('grabfood',this)">GrabFood</button>
+            <button class="chan-tab" onclick="setWeeklyChan('shopee',this)">Shopee</button>
+          </div>
+        </div>
+        <div class="chart-wrap h260"><canvas id="weekly-trend-chart"></canvas></div>
+      </div>
+      <div class="g2 mb12">
+        <div class="card"><div class="chart-title">Minggu Ini vs 1 Minggu Lalu</div><div id="compare-w32"></div></div>
+        <div class="card"><div class="chart-title">Minggu Ini vs 2 Minggu Lalu</div><div id="compare-w31"></div></div>
+      </div>
+      <div class="card mb12">
+        <div class="chart-title">WoW Growth & CAGR</div>
+        <div id="cagr-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="custom-mode" style="display:none">
+    <div class="period-grid-2 mb12">
+      <div class="card">
+        <div class="period-header p1-color">Periode 1</div>
+        <div class="row mb12">
+          <input class="inp" style="flex:1" type="date" id="crange1s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="crange1e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadCustomPeriod(1)">Apply</button>
+        </div>
+        <div class="chart-wrap h200"><canvas id="custom-chart-1"></canvas></div>
+        <div id="custom-stats-1"></div>
+      </div>
+      <div class="card">
+        <div class="period-header p2-color">Periode 2</div>
+        <div class="row mb12">
+          <input class="inp" style="flex:1" type="date" id="crange2s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="crange2e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadCustomPeriod(2)">Apply</button>
+        </div>
+        <div class="chart-wrap h200"><canvas id="custom-chart-2"></canvas></div>
+        <div id="custom-stats-2"></div>
+      </div>
+    </div>
+    <div class="g2 mb12">
+      <div class="card"><div class="chart-title">Channel Comparison P1 vs P2</div><div class="chart-wrap h240"><canvas id="custom-compare-chart"></canvas></div><div id="custom-compare-desc" style="margin-top:12px;"></div></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <div class="chart-title" style="margin:0">Daily Comparison</div>
+          <div class="chan-tabs" id="custom-chan-tabs" style="margin:0">
+            <button class="chan-tab active" onclick="setCustomChan('gmv',this)">GMV</button>
+            <button class="chan-tab" onclick="setCustomChan('offline',this)">Offline</button>
+            <button class="chan-tab" onclick="setCustomChan('online',this)">Online</button>
+            <button class="chan-tab" onclick="setCustomChan('gofood',this)">GoFood</button>
+            <button class="chan-tab" onclick="setCustomChan('grabfood',this)">GrabFood</button>
+            <button class="chan-tab" onclick="setCustomChan('shopee',this)">Shopee</button>
+          </div>
+        </div>
+        <div class="chart-wrap h200"><canvas id="custom-daily-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: FLDT ═══ -->
+<div class="page" id="page-fldt">
+  <div class="row mb16" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <div class="row">
+      <div class="sec-dot"></div>
+      <span style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);">FLDT Analysis</span>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="fldt-mode-weekly" onclick="setFldtMode('weekly')">📅 3 Minggu</button>
+      <button class="mode-btn" id="fldt-mode-custom" onclick="setFldtMode('custom')">🔧 Custom</button>
+    </div>
+  </div>
+
+  <div id="fldt-weekly">
+    <div class="fldt-grid mb12" id="fldt-cat-cards"></div>
+    <div class="card mb12">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <div class="chart-title" style="margin:0">Daily Trend — 3 Minggu</div>
+        <div class="chan-tabs" id="fldt-chan-tabs" style="margin:0">
+          <button class="chan-tab active" onclick="setFldtChan('cup_total',this)">Total Cup</button>
+          <button class="chan-tab" onclick="setFldtChan('food_off',this)">Food</button>
+          <button class="chan-tab" onclick="setFldtChan('large_off',this)">Large</button>
+          <button class="chan-tab" onclick="setFldtChan('diary_off',this)">Diary</button>
+          <button class="chan-tab" onclick="setFldtChan('rtd_off',this)">RTD</button>
+          <button class="chan-tab" onclick="setFldtChan('seasonal_sold',this)">Seasonal</button>
+          <button class="chan-tab" onclick="setFldtChan('offline_sales',this)">Offline Sales</button>
+        </div>
+      </div>
+      <div class="chart-wrap h260"><canvas id="fldt-line-chart"></canvas></div>
+    </div>
+    <div class="g2 mb12">
+      <div class="card"><div class="chart-title">Cup per Kategori (3 Minggu)</div><div class="chart-wrap h240"><canvas id="fldt-group-bar"></canvas></div></div>
+      <div class="card"><div class="chart-title">Komposisi Cup — Minggu Ini</div><div class="chart-wrap h240"><canvas id="fldt-doughnut"></canvas></div></div>
+    </div>
+    <div class="card mb12">
+      <div class="chart-title">Tabel FLDT — 3 Minggu</div>
+      <div class="tbl-wrap"><table id="fldt-main-table"><thead><tr></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="fldt-custom" style="display:none">
+    <div class="period-grid-2 mb12">
+      <div class="card" style="padding:14px 16px;">
+        <div class="period-header p1-color">Periode 1</div>
+        <div class="row">
+          <input class="inp" style="flex:1" type="date" id="fldt-c1s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="fldt-c1e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadFldtCustom(1)">Apply</button>
+        </div>
+      </div>
+      <div class="card" style="padding:14px 16px;">
+        <div class="period-header p2-color">Periode 2</div>
+        <div class="row">
+          <input class="inp" style="flex:1" type="date" id="fldt-c2s"/><span style="color:var(--text3)">—</span>
+          <input class="inp" style="flex:1" type="date" id="fldt-c2e"/>
+          <button class="btn" style="padding:7px 12px;font-size:10px;" onclick="loadFldtCustom(2)">Apply</button>
+        </div>
+      </div>
+    </div>
+    <div class="card mb12"><div class="chart-title">FLDT Comparison — P1 vs P2</div><div class="tbl-wrap"><table id="fldt-custom-table"><thead><tr></tr></thead><tbody></tbody></table></div></div>
+    <div class="g2 mb12">
+      <div class="card"><div class="chart-title">Cup per Kategori P1 vs P2</div><div class="chart-wrap h240"><canvas id="fldt-custom-bar"></canvas></div></div>
+      <div class="g2" style="margin:0;gap:8px;">
+        <div class="card" style="padding:14px;"><div class="chart-title">P1 Komposisi</div><div class="chart-wrap" style="height:180px;"><canvas id="fldt-custom-dough1"></canvas></div></div>
+        <div class="card" style="padding:14px;"><div class="chart-title">P2 Komposisi</div><div class="chart-wrap" style="height:180px;"><canvas id="fldt-custom-dough2"></canvas></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: ALL SUMMARY ═══ -->
+<div class="page" id="page-allsumm">
+  <div class="target-row">
+    <label>Periode 1</label>
+    <input class="inp" type="date" id="summ-p1s"/><span style="color:var(--text3)">—</span>
+    <input class="inp" type="date" id="summ-p1e"/>
+    <label>Periode 2 (opt.)</label>
+    <input class="inp" type="date" id="summ-p2s"/><span style="color:var(--text3)">—</span>
+    <input class="inp" type="date" id="summ-p2e"/>
+    <button class="btn" onclick="loadAllSumm()">▶ TAMPILKAN</button>
+  </div>
+  <div id="summ-content" style="display:none">
+    <div class="summ-kpi-row" id="summ-kpi-row"></div>
+    <div class="g2 mb12">
+      <div class="card"><div class="chart-title">Daily GMV Comparison</div><div id="summ-daily-gmv"></div></div>
+      <div class="card"><div class="chart-title">Channel Ranking P1</div><div class="chan-rank" id="summ-chan-rank"></div></div>
+    </div>
+    <div class="card mb12"><div class="chart-title">FLDT per Kategori</div><div class="fldt-grid" id="summ-fldt-grid"></div></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: DAY TO DAY ═══ -->
+<div class="page" id="page-d2d">
+  <div class="target-row">
+    <label>Dari</label><input class="inp" type="date" id="d2d-start"/>
+    <label>Sampai</label><input class="inp" type="date" id="d2d-end"/>
+    <button class="btn" onclick="loadD2D()">▶ LOAD</button>
+  </div>
+  <div id="d2d-table-wrap">
+    <div class="empty">Pilih tanggal dan klik LOAD</div>
+  </div>
+</div>
+
+</div><!-- /app-body -->
 
 <script>
-// ============================================================
-// ORIGINAL SCRIPT LENGKAP (tidak ada perubahan)
-// ============================================================
+// ═══════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════
 const SHEET_ID = '1Y49X7Gj2Zy8XaX85ONHQTXnd3ItrmwPZHA2MXlRy4gU';
 const SHEET_NAME = 'bacot';
 const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+// ═══════════════════════════════════════
+// GLOBALS
+// ═══════════════════════════════════════
 let allData = [];
 let charts = {};
 let periodData = {};
@@ -344,15 +726,37 @@ let _fldtChan = 'cup_total';
 let _chTrendChan = 'offline';
 let _periodMode = 'weekly';
 let _fldtMode = 'weekly';
+
 const HARI = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
-const TC = { gmv:'#f472b6', offline:'#60a5fa', online:'#34d399', gofood:'#fb923c', grabfood:'#4ade80', shopee:'#f87171', accent:'#00e5ff', accent2:'#00ff9d', amber:'#ffc233', text2:'#94a3b8', text3:'#475569', bg:'#070a0e', bg2:'#0d1117', bg3:'#141b22', border:'#1e2d3d', grid:'rgba(30,45,61,0.8)' };
+
+// ═══════════════════════════════════════
+// CHART COLORS
+// ═══════════════════════════════════════
+const TC = {
+  gmv:'#f472b6', offline:'#60a5fa', online:'#34d399',
+  gofood:'#fb923c', grabfood:'#4ade80', shopee:'#f87171',
+  accent:'#00e5ff', accent2:'#00ff9d', amber:'#ffc233',
+  text2:'#94a3b8', text3:'#475569', bg:'#070a0e', bg2:'#0d1117', bg3:'#141b22',
+  border:'#1e2d3d', grid:'rgba(30,45,61,0.8)',
+};
 const FLDT_COLORS = ['#00ff9d','#60a5fa','#a78bfa','#ffc233','#2dd4bf','#f472b6'];
 const FLDT_KEYS = ['food_off','large_off','diary_off','topping_off','rtd_off','seasonal_sold'];
 const FLDT_LABELS = ['Food','Large','Diary','Topping','RTD','Seasonal'];
+
 Chart.defaults.color = TC.text2;
 Chart.defaults.font = { family: "'DM Sans', sans-serif", size: 11 };
 
-const fmtRp = v => { v = v || 0; const abs = Math.abs(v); if(abs>=1e9) return 'Rp '+(abs/1e9).toFixed(2)+'M'; if(abs>=1e6) return 'Rp '+(abs/1e6).toFixed(1)+'jt'; if(abs>=1e3) return 'Rp '+(abs/1e3).toFixed(0)+'rb'; return 'Rp '+Math.round(abs); };
+// ═══════════════════════════════════════
+// FORMATTERS
+// ═══════════════════════════════════════
+const fmtRp = v => {
+  v = v || 0; const neg = v < 0, abs = Math.abs(v);
+  let s = abs >= 1e9 ? 'Rp '+(abs/1e9).toFixed(2)+'M'
+        : abs >= 1e6 ? 'Rp '+(abs/1e6).toFixed(1)+'jt'
+        : abs >= 1e3 ? 'Rp '+(abs/1e3).toFixed(0)+'rb'
+        : 'Rp '+Math.round(abs);
+  return neg ? '-'+s : s;
+};
 const fmtNum = v => new Intl.NumberFormat('id-ID').format(Math.round(v||0));
 const fmtPct = v => (v||0).toFixed(1)+'%';
 const fmtDate = d => d ? d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) : '—';
@@ -364,6 +768,9 @@ const avg = (arr,k) => arr.length ? sum(arr,k)/arr.length : 0;
 const pct = (a,b) => b ? a/b*100 : 0;
 const safePct = (a,b) => b>0 ? ((a-b)/b*100) : 0;
 
+// ═══════════════════════════════════════
+// CHART HELPERS
+// ═══════════════════════════════════════
 function destroyChart(id) { if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
 function baseOptions(yFmt='rp') {
   return {
@@ -395,6 +802,9 @@ function grad(ctx, color, a1=0.3, a2=0) {
   return g;
 }
 
+// ═══════════════════════════════════════
+// DATA LOAD & PARSE
+// ═══════════════════════════════════════
 async function loadData() {
   document.getElementById('last-updated').textContent = 'LOADING...';
   try {
@@ -404,7 +814,6 @@ async function loadData() {
     document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('id-ID');
     initDefaults();
     renderCurrentPage();
-    showToast('Data refreshed');
   } catch(e) {
     document.getElementById('last-updated').textContent = 'ERROR';
     console.error(e);
@@ -447,6 +856,7 @@ function parseCSVLine(line) {
   result.push(cur); return result;
 }
 
+// Map row to standard keys
 function mapRow(r) {
   return {
     date: r._dateStr,
@@ -507,6 +917,9 @@ function aggregateData(rows) {
   };
 }
 
+// ═══════════════════════════════════════
+// INIT DEFAULTS
+// ═══════════════════════════════════════
 function initDefaults() {
   if(!allData.length) return;
   const last = allData[allData.length-1]._dateStr;
@@ -536,6 +949,9 @@ function initDefaults() {
 function setIfEmpty(id,val){ const el=document.getElementById(id); if(el&&!el.value) el.value=val; }
 function getVal(id){ return document.getElementById(id)?.value||''; }
 
+// ═══════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════
 let currentPage='kpi';
 function showPage(p,btn){
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
@@ -551,13 +967,19 @@ function renderPage(p){
   else if(p==='channel') applyChannelFilter();
   else if(p==='period') initPeriodPage();
   else if(p==='fldt') initFldtPage();
-  else if(p==='allsumm') loadAllSumm();
-  else if(p==='d2d') loadD2D();
+  else if(p==='allsumm') {}
+  else if(p==='d2d') {}
 }
 
+// ═══════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════
 function updateClock(){ document.getElementById('clock').textContent=new Date().toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'}); }
 updateClock(); setInterval(updateClock,30000);
 
+// ═══════════════════════════════════════
+// PAGE: KPI SUMMARY
+// ═══════════════════════════════════════
 function calcKpi() {
   const s=getVal('kpi-start'), e=getVal('kpi-end');
   if(!s||!e||!allData.length) return;
@@ -577,6 +999,7 @@ function calcKpi() {
   const total=data.offline+data.gofood+data.grabfood+data.shopee||1;
   const contrib={offline:pct(data.offline,total),gofood:pct(data.gofood,total),grabfood:pct(data.grabfood,total),shopee:pct(data.shopee,total),online:pct(data.online,data.gmv)};
 
+  // KPI Cards
   const kpis=[
     {l:'Target GMV',v:fmtRp(target),s:'',c:'var(--accent)'},
     {l:'Current GMV',v:fmtRp(data.gmv),s:elapsed+' hari data',c:'var(--gmv)'},
@@ -598,8 +1021,10 @@ function calcKpi() {
       ${k.s?`<div class="kpi-sub">${k.s}</div>`:''}
     </div>`).join('');
 
+  // Gauge
   buildGauge(achPct);
 
+  // Contrib
   const contribItems=[
     {name:'GoFood',val:contrib.gofood,color:TC.gofood},
     {name:'Offline',val:contrib.offline,color:TC.offline},
@@ -614,6 +1039,7 @@ function calcKpi() {
       <div class="chan-pct">${fmtPct(c.val)}</div>
     </div>`).join('');
 
+  // Pace info
   const pacePct=target?pct(avgDaily,dailyTarget):0;
   const paceColor=pacePct>=100?'var(--accent2)':pacePct>=80?'var(--amber)':'var(--accent3)';
   document.getElementById('pace-info').innerHTML=`
@@ -631,7 +1057,9 @@ function calcKpi() {
       ].map(x=>`<div style="background:var(--bg3);border-radius:8px;padding:10px 12px;"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">${x.l}</div><div style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--text);">${x.v}</div></div>`).join('')}
     </div>`;
 
+  // Trend chart
   buildKpiTrend(rows, ma7);
+  // Stacked chart
   buildKpiStacked(rows);
 }
 
@@ -679,6 +1107,9 @@ function buildKpiStacked(rows) {
   });
 }
 
+// ═══════════════════════════════════════
+// PAGE: CHANNEL
+// ═══════════════════════════════════════
 let _chRows=[];
 function applyChannelFilter() {
   const s=getVal('ch-start'), e=getVal('ch-end');
@@ -687,6 +1118,7 @@ function applyChannelFilter() {
   const d=aggregateData(_chRows);
   const total=d.offline+d.gofood+d.grabfood+d.shopee||1;
 
+  // KPI
   const kpis=[
     {l:'Total GMV',v:fmtRp(d.gmv),c:'var(--gmv)'},{l:'Offline Sales',v:fmtRp(d.offline),c:'var(--offline)'},{l:'GoFood',v:fmtRp(d.gofood),c:'var(--gofood)'},
     {l:'GrabFood',v:fmtRp(d.grabfood),c:'var(--grabfood)'},{l:'Shopee',v:fmtRp(d.shopee),c:'var(--shopee)'},{l:'Online (Total)',v:fmtRp(d.online),c:'var(--online)'},
@@ -696,6 +1128,7 @@ function applyChannelFilter() {
 
   const channels=[{name:'Offline',val:d.offline,color:TC.offline},{name:'GoFood',val:d.gofood,color:TC.gofood},{name:'GrabFood',val:d.grabfood,color:TC.grabfood},{name:'Shopee',val:d.shopee,color:TC.shopee}];
 
+  // Pie
   destroyChart('chPie');
   charts.chPie=new Chart(document.getElementById('ch-pie-chart'),{
     type:'doughnut',
@@ -703,6 +1136,7 @@ function applyChannelFilter() {
     options:{responsive:true,maintainAspectRatio:false,cutout:'60%',animation:{duration:700},plugins:{legend:{position:'right',labels:{color:TC.text2,font:{size:11},padding:14,usePointStyle:true}},tooltip:{backgroundColor:'rgba(13,17,23,.96)',titleColor:TC.text,bodyColor:TC.text2,borderColor:'rgba(0,229,255,.15)',borderWidth:1,cornerRadius:10,padding:12,callbacks:{label:ctx=>' '+ctx.label+': '+fmtRp(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,total))+')'}}}}
   });
 
+  // Bar
   destroyChart('chBar');
   charts.chBar=new Chart(document.getElementById('ch-bar-chart'),{
     type:'bar',
@@ -710,6 +1144,7 @@ function applyChannelFilter() {
     options:{...baseOptions(),plugins:{...baseOptions().plugins,legend:{display:false}}}
   });
 
+  // Breakdown list
   const maxV=Math.max(...channels.map(c=>c.val),1);
   document.getElementById('ch-breakdown-list').innerHTML=`<div style="display:flex;flex-direction:column;gap:12px;">`+channels.map(c=>`
     <div style="display:flex;align-items:center;gap:12px;">
@@ -720,6 +1155,7 @@ function applyChannelFilter() {
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);min-width:44px;text-align:right;">${fmtPct(pct(c.val,total))}</div>
     </div>`).join('')+`</div>`;
 
+  // ADT chart
   const adtData=[{n:'Store',v:d.adt_store,c:TC.accent},{n:'Offline',v:d.adt_offline,c:TC.offline},{n:'Online',v:d.adt_online,c:TC.online},{n:'GoFood',v:d.adt_gofood,c:TC.gofood},{n:'GrabFood',v:d.adt_grabfood,c:TC.grabfood},{n:'Shopee',v:d.adt_shopee,c:TC.shopee}];
   destroyChart('chAdt');
   charts.chAdt=new Chart(document.getElementById('ch-adt-chart'),{
@@ -755,6 +1191,9 @@ function buildChTrend() {
   });
 }
 
+// ═══════════════════════════════════════
+// PAGE: PERIOD COMPARISON
+// ═══════════════════════════════════════
 function setPeriodMode(m) {
   _periodMode=m;
   document.getElementById('weekly-mode').style.display=m==='weekly'?'':'none';
@@ -831,9 +1270,9 @@ function buildWeeklyMiniCompare(id,curr,ref,lc,lr) {
   const names=['GMV','Offline','Online','GrabFood','GoFood','Shopee'];
   const rows=keys.map((k,i)=>{
     const v1=ref[k]||0,v2=curr[k]||0,diff=v2-v1,base=v1||1,p2=Math.abs(diff/base*100).toFixed(1),up=diff>=0;
-    return `<tr class="${i===0?'cmp-total':''}"><td class="mc-chan">${names[i]}</td><td class="td-mono">${fmtRp(v1)}</td><td class="td-mono">${fmtRp(v2)}<td><span class="inline-arr ${up?'arr-up':'arr-dn'}">${up?'↑':'↓'} ${p2}%</span></td></tr>`;
+    return `<tr class="${i===0?'cmp-total':''}"><td class="mc-chan">${names[i]}</td><td class="td-mono">${fmtRp(v1)}</td><td class="td-mono">${fmtRp(v2)}</td><td><span class="inline-arr ${up?'arr-up':'arr-dn'}">${up?'↑':'↓'} ${p2}%</span></td></tr>`;
   }).join('');
-  document.getElementById(id).innerHTML=`<table class="mini-compare" style="width:100%;"><thead><tr><th>Channel</th><th>${lr}</th><th>${lc}</th><th>Δ</th></tr></thead><tbody>${rows}</tbody></tr>`;
+  document.getElementById(id).innerHTML=`<table class="mini-compare" style="width:100%;"><thead><tr><th>Channel</th><th>${lr}</th><th>${lc}</th><th>Δ</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 function buildCagrTable() {
   const [p1,p2,p3]=[periodData[1],periodData[2],periodData[3]];
@@ -850,6 +1289,7 @@ function buildCagrTable() {
   document.getElementById('cagr-table').innerHTML=`<table class="mini-compare" style="width:100%;"><thead><tr><th>Channel</th><th>W1</th><th>W2</th><th>W3</th><th>W1→W2</th><th>W2→W3</th><th>CAGR/Wk</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
+// Custom period
 function loadCustomPeriod(n) {
   const s=getVal('crange'+n+'s'), e=getVal('crange'+n+'e');
   if(!s||!e||!allData.length) return;
@@ -902,6 +1342,9 @@ function buildCustomDailyChart() {
   });
 }
 
+// ═══════════════════════════════════════
+// PAGE: FLDT
+// ═══════════════════════════════════════
 const FLDT_META=[
   {key:'food_off',label:'Food',icon:'🍱',color:'#00ff9d'},
   {key:'large_off',label:'Large',icon:'☕',color:'#60a5fa'},
@@ -934,6 +1377,7 @@ function renderFldtWeekly() {
   const labels=[fmtR(p1.daily)||'W1',fmtR(p2.daily)||'W2',fmtR(p3.daily)||'W3'];
   const maxAll=Math.max(...FLDT_META.map(m=>Math.max(p1[m.key]||0,p2[m.key]||0,p3[m.key]||0)),1);
 
+  // Category cards
   document.getElementById('fldt-cat-cards').innerHTML=FLDT_META.map((m,mi)=>{
     const [v1,v2,v3]=[p1[m.key]||0,p2[m.key]||0,p3[m.key]||0];
     const wow=v2>0?safePct(v3,v2):0;
@@ -1018,7 +1462,7 @@ function buildFldtMainTable(periods,labels) {
   let tbody=metrics.map(m=>{
     const vals=periods.map(p=>p[m.k]||0);
     const tds=vals.map(v=>`<td class="td-mono">${fmtA(v,m.rp)}</td>`).join('');
-    const wow=periods.length>1?`<td>${arrowFn(vals[1],vals[2]||vals[1])}</td>`:'';
+    const wow=periods.length>1?`<td>${arrowFn(vals[1],vals[2]||vals[1])}</td>`:'' ;
     const cagr=periods.length>=3&&vals[0]&&vals[2]?(()=>{const r=(Math.pow(vals[2]/vals[0],.5)-1)*100,up=r>=0;return`<td><span class="inline-arr ${up?'arr-up':'arr-dn'}">${up?'↑':'↓'} ${Math.abs(r).toFixed(1)}%</span></td>`;})():(periods.length>1?'<td>—</td>':'');
     return `<tr><td style="font-weight:600;color:var(--text2);white-space:nowrap;">${m.l}</td>${tds}${wow}${cagr}</tr>`;
   }).join('');
@@ -1026,6 +1470,7 @@ function buildFldtMainTable(periods,labels) {
   tbl.querySelector('tbody').innerHTML=tbody;
 }
 
+// FLDT custom
 function loadFldtCustom(n) {
   const s=getVal('fldt-c'+n+'s'), e=getVal('fldt-c'+n+'e');
   if(!s||!e||!allData.length) return;
@@ -1051,6 +1496,9 @@ function renderFldtCustom() {
   buildFldtDoughnut('fldt-custom-dough2',p2);
 }
 
+// ═══════════════════════════════════════
+// PAGE: ALL SUMMARY
+// ═══════════════════════════════════════
 function loadAllSumm() {
   const s1=getVal('summ-p1s'),e1=getVal('summ-p1e'); if(!s1||!e1||!allData.length) return;
   const rows1=filterData(s1,e1); if(!rows1.length) return;
@@ -1068,20 +1516,22 @@ function renderAllSumm(d1,d2) {
     {l:'Total GMV',v:fmtRp(d1.gmv),c:'var(--gmv)',d:diff(d1.gmv,d2?.gmv)},
     {l:'AT Store',v:fmtRp(d1.at_store),c:'var(--blue)',d:diff(d1.at_store,d2?.at_store)},
     {l:'ADT Store',v:fmtNum(d1.adt_store),c:'var(--amber)',d:diff(d1.adt_store,d2?.adt_store)},
-  ].map(k=>`<div class="summ-kpi-card"><div class="summ-kpi-label">${k.l}</div><div class="summ-kpi-val" style="color:${k.c}">${k.v}</div>${badge(k.d)}</div>`).join('');
+  ].map(k=>`<div class="summ-kpi-card"><div class="summ-kpi-label">${k.l}</div><div class="summ-kpi-val ${k.c===''?'':''}" style="color:${k.c}">${k.v}</div>${badge(k.d)}</div>`).join('');
 
+  // Daily GMV
   const maxV=Math.max(...d1.daily.map(r=>r.gmv|0),...(d2?d2.daily.map(r=>r.gmv||0):[]),1);
   document.getElementById('summ-daily-gmv').innerHTML=`<div style="max-height:360px;overflow-y:auto;">`+d1.daily.map((r,i)=>{
     const v1=r.gmv||0,v2=d2?.daily[i]?.gmv||0,w1=(v1/maxV*100).toFixed(1),w2=d2?(v2/maxV*100).toFixed(1):0;
     const diffP=d2&&v2?safePct(v1,v2):null;
     return `<div style="display:grid;grid-template-columns:60px 1fr ${d2?'1fr ':''} 55px;gap:8px;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">
       <div style="font-size:10px;font-family:'JetBrains Mono',monospace;"><div style="color:var(--text)">${HARI[new Date(r.date).getDay()]}</div><div style="color:var(--text3)">${fmtShortDate(r.date)}</div></div>
-      <div style="background:var(--bg3);border-radius:4px;overflow:hidden;height:20px;"><div style="height:100%;width:${w1}%;background:linear-gradient(90deg,${TC.gmv}88,${TC.gmv});border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;"><span style="font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;color:rgba(0,0,0,.8);">${fmtRp(v1)}</span></div></div>
-      ${d2?`<div style="background:var(--bg3);border-radius:4px;overflow:hidden;height:20px;"><div style="height:100%;width:${w2}%;background:rgba(255,255,255,.18);border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;"><span style="font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text2);">${fmtRp(v2)}</span></div></div>`:''}
+      <div style="background:var(--bg3);border-radius:4px;overflow:hidden;height:20px;"><div style="height:100%;width:${w1}%;background:linear-gradient(90deg,${TC.gmv}88,${TC.gmv});border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;transition:width .8s ease;"><span style="font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;color:rgba(0,0,0,.8);">${fmtRp(v1)}</span></div></div>
+      ${d2?`<div style="background:var(--bg3);border-radius:4px;overflow:hidden;height:20px;"><div style="height:100%;width:${w2}%;background:rgba(255,255,255,.18);border-radius:4px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;transition:width .8s ease;"><span style="font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text2);">${fmtRp(v2)}</span></div></div>`:''}
       <div style="text-align:right;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;color:${diffP===null?'transparent':diffP>=0?'var(--accent2)':'var(--accent3)'};">${diffP!==null?(diffP>=0?'+':'')+diffP.toFixed(1)+'%':''}</div>
     </div>`;
   }).join('')+'</div>';
 
+  // Channel ranking
   const chans=[{n:'Offline',k:'offline',c:TC.offline},{n:'GoFood',k:'gofood',c:TC.gofood},{n:'GrabFood',k:'grabfood',c:TC.grabfood},{n:'Shopee',k:'shopee',c:TC.shopee},{n:'Online',k:'online',c:TC.online}].sort((a,b)=>(d1[b.k]||0)-(d1[a.k]||0));
   const totCh=chans.reduce((a,c)=>a+(d1[c.k]||0),0)||1, maxCh=d1[chans[0].k]||1;
   document.getElementById('summ-chan-rank').innerHTML=chans.map((c,i)=>{
@@ -1096,6 +1546,7 @@ function renderAllSumm(d1,d2) {
     </div>`;
   }).join('');
 
+  // FLDT cards
   document.getElementById('summ-fldt-grid').innerHTML=FLDT_META.map(m=>{
     const v1=d1[m.key]||0, v2=d2?d2[m.key]||0:null;
     const cup1=d1.cup_total||1, adt1=d1.adt_offline||1;
@@ -1112,6 +1563,9 @@ function renderAllSumm(d1,d2) {
   }).join('');
 }
 
+// ═══════════════════════════════════════
+// PAGE: DAY TO DAY
+// ═══════════════════════════════════════
 function loadD2D() {
   const s=getVal('d2d-start'), e=getVal('d2d-end');
   if(!s||!e||!allData.length) return;
@@ -1198,78 +1652,37 @@ function renderD2D(rows, byDate) {
   </div>`;
 }
 
-// ========== TAMBAHAN UI ENHANCEMENTS (Dock & Command Palette) ==========
-function buildDock() {
-  const pages = ['kpi', 'channel', 'period', 'fldt', 'allsumm', 'd2d'];
-  const labels = ['KPI', 'CHANNEL', 'W/W', 'FLDT', 'SUMMARY', 'D2D'];
-  const dock = document.getElementById('floatingDock');
-  if (!dock) return;
-  dock.innerHTML = '';
-  pages.forEach((p, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'dock-item' + (currentPage === p ? ' active' : '');
-    btn.innerText = labels[i];
-    btn.onclick = () => { showPage(p, btn); document.querySelectorAll('.dock-item').forEach(b => b.classList.remove('active')); btn.classList.add('active'); };
-    dock.appendChild(btn);
-  });
+// ═══════════════════════════════════════
+// THEME TOGGLE
+// ═══════════════════════════════════════
+let _isDark = true;
+function toggleTheme() {
+  _isDark = !_isDark;
+  document.documentElement.setAttribute('data-theme', _isDark ? 'dark' : 'light');
+  document.getElementById('theme-btn').textContent = _isDark ? '☀️' : '🌙';
+  updateChartColors();
+}
+function updateChartColors() {
+  const isDark = _isDark;
+  // Update TC (chart color palette) for current theme
+  TC.text2 = isDark ? '#94a3b8' : '#334155';
+  TC.text3 = isDark ? '#475569' : '#64748b';
+  TC.bg    = isDark ? '#070a0e' : '#f0f4f8';
+  TC.bg2   = isDark ? '#0d1117' : '#ffffff';
+  TC.bg3   = isDark ? '#141b22' : '#f8fafc';
+  TC.border= isDark ? '#1e2d3d' : '#d1dce8';
+  TC.grid  = isDark ? 'rgba(30,45,61,0.8)' : 'rgba(209,220,232,0.9)';
+  TC.accent= isDark ? '#00e5ff' : '#0284c7';
+  TC.accent2=isDark ? '#00ff9d' : '#059669';
+  Chart.defaults.color = TC.text2;
+  // Re-render current page to update charts with new colors
+  renderCurrentPage();
 }
 
-function commandPaletteInit() {
-  const modal = document.getElementById('cmdModal');
-  const input = document.getElementById('cmdInput');
-  const listDiv = document.getElementById('cmdList');
-  const commands = ['kpi', 'channel', 'period', 'fldt', 'allsumm', 'd2d', 'refresh'];
-  function render(filter = '') {
-    listDiv.innerHTML = commands.filter(c => c.includes(filter.toLowerCase())).map(c => `<div class="cmd-item" data-cmd="${c}">${c.toUpperCase()}</div>`).join('');
-  }
-  render();
-  listDiv.onclick = (e) => {
-    const cmd = e.target.closest('.cmd-item')?.dataset.cmd;
-    if (cmd === 'refresh') loadData();
-    else if (cmd) showPage(cmd);
-    modal.classList.remove('active');
-  };
-  input.oninput = () => render(input.value);
-  document.addEventListener('keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-      e.preventDefault();
-      modal.classList.toggle('active');
-      if (modal.classList.contains('active')) input.focus();
-    }
-  });
-  const cmdBtn = document.getElementById('cmdLauncher');
-  if (cmdBtn) cmdBtn.onclick = () => { modal.classList.toggle('active'); input.focus(); };
-  modal.onclick = (e) => { if (e.target === modal) modal.classList.remove('active'); };
-}
-
-function showToast(msg) { const t = document.getElementById('toastMsg'); if (t) { t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); } }
-
-// Override loadData untuk menampilkan toast
-const originalLoadData = loadData;
-window.loadData = async function() {
-  await originalLoadData();
-  showToast('Data refreshed');
-  buildDock();
-};
-
-// Inisialisasi setelah DOM siap
-document.addEventListener('DOMContentLoaded', () => {
-  buildDock();
-  commandPaletteInit();
-  // Sinkronisasi dock saat navigasi manual
-  const navBtns = document.querySelectorAll('.nav-btn');
-  navBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      setTimeout(() => {
-        const activePage = currentPage;
-        const pages = ['kpi', 'channel', 'period', 'fldt', 'allsumm', 'd2d'];
-        const idx = pages.indexOf(activePage);
-        const dockItems = document.querySelectorAll('.dock-item');
-        dockItems.forEach((item, i) => { if (i === idx) item.classList.add('active'); else item.classList.remove('active'); });
-      }, 50);
-    });
-  });
-});
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+loadData();
 </script>
 </body>
 </html>
