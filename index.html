@@ -6,6 +6,7 @@
 <title>Sales Dashboard — Fore Coffee</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* ═══ THEME TOKENS ═══ */
 :root,[data-theme="dark"]{
@@ -608,6 +609,8 @@ tbody tr:hover td{background:var(--surface2);}
     <div class="mode-toggle">
       <button class="mode-btn active" id="fldt-mode-weekly" onclick="setFldtMode('weekly')">📅 3 Minggu</button>
       <button class="mode-btn" id="fldt-mode-custom" onclick="setFldtMode('custom')">🔧 Custom</button>
+      <button class="mode-btn" id="fldt-dl-excel" onclick="downloadFldtExcel()" style="border-color:#22c55e;color:#22c55e;" title="Download Excel">⬇ Excel</button>
+      <button class="mode-btn" id="fldt-dl-pdf" onclick="downloadFldtPDF()" style="border-color:#f87171;color:#f87171;" title="Download PDF">⬇ PDF</button>
     </div>
   </div>
 
@@ -1682,8 +1685,208 @@ function renderD2D(rows, byDate) {
 }
 
 // ═══════════════════════════════════════
-// THEME TOGGLE
+// FLDT DOWNLOAD
 // ═══════════════════════════════════════
+function getFldtReportData() {
+  const isWeekly = _fldtMode === 'weekly';
+  let periods, wLabels, fmtR;
+  fmtR = d => { if(!d||!d.length) return ''; const f=fmtShortDate(d[0].date),l=fmtShortDate(d[d.length-1].date); return f===l?f:f+'–'+l; };
+
+  if (isWeekly) {
+    if (!fldtData[1]||!fldtData[2]||!fldtData[3]) return null;
+    periods = [fldtData[1], fldtData[2], fldtData[3]];
+    wLabels = [fmtR(periods[0].daily)||'W1', fmtR(periods[1].daily)||'W2', fmtR(periods[2].daily)||'W3'];
+  } else {
+    if (!fldtData.p1||!fldtData.p2) return null;
+    periods = [fldtData.p1, fldtData.p2];
+    wLabels = [fmtR(periods[0].daily)||'P1', fmtR(periods[1].daily)||'P2'];
+  }
+  return { periods, wLabels, isWeekly };
+}
+
+function getKontVal(key, val, period) {
+  if (key === 'food_off') return period.adt_offline > 0 ? (val / period.adt_offline * 100) : null;
+  return period.cup_total > 0 ? (val / period.cup_total * 100) : null;
+}
+
+function downloadFldtExcel() {
+  const d = getFldtReportData();
+  if (!d) { alert('Data belum tersedia. Pastikan halaman FLDT sudah di-load.'); return; }
+  const { periods, wLabels } = d;
+  const wb = XLSX.utils.book_new();
+  const KONTRIB_KEYS = ['food_off','large_off','diary_off','topping_off'];
+
+  // ── Sheet 1: Card Summary ──
+  const cardMeta = FLDT_META;
+  const cardHeaders = ['Kategori', 'Icon', ...wLabels.flatMap(w => [w+' Qty', w+' Kontribusi']),'WoW W→W (terbaru)'];
+  const cardRows = [cardHeaders];
+  cardMeta.forEach(m => {
+    const vals = periods.map(p => p[m.key]||0);
+    const konts = periods.map((p,i) => {
+      if (!KONTRIB_KEYS.includes(m.key)) return '—';
+      const k = getKontVal(m.key, vals[i], p);
+      return k !== null ? k.toFixed(1)+'%' : '—';
+    });
+    const lastIdx = vals.length - 1;
+    const wow = lastIdx > 0 && vals[lastIdx-1] > 0
+      ? ((vals[lastIdx]-vals[lastIdx-1])/vals[lastIdx-1]*100).toFixed(1)+'%'
+      : '—';
+    const row = [m.label, m.icon];
+    vals.forEach((v, i) => { row.push(v); row.push(konts[i]); });
+    row.push(wow);
+    cardRows.push(row);
+  });
+  const ws1 = XLSX.utils.aoa_to_sheet(cardRows);
+  ws1['!cols'] = [{wch:14},{wch:6},...wLabels.flatMap(()=>[{wch:10},{wch:12}]),{wch:14}];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Card Summary');
+
+  // ── Sheet 2: Tabel FLDT Detail ──
+  const metrics = [
+    {l:'Offline Sales',k:'offline_sales',rp:true},{l:'Total Cup',k:'cup_total'},{l:'Food Cup',k:'food_off'},
+    {l:'Large Cup',k:'large_off'},{l:'Diary Cup',k:'diary_off'},{l:'Topping Cup',k:'topping_off'},
+    {l:'RTD Cup',k:'rtd_off'},{l:'Seasonal',k:'seasonal_sold'},{l:'Food Qty (All Ch.)',k:'food_qty_all'},
+    {l:'ADT Offline',k:'adt_offline'},{l:'AT Offline',k:'at_offline',rp:true},
+  ];
+  const tblHeaders = ['Metrik', ...wLabels];
+  if (wLabels.length >= 2) tblHeaders.push('WoW', 'CAGR/Wk');
+  const tblRows = [tblHeaders];
+  metrics.forEach(m => {
+    const vals = periods.map(p => p[m.k]||0);
+    const row = [m.l, ...vals];
+    if (wLabels.length >= 2) {
+      const last = vals.length-1;
+      const wow = vals[last-1]>0 ? ((vals[last]-vals[last-1])/vals[last-1]*100).toFixed(1)+'%' : '—';
+      const cagr = vals.length>=3 && vals[0]>0 ? ((Math.pow(vals[last]/vals[0], 1/(vals.length-1))-1)*100).toFixed(1)+'%' : '—';
+      row.push(wow, cagr);
+    }
+    tblRows.push(row);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(tblRows);
+  ws2['!cols'] = [{wch:20},...wLabels.map(()=>({wch:14})),{wch:10},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'FLDT Detail');
+
+  // ── Sheet 3: Kontribusi per Periode ──
+  const kontHeaders = ['Kategori', ...wLabels.map(w=>w+' Qty'), ...wLabels.map(w=>w+' Kontribusi')];
+  const kontRows = [kontHeaders];
+  KONTRIB_KEYS.forEach(key => {
+    const m = FLDT_META.find(x=>x.key===key);
+    const vals = periods.map(p=>p[key]||0);
+    const konts = periods.map((p,i)=>{ const k=getKontVal(key,vals[i],p); return k!==null?k.toFixed(1)+'%':'—'; });
+    kontRows.push([m.label, ...vals, ...konts]);
+  });
+  const ws3 = XLSX.utils.aoa_to_sheet(kontRows);
+  ws3['!cols'] = [{wch:14},...wLabels.map(()=>({wch:10})),...wLabels.map(()=>({wch:14}))];
+  XLSX.utils.book_append_sheet(wb, ws3, 'Kontribusi');
+
+  const dateStr = new Date().toLocaleDateString('id-ID').replace(/\//g,'-');
+  XLSX.writeFile(wb, `FLDT_Report_${dateStr}.xlsx`);
+}
+
+function downloadFldtPDF() {
+  const d = getFldtReportData();
+  if (!d) { alert('Data belum tersedia. Pastikan halaman FLDT sudah di-load.'); return; }
+  const { periods, wLabels } = d;
+  const KONTRIB_KEYS = ['food_off','large_off','diary_off','topping_off'];
+  const dateStr = new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+  const isDark = _isDark;
+
+  // Build print window
+  const printWin = window.open('','_blank','width=800,height=900');
+  const bg = isDark?'#0d1117':'#ffffff';
+  const bg2 = isDark?'#141b22':'#f8fafc';
+  const border = isDark?'#1e2d3d':'#e2e8f0';
+  const text = isDark?'#e2e8f0':'#0f172a';
+  const text2 = isDark?'#94a3b8':'#334155';
+  const text3 = isDark?'#475569':'#64748b';
+  const accent = isDark?'#00e5ff':'#0284c7';
+
+  const cardHTML = FLDT_META.map(m => {
+    const vals = periods.map(p => p[m.key]||0);
+    const lastIdx = vals.length-1;
+    const wow = lastIdx>0&&vals[lastIdx-1]>0 ? ((vals[lastIdx]-vals[lastIdx-1])/vals[lastIdx-1]*100) : null;
+    const wowStr = wow!==null ? `<span style="color:${wow>=0?'#00ff9d':'#ff4d6d'};font-size:11px;">${wow>=0?'↑':'↓'}${Math.abs(wow).toFixed(1)}% WoW</span>` : '';
+    const weekRows = vals.map((v, i) => {
+      const kont = KONTRIB_KEYS.includes(m.key) ? getKontVal(m.key, v, periods[i]) : null;
+      const kontStr = kont!==null ? `<span style="color:${i===lastIdx?m.color:text3};margin-left:auto;font-size:10px;">${kont.toFixed(1)}%</span>` : '';
+      return `<div style="display:flex;align-items:center;gap:8px;margin-top:5px;">
+        <span style="font-size:10px;color:${i===lastIdx?m.color:text3};width:28px;font-family:monospace;">${wLabels[i]}</span>
+        <div style="flex:1;height:12px;background:${bg};border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${vals[lastIdx]>0?(v/Math.max(...vals)*100).toFixed(1):0}%;background:${i===lastIdx?m.color:'rgba(255,255,255,0.15)'};border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;">
+            <span style="font-size:8px;font-weight:700;font-family:monospace;color:${i===lastIdx?'rgba(0,0,0,.8)':text2};">${new Intl.NumberFormat('id-ID').format(v)}</span>
+          </div>
+        </div>
+        ${kontStr}
+      </div>`;
+    }).join('');
+    return `<div style="background:${bg2};border:1px solid ${border};border-top:2px solid ${m.color};border-radius:10px;padding:14px;break-inside:avoid;">
+      <div style="font-size:18px;margin-bottom:4px;">${m.icon}</div>
+      <div style="font-family:sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${m.color};margin-bottom:2px;">${m.label}</div>
+      <div style="font-family:monospace;font-size:22px;font-weight:700;color:${text};margin-bottom:2px;">${new Intl.NumberFormat('id-ID').format(vals[lastIdx])}</div>
+      <div style="margin-bottom:8px;">${wowStr}</div>
+      ${weekRows}
+    </div>`;
+  }).join('');
+
+  // Detail table
+  const metrics = [
+    {l:'Offline Sales',k:'offline_sales',rp:true},{l:'Total Cup',k:'cup_total'},{l:'Food Cup',k:'food_off'},
+    {l:'Large Cup',k:'large_off'},{l:'Diary Cup',k:'diary_off'},{l:'Topping Cup',k:'topping_off'},
+    {l:'RTD Cup',k:'rtd_off'},{l:'Seasonal',k:'seasonal_sold'},{l:'ADT Offline',k:'adt_offline'},{l:'AT Offline',k:'at_offline',rp:true},
+  ];
+  const fmtA = (v,isRp) => isRp ? (v>=1e6?'Rp '+(v/1e6).toFixed(2)+'jt':new Intl.NumberFormat('id-ID').format(Math.round(v))) : new Intl.NumberFormat('id-ID').format(Math.round(v));
+  const tblHead = `<tr><th style="text-align:left;padding:8px 10px;font-size:10px;color:${text3};border-bottom:1px solid ${border};">Metrik</th>${wLabels.map(w=>`<th style="text-align:right;padding:8px 10px;font-size:10px;color:${text3};border-bottom:1px solid ${border};">${w}</th>`).join('')}${wLabels.length>=2?`<th style="text-align:right;padding:8px 10px;font-size:10px;color:${text3};border-bottom:1px solid ${border};">WoW</th>`:''}
+</tr>`;
+  const tblBody = metrics.map((m,ri) => {
+    const vals = periods.map(p=>p[m.k]||0);
+    const last = vals.length-1;
+    const wow = last>0&&vals[last-1]>0 ? ((vals[last]-vals[last-1])/vals[last-1]*100) : null;
+    const wowTd = wLabels.length>=2 ? `<td style="text-align:right;padding:7px 10px;font-family:monospace;font-size:10px;color:${wow===null?text3:wow>=0?'#00ff9d':'#ff4d6d'};">${wow!==null?(wow>=0?'↑':'↓')+Math.abs(wow).toFixed(1)+'%':'—'}</td>` : '';
+    return `<tr style="background:${ri%2===0?'transparent':isDark?'rgba(255,255,255,0.02)':'rgba(0,0,0,0.02)'};">
+      <td style="padding:7px 10px;font-size:11px;font-weight:600;color:${text2};">${m.l}</td>
+      ${vals.map((v,i)=>`<td style="text-align:right;padding:7px 10px;font-family:monospace;font-size:10px;color:${i===last?text:text2};">${fmtA(v,m.rp)}</td>`).join('')}
+      ${wowTd}
+    </tr>`;
+  }).join('');
+
+  printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>FLDT Report — Fore Coffee</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:${bg};color:${text};padding:28px;font-size:12px;}
+  @media print{body{padding:16px;}}
+  @page{margin:16mm;}
+</style></head><body>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid ${accent};">
+    <div>
+      <div style="font-size:20px;font-weight:800;letter-spacing:3px;background:linear-gradient(135deg,${accent},#00ff9d);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2px;">FORE COFFEE</div>
+      <div style="font-size:11px;color:${text3};letter-spacing:1px;">FLDT REPORT — KEMANG RAYA</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:12px;color:${text2};font-weight:600;">${dateStr}</div>
+      <div style="font-size:10px;color:${text3};margin-top:2px;">${wLabels.join(' · ')}</div>
+    </div>
+  </div>
+
+  <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${text3};margin-bottom:12px;">📦 CARD SUMMARY</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
+    ${cardHTML}
+  </div>
+
+  <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:${text3};margin-bottom:10px;">📋 DETAIL METRIK</div>
+  <table style="width:100%;border-collapse:collapse;background:${bg2};border:1px solid ${border};border-radius:8px;overflow:hidden;">
+    <thead>${tblHead}</thead>
+    <tbody>${tblBody}</tbody>
+  </table>
+
+  <div style="margin-top:20px;font-size:9px;color:${text3};text-align:center;">
+    Fore Coffee Sales Dashboard · Generated ${new Date().toLocaleString('id-ID')} · Kontribusi: Food = Food÷ADT Offline, Large/Diary/Topping = Qty÷Total Cup
+  </div>
+
+  <script>window.onload=()=>{window.print();}<\/script>
+</body></html>`);
+  printWin.document.close();
+}
+
+
 let _isDark = true;
 function toggleTheme() {
   _isDark = !_isDark;
