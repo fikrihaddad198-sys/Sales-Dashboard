@@ -142,28 +142,175 @@ body{
 .sec-text{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);}
 .sec-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
 
-/* KPI GRID */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px;}
-.kpi-card{
-  background:var(--bg3);border:1px solid var(--border);border-radius:12px;
-  padding:14px 16px;position:relative;overflow:hidden;transition:border-color .25s,box-shadow .25s,transform .25s;
+/* ═══ KPI HERO REDESIGN ═══ */
+
+/* True dark override for KPI page */
+#page-kpi { background:transparent; padding:0; }
+
+/* Filter bar */
+.kpi-filter-bar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:12px 20px;
+  background:rgba(255,255,255,0.03);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
 }
-.kpi-card:hover{border-color:var(--accent);box-shadow:0 0 20px rgba(0,229,255,0.08);transform:translateY(-1px);}
-[data-theme="light"] .kpi-card:hover{box-shadow:0 4px 20px rgba(2,132,199,0.12);}
-.kpi-card::after{
+[data-theme="light"] .kpi-filter-bar{
+  background:rgba(255,255,255,0.7);
+  border-bottom:1px solid rgba(0,0,0,0.06);
+}
+.kpi-filter-group{display:flex;align-items:center;gap:8px;}
+.kpi-filter-lbl{font-size:9px;font-family:'Syne',sans-serif;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);white-space:nowrap;}
+.kpi-filter-sep{color:var(--text3);font-size:12px;}
+.kpi-hitung-btn{padding:9px 22px;border-radius:12px;font-size:11px;letter-spacing:1.5px;}
+
+/* Hero wrapper - scrollable */
+.kpi-hero{
+  padding:20px;
+  overflow-y:auto;
+  height:calc(100vh - 56px - 44px - 57px);
+  scroll-behavior:smooth;
+}
+.kpi-hero::-webkit-scrollbar{width:3px;}
+.kpi-hero::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px;}
+
+/* Liquid Glass base */
+.kpi-glass-hero,.kpi-glass-card{
+  position:relative;overflow:hidden;border-radius:20px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.09);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.2);
+  transition:transform .3s ease,box-shadow .3s ease;
+}
+.kpi-glass-hero:hover,.kpi-glass-card:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 16px 48px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    inset 0 -1px 0 rgba(0,0,0,0.2);
+}
+[data-theme="light"] .kpi-glass-hero,[data-theme="light"] .kpi-glass-card{
+  background:rgba(255,255,255,0.65);
+  border:1px solid rgba(255,255,255,0.9);
+  box-shadow:0 8px 32px rgba(15,23,42,0.1),inset 0 1px 0 rgba(255,255,255,0.9);
+}
+/* Noise texture overlay for glass feel */
+.kpi-glass-noise{
+  position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size:200px 200px;opacity:.5;
+}
+
+/* Hero top row */
+.kpi-hero-top{
+  display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px;
+}
+@media(max-width:900px){.kpi-hero-top{grid-template-columns:1fr;}}
+
+/* Big GMV hero card */
+.kpi-glass-hero{
+  padding:28px 32px;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(0,229,255,0.08) 0%, transparent 60%),
+    rgba(255,255,255,0.03);
+}
+[data-theme="light"] .kpi-glass-hero{
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(2,132,199,0.06) 0%, transparent 60%),
+    rgba(255,255,255,0.7);
+}
+.kpi-hero-eyebrow{
+  font-size:9px;font-family:'JetBrains Mono',monospace;
+  letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;
+}
+.kpi-hero-bignum{
+  font-family:'Syne',sans-serif;font-size:clamp(32px,4vw,52px);font-weight:800;
+  color:var(--text);line-height:1;margin-bottom:8px;
+  text-shadow:0 0 40px rgba(0,229,255,0.2);
+}
+[data-theme="light"] .kpi-hero-bignum{text-shadow:none;}
+.kpi-hero-sub{font-size:11px;color:var(--text3);margin-bottom:20px;font-family:'JetBrains Mono',monospace;}
+
+/* Progress bar in hero */
+.kpi-hero-progress-wrap{margin-top:auto;}
+.kpi-hero-progress-track{
+  height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;margin-bottom:6px;
+}
+[data-theme="light"] .kpi-hero-progress-track{background:rgba(0,0,0,0.08);}
+.kpi-hero-progress-fill{
+  height:100%;border-radius:3px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  box-shadow:0 0 12px rgba(0,229,255,0.5);
+  transition:width 1.2s cubic-bezier(.4,0,.2,1);
+}
+.kpi-hero-progress-labels{
+  display:flex;justify-content:space-between;
+  font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);
+}
+
+/* Right column cards */
+.kpi-hero-right{display:flex;flex-direction:column;gap:10px;}
+.kpi-glass-card{padding:18px 20px;}
+.kpi-hero-ach{
+  background:radial-gradient(ellipse at 80% 20%, rgba(244,114,182,0.12) 0%, transparent 60%), rgba(255,255,255,0.03);
+}
+.kpi-hero-vsideal{}
+.kpi-hero-pace{
+  background:radial-gradient(ellipse at 80% 80%, rgba(167,139,250,0.1) 0%, transparent 60%), rgba(255,255,255,0.03);
+}
+.kpi-mini-eyebrow{font-size:8px;font-family:'JetBrains Mono',monospace;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.kpi-mini-bignum{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;line-height:1;margin-bottom:4px;}
+.kpi-mini-sub{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+
+/* Metric strip */
+.kpi-strip-wrap{
+  margin-bottom:16px;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;
+}
+.kpi-strip-wrap::-webkit-scrollbar{height:2px;}
+.kpi-strip-wrap::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);}
+.kpi-strip{display:flex;gap:10px;padding:2px 0;}
+.kpi-strip-item{
+  flex-shrink:0;scroll-snap-align:start;
+  min-width:140px;padding:14px 16px;border-radius:14px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  transition:transform .25s,border-color .25s,background .25s;
+  position:relative;overflow:hidden;
+}
+.kpi-strip-item::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:var(--kpi-color,var(--accent));
+  background:var(--strip-color,var(--accent));
+  opacity:.7;
 }
-.kpi-lbl{font-size:9px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px;}
-.kpi-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--text);line-height:1;margin-bottom:4px;}
-.kpi-sub{font-size:10px;color:var(--text3);}
-.kpi-badge{display:inline-block;font-size:9px;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;margin-top:4px;}
-.badge-up{background:rgba(0,255,157,0.1);color:var(--accent2);}
-.badge-dn{background:rgba(255,77,109,0.1);color:var(--accent3);}
-.badge-neu{background:rgba(148,163,184,0.1);color:var(--text2);}
-[data-theme="light"] .badge-up{background:rgba(5,150,105,0.1);color:var(--accent2);}
-[data-theme="light"] .badge-dn{background:rgba(225,29,72,0.1);color:var(--accent3);}
-[data-theme="light"] .badge-neu{background:rgba(100,116,139,0.1);color:var(--text2);}
+.kpi-strip-item:hover{transform:translateY(-3px);border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);}
+[data-theme="light"] .kpi-strip-item{background:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.9);}
+[data-theme="light"] .kpi-strip-item:hover{background:rgba(255,255,255,0.9);}
+.kpi-strip-lbl{font-size:8px;font-family:'JetBrains Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.kpi-strip-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;line-height:1;margin-bottom:3px;}
+.kpi-strip-sub{font-size:9px;color:var(--text3);}
+
+/* Bottom grid */
+.kpi-bottom-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px;}
+@media(max-width:900px){.kpi-bottom-grid{grid-template-columns:1fr;}}
+.kpi-section-title{
+  font-size:9px;font-family:'Syne',sans-serif;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:14px;
+}
+
+/* Animate in */
+@keyframes heroSlideUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:none;}}
+.kpi-hero-top,.kpi-strip-wrap,.kpi-bottom-grid,.g2{animation:heroSlideUp .5s ease both;}
+.kpi-strip-wrap{animation-delay:.1s;}
+.kpi-bottom-grid{animation-delay:.15s;}
+.g2{animation-delay:.2s;}
 
 /* CHART CARDS */
 .chart-row{display:grid;gap:12px;margin-bottom:12px;}
@@ -393,48 +540,108 @@ tbody tr:hover td{background:var(--surface2);}
 
 <!-- ═══ PAGE: KPI SUMMARY ═══ -->
 <div class="page active" id="page-kpi">
-  <div class="target-row">
-    <label>Periode</label>
-    <input class="inp" type="date" id="kpi-start"/>
-    <label>—</label>
-    <input class="inp" type="date" id="kpi-end"/>
-    <label>Target GMV</label>
-    <input class="inp" type="text" id="kpi-target" placeholder="700000000"/>
-    <label>Total Hari</label>
-    <input class="inp inp-sm" type="text" id="kpi-days" placeholder="30"/>
-    <button class="btn" onclick="calcKpi()">▶ HITUNG</button>
+
+  <!-- ── Filter Bar ── -->
+  <div class="kpi-filter-bar">
+    <div class="kpi-filter-group">
+      <span class="kpi-filter-lbl">Periode</span>
+      <input class="inp" type="date" id="kpi-start"/>
+      <span class="kpi-filter-sep">—</span>
+      <input class="inp" type="date" id="kpi-end"/>
+    </div>
+    <div class="kpi-filter-group">
+      <span class="kpi-filter-lbl">Target GMV</span>
+      <input class="inp" type="text" id="kpi-target" placeholder="700000000"/>
+    </div>
+    <div class="kpi-filter-group">
+      <span class="kpi-filter-lbl">Total Hari</span>
+      <input class="inp inp-sm" type="text" id="kpi-days" placeholder="30"/>
+    </div>
+    <button class="btn kpi-hitung-btn" onclick="calcKpi()">▶ HITUNG</button>
   </div>
 
-  <div class="kpi-grid" id="kpi-cards"></div>
+  <!-- ── Hero Section ── -->
+  <div class="kpi-hero" id="kpi-hero" style="display:none">
 
-  <div class="g3 mb12">
-    <div class="card gauge-wrap" style="min-height:220px;">
-      <div class="chart-title">GMV Achievement</div>
-      <canvas id="gaugeChart" style="height:160px!important;"></canvas>
-      <div class="gauge-center">
-        <div class="gauge-pct" id="gauge-pct" style="color:var(--accent)">0%</div>
-        <div class="gauge-lbl">dari target</div>
+    <!-- Hero Top: GMV + Achievement side by side -->
+    <div class="kpi-hero-top">
+      <!-- Current GMV -->
+      <div class="kpi-glass-hero kpi-hero-gmv">
+        <div class="kpi-glass-noise"></div>
+        <div class="kpi-hero-eyebrow">CURRENT GMV</div>
+        <div class="kpi-hero-bignum" id="h-gmv">—</div>
+        <div class="kpi-hero-sub" id="h-gmv-sub"></div>
+        <div class="kpi-hero-progress-wrap">
+          <div class="kpi-hero-progress-track">
+            <div class="kpi-hero-progress-fill" id="h-progress"></div>
+          </div>
+          <div class="kpi-hero-progress-labels">
+            <span id="h-ach-lbl">0%</span>
+            <span id="h-target-lbl">Target</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Achievement + vs Ideal stacked -->
+      <div class="kpi-hero-right">
+        <div class="kpi-glass-card kpi-hero-ach">
+          <div class="kpi-glass-noise"></div>
+          <div class="kpi-mini-eyebrow">ACHIEVEMENT</div>
+          <div class="kpi-mini-bignum" id="h-ach">—</div>
+          <div class="kpi-mini-sub" id="h-ach-sub">dari target</div>
+        </div>
+        <div class="kpi-glass-card kpi-hero-vsideal">
+          <div class="kpi-glass-noise"></div>
+          <div class="kpi-mini-eyebrow">VS IDEAL</div>
+          <div class="kpi-mini-bignum" id="h-vsideal">—</div>
+          <div class="kpi-mini-sub" id="h-vsideal-sub"></div>
+        </div>
+        <div class="kpi-glass-card kpi-hero-pace">
+          <div class="kpi-glass-noise"></div>
+          <div class="kpi-mini-eyebrow">PACE</div>
+          <div class="kpi-mini-bignum" id="h-pace">—</div>
+          <div class="kpi-mini-sub">vs daily target</div>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <div class="chart-title">Channel Contribution</div>
-      <div class="chan-contrib" id="kpi-contrib"></div>
-    </div>
-    <div class="card">
-      <div class="chart-title">Pace vs Target</div>
-      <div id="pace-info"></div>
-    </div>
-  </div>
 
-  <div class="g2 mb12">
-    <div class="card">
-      <div class="chart-title">Daily GMV Trend + 7D MA</div>
-      <div class="chart-wrap h260"><canvas id="kpi-trend-chart"></canvas></div>
+    <!-- Metric Strip: horizontal scroll -->
+    <div class="kpi-strip-wrap">
+      <div class="kpi-strip" id="kpi-strip"></div>
     </div>
-    <div class="card">
-      <div class="chart-title">Channel Stacked — Daily</div>
-      <div class="chart-wrap h260"><canvas id="kpi-stacked-chart"></canvas></div>
+
+    <!-- Bottom: Gauge + Channel + Pace detail -->
+    <div class="kpi-bottom-grid">
+      <div class="kpi-glass-card gauge-wrap" style="min-height:200px;">
+        <div class="kpi-section-title">GMV Achievement</div>
+        <canvas id="gaugeChart" style="height:140px!important;"></canvas>
+        <div class="gauge-center">
+          <div class="gauge-pct" id="gauge-pct" style="color:var(--accent)">0%</div>
+          <div class="gauge-lbl">dari target</div>
+        </div>
+      </div>
+      <div class="kpi-glass-card">
+        <div class="kpi-section-title">Channel Contribution</div>
+        <div class="chan-contrib" id="kpi-contrib"></div>
+      </div>
+      <div class="kpi-glass-card">
+        <div class="kpi-section-title">Pace vs Target</div>
+        <div id="pace-info"></div>
+      </div>
     </div>
+
+    <!-- Charts -->
+    <div class="g2 mb12">
+      <div class="kpi-glass-card">
+        <div class="kpi-section-title">Daily GMV Trend + 7D MA</div>
+        <div class="chart-wrap h260"><canvas id="kpi-trend-chart"></canvas></div>
+      </div>
+      <div class="kpi-glass-card">
+        <div class="kpi-section-title">Channel Stacked — Daily</div>
+        <div class="chart-wrap h260"><canvas id="kpi-stacked-chart"></canvas></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1002,27 +1209,60 @@ function calcKpi() {
   const total=data.offline+data.gofood+data.grabfood+data.shopee||1;
   const contrib={offline:pct(data.offline,total),gofood:pct(data.gofood,total),grabfood:pct(data.grabfood,total),shopee:pct(data.shopee,total),online:pct(data.online,data.gmv)};
 
-  // KPI Cards
-  const kpis=[
-    {l:'Target GMV',v:fmtRp(target),s:'',c:'var(--accent)'},
-    {l:'Current GMV',v:fmtRp(data.gmv),s:elapsed+' hari data',c:'var(--gmv)'},
+  // ── Populate Hero ──
+  document.getElementById('kpi-hero').style.display='';
+
+  // Big GMV card
+  document.getElementById('h-gmv').textContent = fmtRp(data.gmv);
+  document.getElementById('h-gmv-sub').textContent = elapsed+' hari data · Target '+fmtRp(target);
+  document.getElementById('h-progress').style.width = Math.min(achPct,100).toFixed(1)+'%';
+  document.getElementById('h-progress').style.background = achPct>=100
+    ? 'linear-gradient(90deg,var(--accent2),var(--green))'
+    : achPct>=80
+    ? 'linear-gradient(90deg,var(--amber),var(--accent))'
+    : 'linear-gradient(90deg,var(--accent3),var(--amber))';
+  document.getElementById('h-ach-lbl').textContent = fmtPct(achPct);
+  document.getElementById('h-target-lbl').textContent = fmtRp(target);
+
+  // Achievement card
+  const achColor = achPct>=100?'var(--accent2)':achPct>=80?'var(--amber)':'var(--accent3)';
+  document.getElementById('h-ach').style.color = achColor;
+  document.getElementById('h-ach').textContent = fmtPct(achPct);
+  document.getElementById('h-ach-sub').textContent = 'dari target · '+elapsed+'/'+totalDays+' hari';
+
+  // vs Ideal
+  const vsColor = vsIdeal>=0?'var(--accent2)':'var(--accent3)';
+  document.getElementById('h-vsideal').style.color = vsColor;
+  document.getElementById('h-vsideal').textContent = (vsIdeal>=0?'+':'')+fmtPct(vsIdeal);
+  document.getElementById('h-vsideal-sub').textContent = vsIdeal>=0?'Ahead of ideal':'Behind ideal · ideal '+fmtPct(idealPct);
+
+  // Pace
+  const pacePct2=target?pct(avgDaily,dailyTarget):0;
+  const paceColor2=pacePct2>=100?'var(--accent2)':pacePct2>=80?'var(--amber)':'var(--accent3)';
+  document.getElementById('h-pace').style.color = paceColor2;
+  document.getElementById('h-pace').textContent = fmtPct(pacePct2);
+
+  // Metric strip — secondary KPIs
+  const stripKpis=[
+    {l:'Target GMV',v:fmtRp(target),s:'bulan ini',c:'var(--accent)'},
     {l:'Gap to Target',v:fmtRp(Math.abs(target-data.gmv)),s:target-data.gmv<=0?'✓ Tercapai':'Kurang',c:target-data.gmv<=0?'var(--accent2)':'var(--accent3)'},
-    {l:'Achievement',v:fmtPct(achPct),s:'dari target',c:achPct>=100?'var(--accent2)':achPct>=80?'var(--amber)':'var(--accent3)'},
-    {l:'Ideal Achievement',v:fmtPct(idealPct),s:elapsed+'/'+totalDays+' hari',c:'var(--accent)'},
-    {l:'vs Ideal',v:(vsIdeal>=0?'+':'')+fmtPct(vsIdeal),s:vsIdeal>=0?'Ahead':'Behind',c:vsIdeal>=0?'var(--accent2)':'var(--accent3)'},
     {l:'Daily Target',v:fmtRp(dailyTarget),s:'per hari',c:'var(--amber)'},
     {l:'Avg Daily GMV',v:fmtRp(avgDaily),s:'aktual',c:'var(--offline)'},
-    {l:'Forecast EOM',v:fmtRp(forecastEom),s:(forecastEom>=target?'✓':'⚠')+' '+fmtRp(forecastEom-target)+' vs target',c:forecastEom>=target?'var(--accent2)':'var(--accent3)'},
-    {l:'Pace vs Target',v:fmtPct(target?pct(avgDaily,dailyTarget):0),s:'kecepatan saat ini',c:'var(--purple)'},
-    {l:'Total Transaksi',v:fmtNum(sum(rows,'adt_store')),s:'all transactions',c:'var(--online)'},
-    {l:'Avg IPT',v:avg(rows,'ipt').toFixed(2),s:'item per transaksi',c:'var(--amber)'},
+    {l:'Forecast EOM',v:fmtRp(forecastEom),s:(forecastEom>=target?'✓ On track':'⚠ Risk'),c:forecastEom>=target?'var(--accent2)':'var(--accent3)'},
+    {l:'Total Transaksi',v:fmtNum(sum(rows,'adt_store')),s:'all channels',c:'var(--online)'},
+    {l:'Avg IPT',v:avg(rows,'ipt').toFixed(2),s:'item/transaksi',c:'var(--amber)'},
+    {l:'Sisa Hari',v:remaining+' hari',s:'tersisa',c:'var(--purple)'},
   ];
-  document.getElementById('kpi-cards').innerHTML=kpis.map(k=>`
-    <div class="kpi-card" style="--kpi-color:${k.c}">
-      <div class="kpi-lbl">${k.l}</div>
-      <div class="kpi-val" style="color:${k.c}">${k.v}</div>
-      ${k.s?`<div class="kpi-sub">${k.s}</div>`:''}
+  document.getElementById('kpi-strip').innerHTML = stripKpis.map(k=>`
+    <div class="kpi-strip-item" style="--strip-color:${k.c}">
+      <div class="kpi-strip-lbl">${k.l}</div>
+      <div class="kpi-strip-val" style="color:${k.c}">${k.v}</div>
+      <div class="kpi-strip-sub">${k.s}</div>
     </div>`).join('');
+
+  // legacy kpi-cards (keep empty so old refs don't break)
+  const legacyEl = document.getElementById('kpi-cards');
+  if(legacyEl) legacyEl.innerHTML='';
 
   // Gauge
   buildGauge(achPct);
