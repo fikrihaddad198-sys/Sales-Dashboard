@@ -897,8 +897,17 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 /* ─────────────────────────────────────────────────────
    RACE PAGE
 ───────────────────────────────────────────────────── */
-#page-race { padding: 0; display:none; }
-#page-race.active { display:block; }
+#page-race {
+  display: none;
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  z-index: 10;
+  background: var(--bg);
+}
+#page-race.active { display: block; }
 .race-inner { display:flex; flex-direction:column; gap:14px; padding:var(--sp5); }
 
 .race-controls {
@@ -1426,6 +1435,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
         <button class="toggle-btn" onclick="setRaceSpeed(120)">⚡</button>
       </div>
     </div>
+    <button class="btn-ghost" onclick="initRacePage()" style="background:var(--surface);border-color:var(--border-md);">⬤ Load</button>
     <button class="btn" id="race-play-btn" onclick="toggleRace()">▶ Play</button>
     <button class="btn-ghost" onclick="resetRace()">↺ Reset</button>
     <div class="race-day-display" id="race-day-display">—</div>
@@ -1705,7 +1715,7 @@ function renderPage(p){
   else if(p==='channel') applyChannelFilter();
   else if(p==='period') initPeriodPage();
   else if(p==='fldt') initFldtPage();
-  else if(p==='race') initRacePage();
+  else if(p==='race'){ if(!_raceRows.length) initRacePage(); }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2375,18 +2385,26 @@ const RACE_CHANNELS=[
 ];
 
 function initRacePage(){
+  // Sync tanggal dari KPI kalau race belum diset
+  const ks=getVal('kpi-start'), ke=getVal('kpi-end');
+  if(!getVal('race-start')&&ks) document.getElementById('race-start').value=ks;
+  if(!getVal('race-end')&&ke)   document.getElementById('race-end').value=ke;
+
   const s=getVal('race-start'), e=getVal('race-end');
-  if(!s||!e) return;
+  if(!s||!e){ console.warn('Race: tanggal kosong'); return; }
+  if(!allData.length){ console.warn('Race: data belum loaded'); return; }
+
   _raceRows=filterData(s,e);
+  if(!_raceRows.length){ console.warn('Race: tidak ada data di range ini'); return; }
+
   _raceTarget=parseNum(getVal('kpi-target')||'700000000');
   _raceTotalDays=parseInt(getVal('kpi-days'))||30;
   _raceFrame=0;
   _racePlaying=false;
-  // Destroy existing trail chart so it rebuilds on visible canvas
   destroyChart('raceTrail');
   document.getElementById('race-play-btn').textContent='▶ Play';
-  // Small delay so DOM is rendered before chart init
-  setTimeout(()=>renderRaceFrame(0), 60);
+  document.getElementById('race-detail-card').style.display='none';
+  setTimeout(()=>renderRaceFrame(0), 80);
 }
 
 function setRaceSpeed(ms){
@@ -2397,11 +2415,23 @@ function setRaceSpeed(ms){
 }
 
 function toggleRace(){
-  if(!_raceRows.length){ initRacePage(); if(!_raceRows.length) return; }
+  // Kalau belum ada data, init dulu
+  if(!_raceRows.length){
+    initRacePage();
+    // tunggu init selesai (ada setTimeout 80ms di dalam)
+    setTimeout(()=>{
+      if(!_raceRows.length){ alert('Tidak ada data. Pastikan tanggal sudah benar.'); return; }
+      _racePlaying=true;
+      document.getElementById('race-play-btn').textContent='⏸ Pause';
+      _raceFrame=0;
+      _raceTimer=setInterval(raceStep, _raceSpeed);
+    }, 150);
+    return;
+  }
   _racePlaying=!_racePlaying;
   document.getElementById('race-play-btn').textContent=_racePlaying?'⏸ Pause':'▶ Play';
   if(_racePlaying){
-    if(_raceFrame>=_raceRows.length) _raceFrame=0;
+    if(_raceFrame>=_raceRows.length-1) _raceFrame=0;
     _raceTimer=setInterval(raceStep, _raceSpeed);
   } else {
     clearInterval(_raceTimer);
@@ -2412,8 +2442,13 @@ function resetRace(){
   clearInterval(_raceTimer);
   _racePlaying=false;
   _raceFrame=0;
+  _raceRows=[];
+  destroyChart('raceTrail');
   document.getElementById('race-play-btn').textContent='▶ Play';
-  if(_raceRows.length) renderRaceFrame(0);
+  document.getElementById('race-day-display').textContent='—';
+  document.getElementById('race-bars').innerHTML='';
+  document.getElementById('race-detail-card').style.display='none';
+  initRacePage();
 }
 
 function raceStep(){
