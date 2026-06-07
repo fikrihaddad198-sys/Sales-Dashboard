@@ -2561,8 +2561,8 @@ function renderRaceFrame(frameIdx){
   document.getElementById('race-day-display').textContent=
     'Hari '+elapsed+' — '+HARI[dateObj.getDay()]+' '+fmtShortDate(cur.date);
 
-  // ── Counter animation duration = 80% of step interval ──
-  const cDur = Math.round(_raceSpeed * 0.78);
+  // ── Counter duration = full step speed so it fills the entire interval ──
+  const cDur = _raceSpeed;
 
   // Previous values (default 0 on first frame)
   const prev = _racePrevVals;
@@ -2623,7 +2623,7 @@ function renderRaceFrame(frameIdx){
         <div class="race-bar-rank" id="rrank-${c.key}">${i+1}</div>
         <div class="race-bar-name">${c.name}</div>
         <div class="race-bar-track">
-          <div class="race-bar-fill" id="rbar-${c.key}" style="width:0%;background:${c.color};box-shadow:0 0 12px ${c.color}55;transition:width ${_raceSpeed*0.45}ms cubic-bezier(.23,1,.32,1);">
+          <div class="race-bar-fill" id="rbar-${c.key}" style="width:0%;background:${c.color};box-shadow:0 0 12px ${c.color}55;">
             <span class="race-bar-val" id="rbval-${c.key}"></span>
           </div>
         </div>
@@ -2636,20 +2636,38 @@ function renderRaceFrame(frameIdx){
     const row=barsEl.querySelector('[data-key="'+c.key+'"]');
     if(row){ row.style.order=i; }
     const val=totals[c.key]||0;
-    const barW=(val/maxVal*100).toFixed(1);
+    const targetBarW=val/maxVal*100;
     const share=pct(val,totalCh).toFixed(1);
     const barEl=document.getElementById('rbar-'+c.key);
-    if(barEl){
-      barEl.style.width=barW+'%';
-      barEl.style.transition='width '+Math.round(_raceSpeed*0.45)+'ms cubic-bezier(.23,1,.32,1)';
-    }
-    // Animate bar value counter
     const prevChVal = _racePrevVals['ch_'+c.key] || 0;
+    const prevBarW = prevChVal/maxVal*100;
+
+    // Animate bar WIDTH via rAF (same easing as counter)
+    if(barEl){
+      const barId='barw-'+c.key;
+      if(_counterRAFs[barId]) cancelAnimationFrame(_counterRAFs[barId]);
+      const startW = parseFloat(barEl.style.width)||prevBarW;
+      const diffW = targetBarW - startW;
+      const startT = performance.now();
+      function tickBar(now){
+        const prog = Math.min((now-startT)/cDur, 1);
+        const ease = 1-Math.pow(1-prog,3);
+        barEl.style.width = (startW + diffW*ease).toFixed(2)+'%';
+        if(prog<1){ _counterRAFs[barId]=requestAnimationFrame(tickBar); }
+        else { barEl.style.width=targetBarW.toFixed(2)+'%'; delete _counterRAFs[barId]; }
+      }
+      _counterRAFs[barId]=requestAnimationFrame(tickBar);
+    }
+
+    // Animate bar VALUE counter
     if(document.getElementById('rbval-'+c.key)){
       animateCounter('rbval-'+c.key, prevChVal, val, cDur, fmtRp);
     }
-    const pctEl=document.getElementById('rbpct-'+c.key);
-    if(pctEl) pctEl.textContent=share+'%';
+    // Animate bar % counter
+    const prevSharePct = _racePrevVals['share_'+c.key]||0;
+    animatePct('rbpct-'+c.key, prevSharePct, pct(val,totalCh), cDur, null);
+    _racePrevVals['share_'+c.key] = pct(val,totalCh);
+
     const rankEl=document.getElementById('rrank-'+c.key);
     if(rankEl){
       rankEl.textContent=i+1;
@@ -2668,7 +2686,8 @@ function renderRaceFrame(frameIdx){
 }
 
 function updateRaceTrail(slice){
-  const animDur = _raceSpeed > 500 ? 280 : (_raceSpeed > 200 ? 120 : 0);
+  // Trail animates for the full step duration so line draws smoothly
+  const animDur = Math.round(_raceSpeed * 0.9);
   if(!charts.raceTrail){
     // First time: create chart
     charts.raceTrail=new Chart(document.getElementById('race-trail-chart'),{
