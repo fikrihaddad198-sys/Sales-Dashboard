@@ -1530,18 +1530,75 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 })();
 
 /* ═══════════════════════════════════════════════════
-   ANIMATED COUNTER
+   ANIMATED COUNTER — unified (used by KPI + Race)
+   animateCounter(elOrId, fromVal, toVal, duration, formatter)
+   Legacy shorthand: animateCounter(elRef, 0, target, dur, fmt)
 ═══════════════════════════════════════════════════ */
-function animateCounter(el, target, fmt, duration=900){
+let _counterRAFs = {};
+function animateCounter(elOrId, fromVal, toVal, duration, formatter){
+  // Support legacy call: animateCounter(el, target, fmt, duration)
+  // Detect by: if formatter is a function and toVal is a function
+  if(typeof toVal === 'function'){
+    // legacy: animateCounter(el, target, fmt, duration)
+    const el = elOrId, target = fromVal, fmt = toVal, dur = duration||900;
+    if(!el) return;
+    const start = performance.now();
+    (function tick(now){
+      const p = Math.min((now-start)/dur, 1);
+      const ease = 1-Math.pow(1-p,3);
+      el.textContent = fmt(target*ease);
+      if(p<1) requestAnimationFrame(tick);
+      else el.textContent = fmt(target);
+    })(start);
+    return;
+  }
+  // New race mode: animateCounter(idStr, from, to, duration, formatter)
+  const id = typeof elOrId === 'string' ? elOrId : null;
+  const el = id ? document.getElementById(id) : elOrId;
   if(!el) return;
+  if(id && _counterRAFs[id]) cancelAnimationFrame(_counterRAFs[id]);
+  const fmt = formatter || (v => v);
   const start = performance.now();
-  (function tick(now){
-    const p = Math.min((now-start)/duration, 1);
-    const ease = 1-Math.pow(1-p,3);
-    el.textContent = fmt(target*ease);
-    if(p<1) requestAnimationFrame(tick);
-    else el.textContent = fmt(target);
-  })(start);
+  const diff = (toVal||0) - (fromVal||0);
+  function tick(now){
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / (duration||600), 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    el.textContent = fmt((fromVal||0) + diff * ease);
+    if(progress < 1){
+      const raf = requestAnimationFrame(tick);
+      if(id) _counterRAFs[id] = raf;
+    } else {
+      el.textContent = fmt(toVal||0);
+      if(id) delete _counterRAFs[id];
+    }
+  }
+  const raf = requestAnimationFrame(tick);
+  if(id) _counterRAFs[id] = raf;
+}
+
+function animatePct(id, fromVal, toVal, durationMs, colorFn){
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(_counterRAFs[id]) cancelAnimationFrame(_counterRAFs[id]);
+  const start = performance.now();
+  const diff = (toVal||0) - (fromVal||0);
+  function tick(now){
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / (durationMs||600), 1);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    const current = (fromVal||0) + diff * ease;
+    el.textContent = fmtPct(current);
+    if(colorFn) el.style.color = colorFn(current);
+    if(progress < 1){
+      _counterRAFs[id] = requestAnimationFrame(tick);
+    } else {
+      el.textContent = fmtPct(toVal||0);
+      if(colorFn) el.style.color = colorFn(toVal||0);
+      delete _counterRAFs[id];
+    }
+  }
+  _counterRAFs[id] = requestAnimationFrame(tick);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -1553,6 +1610,7 @@ const CSV_URL    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?t
 
 let allData=[], charts={}, periodData={}, customPeriodData={}, fldtData={}, summData={};
 let _weeklyChan='gmv', _customChan='gmv', _fldtChan='cup_total', _chTrendKey='offline';
+let _racePrevVals = {}; // stores prev frame values for counter animation
 let _periodMode='weekly', _fldtMode='weekly';
 const HARI=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
 
@@ -2457,8 +2515,8 @@ function toggleRace(){
 function resetRace(){
   clearInterval(_raceTimer);
   // Cancel any in-flight counter animations
-  Object.values(_raceCounterRAFs||{}).forEach(id=>cancelAnimationFrame(id));
-  _raceCounterRAFs={};
+  Object.values(_counterRAFs||{}).forEach(h=>cancelAnimationFrame(h));
+  Object.keys(_counterRAFs||{}).forEach(k=>delete _counterRAFs[k]);
   _racePrevVals={};
   _racePlaying=false;
   _raceFrame=0;
