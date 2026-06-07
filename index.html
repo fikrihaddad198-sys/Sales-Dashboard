@@ -893,6 +893,96 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   .hero-banner { padding: 18px 20px; }
   .hero-num { font-size: 32px; }
 }
+
+/* ─────────────────────────────────────────────────────
+   RACE PAGE
+───────────────────────────────────────────────────── */
+#page-race { padding: var(--sp5); display:none; flex-direction:column; gap:14px; }
+#page-race.active { display:flex; }
+
+.race-controls {
+  display:flex; align-items:center; gap:var(--sp3); flex-wrap:wrap;
+  background:var(--bg1); border:1px solid var(--border);
+  border-radius:var(--r5); padding:10px 14px;
+}
+.race-day-display {
+  margin-left:auto; font-family:var(--mono); font-size:13px; font-weight:700;
+  color:var(--cyan); letter-spacing:1px;
+  background:var(--cyan-10); border:1px solid rgba(34,211,238,0.2);
+  padding:5px 14px; border-radius:20px;
+}
+
+/* Hero race */
+.race-hero {
+  background:linear-gradient(135deg,#0a1628 0%,#0d1f30 50%,#081428 100%);
+  border:1px solid rgba(34,211,238,0.12);
+  border-radius:var(--r7); padding:24px 28px;
+  box-shadow:var(--e3), 0 0 48px rgba(34,211,238,0.05);
+}
+.race-hero-inner { display:grid; grid-template-columns:1fr auto; gap:24px; align-items:start; margin-bottom:20px; }
+.race-hero-label { font-size:9px; font-weight:700; color:var(--cyan); letter-spacing:3px; text-transform:uppercase; margin-bottom:6px; opacity:.85; }
+.race-hero-gmv { font-size:clamp(32px,4vw,56px); font-weight:900; color:var(--t1); line-height:.95; letter-spacing:-2px; margin-bottom:8px; transition:all .3s; }
+.race-hero-sub { font-size:11px; color:var(--t3); font-family:var(--mono); }
+.race-kpis { display:flex; flex-direction:column; gap:10px; min-width:170px; }
+.race-kpi-item { text-align:right; }
+.race-kpi-label { font-size:9px; color:var(--t3); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:2px; font-weight:600; }
+.race-kpi-val { font-size:22px; font-weight:800; line-height:1; letter-spacing:-.8px; transition:all .3s; }
+
+/* Progress bar race */
+.race-progress-wrap { display:flex; align-items:center; gap:12px; }
+.race-progress-track {
+  flex:1; height:8px; background:rgba(255,255,255,0.06);
+  border-radius:4px; position:relative; overflow:visible;
+}
+.race-progress-fill {
+  height:100%; border-radius:4px;
+  background:linear-gradient(90deg,var(--cyan),var(--green));
+  transition:width .5s cubic-bezier(.23,1,.32,1);
+  box-shadow:0 0 12px rgba(34,211,238,0.4);
+  position:relative;
+}
+.race-progress-fill::after {
+  content:''; position:absolute; right:-5px; top:50%; transform:translateY(-50%);
+  width:12px; height:12px; border-radius:50%; background:#fff;
+  box-shadow:0 0 12px rgba(34,211,238,0.9), 0 0 0 2px rgba(34,211,238,.3);
+}
+.race-ideal-marker {
+  position:absolute; top:-4px; width:2px; height:16px;
+  background:rgba(251,191,36,0.8); border-radius:1px;
+  transition:left .5s cubic-bezier(.23,1,.32,1);
+}
+.race-ideal-marker::before {
+  content:'IDEAL'; position:absolute; top:-16px; left:50%; transform:translateX(-50%);
+  font-size:7px; font-weight:700; color:var(--amber); letter-spacing:.5px; white-space:nowrap;
+}
+.race-progress-meta { font-size:11px; font-family:var(--mono); color:var(--t3); white-space:nowrap; }
+
+/* Channel bar race */
+.race-chart-section {
+  background:var(--bg1); border:1px solid var(--border);
+  border-radius:var(--r5); padding:18px 20px;
+}
+.race-chart-title { font-size:11px; font-weight:700; color:var(--t2); margin-bottom:16px; }
+.race-bars { display:flex; flex-direction:column; gap:14px; }
+.race-bar-row { display:flex; align-items:center; gap:12px; }
+.race-bar-rank {
+  width:22px; height:22px; border-radius:7px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:800; font-family:var(--mono);
+  background:var(--bg3); color:var(--t3); flex-shrink:0;
+  transition:background .4s, color .4s;
+}
+.race-bar-name { font-size:12px; font-weight:600; color:var(--t1); min-width:76px; flex-shrink:0; }
+.race-bar-track { flex:1; height:32px; background:var(--bg3); border-radius:8px; overflow:hidden; position:relative; }
+.race-bar-fill {
+  height:100%; border-radius:8px;
+  display:flex; align-items:center; justify-content:flex-end; padding-right:10px;
+  transition:width .5s cubic-bezier(.23,1,.32,1);
+  min-width:0; position:relative;
+}
+.race-bar-val { font-size:11px; font-weight:700; font-family:var(--mono); color:rgba(0,0,0,0.85); white-space:nowrap; }
+.race-bar-pct { font-size:12px; font-weight:700; font-family:var(--mono); min-width:48px; text-align:right; flex-shrink:0; }
+
 </style>
 </head>
 <body>
@@ -924,6 +1014,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   <button class="nav-btn" onclick="showPage('fldt',this)"><span class="ni">◧</span>FLDT</button>
   <button class="nav-btn" onclick="showPage('allsumm',this)"><span class="ni">◫</span>All Summary</button>
   <button class="nav-btn" onclick="showPage('d2d',this)"><span class="ni">◈</span>Day to Day</button>
+  <button class="nav-btn" onclick="showPage('race',this)"><span class="ni">⚡</span>Race</button>
 </nav>
 
 <div class="app-body">
@@ -1280,6 +1371,79 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   <div id="d2d-table-wrap"><div class="empty">Pilih tanggal dan klik Load</div></div>
 </div>
 
+
+<!-- ════════════════════ RACE ════════════════════ -->
+<div class="page" id="page-race">
+  <div class="race-controls">
+    <div class="filter-group">
+      <span class="filter-label">Periode</span>
+      <input class="inp" type="date" id="race-start"/>
+      <span class="filter-sep">—</span>
+      <input class="inp" type="date" id="race-end"/>
+    </div>
+    <div class="filter-group" style="gap:8px;">
+      <span class="filter-label">Speed</span>
+      <div class="toggle-group">
+        <button class="toggle-btn" onclick="setRaceSpeed(1200)">🐢</button>
+        <button class="toggle-btn active" onclick="setRaceSpeed(700)">🚶</button>
+        <button class="toggle-btn" onclick="setRaceSpeed(350)">🏃</button>
+        <button class="toggle-btn" onclick="setRaceSpeed(120)">⚡</button>
+      </div>
+    </div>
+    <button class="btn" id="race-play-btn" onclick="toggleRace()">▶ Play</button>
+    <button class="btn-ghost" onclick="resetRace()">↺ Reset</button>
+    <div class="race-day-display" id="race-day-display">—</div>
+  </div>
+
+  <!-- HERO PROGRESS RACE -->
+  <div class="race-hero" id="race-hero">
+    <div class="race-hero-inner">
+      <div>
+        <div class="race-hero-label">CURRENT GMV</div>
+        <div class="race-hero-gmv" id="race-gmv">Rp 0</div>
+        <div class="race-hero-sub" id="race-gmv-sub">— hari data</div>
+      </div>
+      <div class="race-kpis">
+        <div class="race-kpi-item">
+          <div class="race-kpi-label">ACHIEVEMENT</div>
+          <div class="race-kpi-val" id="race-ach" style="color:var(--cyan)">0%</div>
+        </div>
+        <div class="race-kpi-item">
+          <div class="race-kpi-label">IDEAL ACH</div>
+          <div class="race-kpi-val" id="race-ideal" style="color:var(--t3)">0%</div>
+        </div>
+        <div class="race-kpi-item">
+          <div class="race-kpi-label">DAILY PACE</div>
+          <div class="race-kpi-val" id="race-pace" style="color:var(--amber)">0%</div>
+        </div>
+      </div>
+    </div>
+    <!-- progress bar -->
+    <div class="race-progress-wrap">
+      <div class="race-progress-track">
+        <div class="race-progress-fill" id="race-progress-fill" style="width:0%"></div>
+        <!-- ideal marker -->
+        <div class="race-ideal-marker" id="race-ideal-marker" style="left:0%"></div>
+      </div>
+      <div class="race-progress-meta"><span id="race-ach-lbl">0%</span> / <span id="race-target-lbl">—</span></div>
+    </div>
+  </div>
+
+  <!-- BAR CHART RACE -->
+  <div class="race-chart-section">
+    <div class="race-chart-title"><div class="card-hdr-dot" style="display:inline-block;margin-right:6px;"></div>Channel Race</div>
+    <div class="race-bars" id="race-bars">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+
+  <!-- MINI TREND -->
+  <div class="card" style="margin-top:14px;">
+    <div class="card-hdr"><div class="card-hdr-dot"></div>GMV Trail — Hari per Hari</div>
+    <div class="chart-wrap h200"><canvas id="race-trail-chart"></canvas></div>
+  </div>
+</div>
+
 </div><!-- /app-body -->
 
 <script>
@@ -1473,6 +1637,7 @@ function initDefaults(){
   setIfEmpty('range3s',toInputDate(monW3)); setIfEmpty('range3e',yesterday);
   setIfEmpty('summ-p1s',monthStart); setIfEmpty('summ-p1e',yesterday);
   setIfEmpty('d2d-start',monthStart); setIfEmpty('d2d-end',yesterday);
+  setIfEmpty('race-start',monthStart); setIfEmpty('race-end',yesterday);
 }
 function setIfEmpty(id,val){ const el=document.getElementById(id); if(el&&!el.value) el.value=val; }
 function getVal(id){ return document.getElementById(id)?.value||''; }
@@ -1496,6 +1661,7 @@ function renderPage(p){
   else if(p==='channel') applyChannelFilter();
   else if(p==='period') initPeriodPage();
   else if(p==='fldt') initFldtPage();
+  else if(p==='race') initRacePage();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2151,6 +2317,181 @@ function downloadFldtPDF(){ alert('Gunakan Print to PDF (Ctrl+P → Save as PDF)
 /* ═══════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════
+   PAGE: RACE
+═══════════════════════════════════════════════════ */
+let _raceRows=[], _raceFrame=0, _raceTimer=null, _racePlaying=false, _raceSpeed=700;
+let _raceTarget=0, _raceTotalDays=30;
+const RACE_CHANNELS=[
+  {key:'offline',  name:'Offline',  color:'#60a5fa'},
+  {key:'gofood',   name:'GoFood',   color:'#fb923c'},
+  {key:'grabfood', name:'GrabFood', color:'#4ade80'},
+  {key:'shopee',   name:'Shopee',   color:'#f87171'},
+];
+
+function initRacePage(){
+  const s=getVal('race-start'), e=getVal('race-end');
+  if(!s||!e) return;
+  _raceRows=filterData(s,e);
+  _raceTarget=parseNum(getVal('kpi-target')||'700000000');
+  _raceTotalDays=parseInt(getVal('kpi-days'))||30;
+  _raceFrame=0;
+  _racePlaying=false;
+  document.getElementById('race-play-btn').textContent='▶ Play';
+  renderRaceFrame(0);
+}
+
+function setRaceSpeed(ms){
+  _raceSpeed=ms;
+  document.querySelectorAll('.race-controls .toggle-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  if(_racePlaying){ clearInterval(_raceTimer); _raceTimer=setInterval(raceStep, _raceSpeed); }
+}
+
+function toggleRace(){
+  if(!_raceRows.length){ initRacePage(); if(!_raceRows.length) return; }
+  _racePlaying=!_racePlaying;
+  document.getElementById('race-play-btn').textContent=_racePlaying?'⏸ Pause':'▶ Play';
+  if(_racePlaying){
+    if(_raceFrame>=_raceRows.length) _raceFrame=0;
+    _raceTimer=setInterval(raceStep, _raceSpeed);
+  } else {
+    clearInterval(_raceTimer);
+  }
+}
+
+function resetRace(){
+  clearInterval(_raceTimer);
+  _racePlaying=false;
+  _raceFrame=0;
+  document.getElementById('race-play-btn').textContent='▶ Play';
+  if(_raceRows.length) renderRaceFrame(0);
+}
+
+function raceStep(){
+  _raceFrame++;
+  if(_raceFrame>=_raceRows.length){
+    clearInterval(_raceTimer);
+    _racePlaying=false;
+    document.getElementById('race-play-btn').textContent='▶ Play';
+    _raceFrame=_raceRows.length-1;
+  }
+  renderRaceFrame(_raceFrame);
+}
+
+function renderRaceFrame(frameIdx){
+  if(!_raceRows.length) return;
+  const slice=_raceRows.slice(0,frameIdx+1);
+  const cur=slice[slice.length-1];
+  const elapsed=slice.length;
+
+  // Cumulative channel totals
+  const totals={};
+  RACE_CHANNELS.forEach(c=>{ totals[c.key]=slice.reduce((a,r)=>a+(r[c.key]||0),0); });
+  const gmvTotal=slice.reduce((a,r)=>a+(r.gmv||0),0);
+  const achPct=_raceTarget?pct(gmvTotal,_raceTarget):0;
+  const idealAch=pct(elapsed,_raceTotalDays);
+  const avgDaily=gmvTotal/elapsed;
+  const dailyTarget=_raceTarget/_raceTotalDays;
+  const pacePct=dailyTarget?pct(avgDaily,dailyTarget):0;
+
+  // Day label
+  const dateObj=new Date(cur.date);
+  document.getElementById('race-day-display').textContent=
+    'Hari '+elapsed+' — '+HARI[dateObj.getDay()]+' '+fmtShortDate(cur.date);
+
+  // Hero GMV
+  document.getElementById('race-gmv').textContent=fmtRp(gmvTotal);
+  document.getElementById('race-gmv-sub').textContent=elapsed+' hari · Target '+fmtRp(_raceTarget);
+
+  // Achievement
+  const achColor=achPct>=100?'var(--green)':achPct>=80?'var(--amber)':'var(--red)';
+  const achEl=document.getElementById('race-ach');
+  achEl.textContent=fmtPct(achPct); achEl.style.color=achColor;
+  document.getElementById('race-ach-lbl').textContent=fmtPct(achPct);
+  document.getElementById('race-target-lbl').textContent=fmtRp(_raceTarget);
+
+  // Ideal
+  const vsColor=achPct>=idealAch?'var(--green)':'var(--red)';
+  const idealEl=document.getElementById('race-ideal');
+  idealEl.textContent=fmtPct(idealAch); idealEl.style.color=vsColor;
+
+  // Pace
+  const paceColor=pacePct>=100?'var(--green)':pacePct>=80?'var(--amber)':'var(--red)';
+  const paceEl=document.getElementById('race-pace');
+  paceEl.textContent=fmtPct(pacePct); paceEl.style.color=paceColor;
+
+  // Progress fill
+  const fillPct=Math.min(achPct,100);
+  const pFill=document.getElementById('race-progress-fill');
+  pFill.style.width=fillPct.toFixed(1)+'%';
+  pFill.style.background=achPct>=100
+    ?'linear-gradient(90deg,var(--green),var(--cyan))'
+    :achPct>=80
+    ?'linear-gradient(90deg,var(--amber),var(--cyan))'
+    :'linear-gradient(90deg,var(--red),var(--amber))';
+
+  // Ideal marker
+  document.getElementById('race-ideal-marker').style.left=Math.min(idealAch,100).toFixed(1)+'%';
+
+  // Channel bars — sort by cumulative desc
+  const sorted=[...RACE_CHANNELS].sort((a,b)=>(totals[b.key]||0)-(totals[a.key]||0));
+  const maxVal=totals[sorted[0].key]||1;
+  const totalCh=sorted.reduce((a,c)=>a+(totals[c.key]||0),0)||1;
+  const rankColors=['#fbbf24','rgba(255,255,255,0.3)','#fb923c','rgba(255,255,255,0.15)'];
+
+  document.getElementById('race-bars').innerHTML=sorted.map((c,i)=>{
+    const val=totals[c.key]||0;
+    const barW=(val/maxVal*100).toFixed(1);
+    const share=pct(val,totalCh).toFixed(1);
+    return`<div class="race-bar-row">
+      <div class="race-bar-rank" style="background:${rankColors[i]}20;color:${rankColors[i]}">${i+1}</div>
+      <div class="race-bar-name">${c.name}</div>
+      <div class="race-bar-track">
+        <div class="race-bar-fill" style="width:${barW}%;background:${c.color};box-shadow:0 0 12px ${c.color}55;">
+          <span class="race-bar-val">${fmtRp(val)}</span>
+        </div>
+      </div>
+      <div class="race-bar-pct" style="color:${c.color}">${share}%</div>
+    </div>`;
+  }).join('');
+
+  // Trail chart
+  buildRaceTrail(slice);
+}
+
+function buildRaceTrail(slice){
+  destroyChart('raceTrail');
+  charts.raceTrail=new Chart(document.getElementById('race-trail-chart'),{
+    type:'line',
+    data:{
+      labels:slice.map(r=>fmtShortDate(r.date)),
+      datasets:[
+        { label:'GMV Harian', data:slice.map(r=>r.gmv||0),
+          borderColor:TC.gmv, backgroundColor:ctx=>grad(ctx,'#f472b6',0.18),
+          fill:true, tension:.4, pointRadius:slice.length>20?0:3,
+          borderWidth:2, cubicInterpolationMode:'monotone' },
+        { label:'Offline', data:slice.map(r=>r.offline||0),
+          borderColor:TC.offline, backgroundColor:'transparent',
+          fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[3,3] },
+        { label:'GoFood', data:slice.map(r=>r.gofood||0),
+          borderColor:TC.gofood, backgroundColor:'transparent',
+          fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[3,3] },
+      ]
+    },
+    options:{
+      ...baseOptions(),
+      animation:{ duration:_raceSpeed>500?300:0 },
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        ...baseOptions().plugins,
+        legend:{display:true,position:'top',labels:{color:TC.text2,font:{size:10},padding:12,usePointStyle:true}}
+      }
+    }
+  });
+}
+
 loadData();
 </script>
 </body>
