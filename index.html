@@ -967,7 +967,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
               <div class="hero-kpi-val arr-up" id="h-ach" style="font-size:30px;">—</div>
             </div>
             <div class="hero-kpi-item">
-              <div class="hero-kpi-label">vs Ideal Pace</div>
+              <div class="hero-kpi-label">Ideal Achievement</div>
               <div class="hero-kpi-val" id="h-vsideal" style="font-size:20px;">—</div>
             </div>
             <div class="hero-kpi-item">
@@ -1538,8 +1538,6 @@ function calcKpi(){
   const remaining=Math.max(0,totalDays-elapsed);
   const forecastEom=data.gmv+avgDaily*remaining;
   const achPct=target?pct(data.gmv,target):0;
-  const idealPct=pct(elapsed,totalDays)*100;
-  const vsIdeal=achPct-idealPct;
   const ma7=computeMA(rows,'gmv',7);
   const total=data.offline+data.gofood+data.grabfood+data.shopee||1;
   const contrib={offline:pct(data.offline,total),gofood:pct(data.gofood,total),grabfood:pct(data.grabfood,total),shopee:pct(data.shopee,total)};
@@ -1572,10 +1570,14 @@ function calcKpi(){
   achEl.style.color=achColor; achEl.style.textShadow=`0 0 20px ${glowColor}`;
   animateCounter(achEl, achPct, v=>fmtPct(v), 900);
 
-  const vsColor=vsIdeal>=0?'var(--green)':'var(--red)';
+  /* ── IDEAL ACHIEVEMENT (CHANGED) ── */
+  /* Ideal Achievement = elapsed / totalDays * 100             */
+  /* Warna: hijau kalau actual achPct >= idealAch, merah kalau kurang */
+  const idealAch=pct(elapsed,totalDays)*100;
+  const vsColor=achPct>=idealAch?'var(--green)':'var(--red)';
   const vsEl=document.getElementById('h-vsideal');
   vsEl.style.color=vsColor;
-  vsEl.textContent=(vsIdeal>=0?'+':'')+fmtPct(vsIdeal);
+  vsEl.textContent=fmtPct(idealAch);
 
   const pacePct=target?pct(avgDaily,dailyTarget):0;
   const paceColor=pacePct>=100?'var(--green)':pacePct>=80?'var(--amber)':'var(--red)';
