@@ -1573,7 +1573,7 @@ function calcKpi(){
   /* ── IDEAL ACHIEVEMENT (CHANGED) ── */
   /* Ideal Achievement = elapsed / totalDays * 100             */
   /* Warna: hijau kalau actual achPct >= idealAch, merah kalau kurang */
-  const idealAch=pct(elapsed,totalDays)*100;
+  const idealAch=pct(elapsed,totalDays);
   const vsColor=achPct>=idealAch?'var(--green)':'var(--red)';
   const vsEl=document.getElementById('h-vsideal');
   vsEl.style.color=vsColor;
