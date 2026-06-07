@@ -897,8 +897,9 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 /* ─────────────────────────────────────────────────────
    RACE PAGE
 ───────────────────────────────────────────────────── */
-#page-race { padding: var(--sp5); display:none; flex-direction:column; gap:14px; overflow-y:auto; }
-#page-race.active { display:flex; overflow-y:auto; }
+#page-race { padding: 0; display:none; }
+#page-race.active { display:block; }
+.race-inner { display:flex; flex-direction:column; gap:14px; padding:var(--sp5); }
 
 .race-controls {
   display:flex; align-items:center; gap:var(--sp3); flex-wrap:wrap;
@@ -1408,6 +1409,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
 <!-- ════════════════════ RACE ════════════════════ -->
 <div class="page" id="page-race">
+<div class="race-inner">
   <div class="race-controls">
     <div class="filter-group">
       <span class="filter-label">Periode</span>
@@ -1482,7 +1484,8 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
     <div class="card-hdr"><div class="card-hdr-dot"></div>Sales Insight — Real-time Analysis</div>
     <div id="race-detail-content"></div>
   </div>
-</div>
+</div><!-- /race-inner -->
+</div><!-- /page-race -->
 
 </div><!-- /app-body -->
 
@@ -1687,9 +1690,10 @@ function getVal(id){ return document.getElementById(id)?.value||''; }
 ═══════════════════════════════════════════════════ */
 let currentPage='kpi';
 function showPage(p,btn){
-  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(el=>{ el.classList.remove('active'); el.scrollTop=0; });
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+p)?.classList.add('active');
+  const pageEl=document.getElementById('page-'+p);
+  if(pageEl) pageEl.classList.add('active');
   if(btn) btn.classList.add('active');
   currentPage=p;
   if(allData.length) renderPage(p);
@@ -2378,8 +2382,11 @@ function initRacePage(){
   _raceTotalDays=parseInt(getVal('kpi-days'))||30;
   _raceFrame=0;
   _racePlaying=false;
+  // Destroy existing trail chart so it rebuilds on visible canvas
+  destroyChart('raceTrail');
   document.getElementById('race-play-btn').textContent='▶ Play';
-  renderRaceFrame(0);
+  // Small delay so DOM is rendered before chart init
+  setTimeout(()=>renderRaceFrame(0), 60);
 }
 
 function setRaceSpeed(ms){
@@ -2562,14 +2569,15 @@ function updateRaceTrail(slice){
       }
     });
   } else {
-    // Smooth update: push new data points
+    // Smooth update: push new data points without flicker
     const ch=charts.raceTrail;
+    if(!ch) return;
     ch.data.labels = slice.map(r=>fmtShortDate(r.date));
     ch.data.datasets[0].data = slice.map(r=>r.gmv||0);
     ch.data.datasets[1].data = slice.map(r=>r.offline||0);
     ch.data.datasets[2].data = slice.map(r=>r.gofood||0);
-    ch.options.animation.duration = animDur;
-    ch.update('none'); // 'none' = no animation flicker, instant
+    ch.options.animation = { duration: animDur };
+    ch.update(animDur === 0 ? 'none' : undefined);
   }
 }
 
