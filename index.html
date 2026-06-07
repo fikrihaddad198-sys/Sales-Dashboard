@@ -897,8 +897,8 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 /* ─────────────────────────────────────────────────────
    RACE PAGE
 ───────────────────────────────────────────────────── */
-#page-race { padding: var(--sp5); display:none; flex-direction:column; gap:14px; }
-#page-race.active { display:flex; }
+#page-race { padding: var(--sp5); display:none; flex-direction:column; gap:14px; overflow-y:auto; }
+#page-race.active { display:flex; overflow-y:auto; }
 
 .race-controls {
   display:flex; align-items:center; gap:var(--sp3); flex-wrap:wrap;
@@ -982,6 +982,40 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 }
 .race-bar-val { font-size:11px; font-weight:700; font-family:var(--mono); color:rgba(0,0,0,0.85); white-space:nowrap; }
 .race-bar-pct { font-size:12px; font-weight:700; font-family:var(--mono); min-width:48px; text-align:right; flex-shrink:0; }
+
+/* Race detail card */
+.race-insight-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
+.race-insight-item {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--r4); padding:11px 13px; position:relative;
+}
+.race-insight-item::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:var(--ri-color,var(--cyan)); border-radius:2px 2px 0 0;
+}
+.ri-label { font-size:9px; font-weight:700; color:var(--t3); letter-spacing:1.1px; text-transform:uppercase; margin-bottom:4px; }
+.ri-val   { font-size:15px; font-weight:800; color:var(--t1); margin-bottom:2px; letter-spacing:-.3px; }
+.ri-sub   { font-size:10px; color:var(--t3); }
+
+.race-trend-row {
+  display:flex; align-items:center; gap:10px; padding:8px 0;
+  border-bottom:1px solid var(--border);
+}
+.race-trend-row:last-child { border-bottom:none; }
+.rtd { font-size:11px; font-weight:600; color:var(--t1); min-width:70px; }
+.rtv { font-size:11px; font-family:var(--mono); color:var(--t2); }
+.rtb { margin-left:auto; }
+
+.race-alert {
+  display:flex; align-items:center; gap:9px;
+  padding:9px 12px; border-radius:var(--r3); margin-bottom:8px;
+  font-size:11px; font-weight:600;
+}
+.race-alert.warn  { background:var(--amber-10); border:1px solid var(--amber-20); color:var(--amber); }
+.race-alert.good  { background:var(--green-10);  border:1px solid var(--green-20);  color:var(--green); }
+.race-alert.bad   { background:var(--red-10);    border:1px solid var(--red-20);    color:var(--red); }
+.race-alert-icon  { font-size:14px; flex-shrink:0; }
+
 
 </style>
 </head>
@@ -1441,6 +1475,12 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   <div class="card" style="margin-top:14px;">
     <div class="card-hdr"><div class="card-hdr-dot"></div>GMV Trail — Hari per Hari</div>
     <div class="chart-wrap h200"><canvas id="race-trail-chart"></canvas></div>
+  </div>
+
+  <!-- DETAIL INSIGHT CARD -->
+  <div class="card" id="race-detail-card" style="margin-top:14px;display:none;">
+    <div class="card-hdr"><div class="card-hdr-dot"></div>Sales Insight — Real-time Analysis</div>
+    <div id="race-detail-content"></div>
   </div>
 </div>
 
@@ -2435,61 +2475,212 @@ function renderRaceFrame(frameIdx){
   // Ideal marker
   document.getElementById('race-ideal-marker').style.left=Math.min(idealAch,100).toFixed(1)+'%';
 
-  // Channel bars — sort by cumulative desc
+  // Channel bars — sort by cumulative desc (smooth: update bar widths without innerHTML destroy)
   const sorted=[...RACE_CHANNELS].sort((a,b)=>(totals[b.key]||0)-(totals[a.key]||0));
   const maxVal=totals[sorted[0].key]||1;
   const totalCh=sorted.reduce((a,c)=>a+(totals[c.key]||0),0)||1;
-  const rankColors=['#fbbf24','rgba(255,255,255,0.3)','#fb923c','rgba(255,255,255,0.15)'];
+  const rankColors=['#fbbf24','rgba(200,200,200,0.5)','#fb923c','rgba(255,255,255,0.15)'];
+  const barsEl=document.getElementById('race-bars');
 
-  document.getElementById('race-bars').innerHTML=sorted.map((c,i)=>{
+  // Build or update bars — reuse DOM when possible
+  if(barsEl.children.length!==sorted.length){
+    barsEl.innerHTML=sorted.map((c,i)=>`
+      <div class="race-bar-row" data-key="${c.key}">
+        <div class="race-bar-rank" id="rrank-${c.key}">${i+1}</div>
+        <div class="race-bar-name">${c.name}</div>
+        <div class="race-bar-track">
+          <div class="race-bar-fill" id="rbar-${c.key}" style="width:0%;background:${c.color};box-shadow:0 0 12px ${c.color}55;transition:width ${_raceSpeed*0.45}ms cubic-bezier(.23,1,.32,1);">
+            <span class="race-bar-val" id="rbval-${c.key}"></span>
+          </div>
+        </div>
+        <div class="race-bar-pct" id="rbpct-${c.key}" style="color:${c.color}"></div>
+      </div>`).join('');
+  }
+
+  // Reorder rows by current rank (smooth positional shift via order)
+  sorted.forEach((c,i)=>{
+    const row=barsEl.querySelector('[data-key="'+c.key+'"]');
+    if(row){ row.style.order=i; }
     const val=totals[c.key]||0;
     const barW=(val/maxVal*100).toFixed(1);
     const share=pct(val,totalCh).toFixed(1);
-    return`<div class="race-bar-row">
-      <div class="race-bar-rank" style="background:${rankColors[i]}20;color:${rankColors[i]}">${i+1}</div>
-      <div class="race-bar-name">${c.name}</div>
-      <div class="race-bar-track">
-        <div class="race-bar-fill" style="width:${barW}%;background:${c.color};box-shadow:0 0 12px ${c.color}55;">
-          <span class="race-bar-val">${fmtRp(val)}</span>
-        </div>
-      </div>
-      <div class="race-bar-pct" style="color:${c.color}">${share}%</div>
-    </div>`;
-  }).join('');
-
-  // Trail chart
-  buildRaceTrail(slice);
-}
-
-function buildRaceTrail(slice){
-  destroyChart('raceTrail');
-  charts.raceTrail=new Chart(document.getElementById('race-trail-chart'),{
-    type:'line',
-    data:{
-      labels:slice.map(r=>fmtShortDate(r.date)),
-      datasets:[
-        { label:'GMV Harian', data:slice.map(r=>r.gmv||0),
-          borderColor:TC.gmv, backgroundColor:ctx=>grad(ctx,'#f472b6',0.18),
-          fill:true, tension:.4, pointRadius:slice.length>20?0:3,
-          borderWidth:2, cubicInterpolationMode:'monotone' },
-        { label:'Offline', data:slice.map(r=>r.offline||0),
-          borderColor:TC.offline, backgroundColor:'transparent',
-          fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[3,3] },
-        { label:'GoFood', data:slice.map(r=>r.gofood||0),
-          borderColor:TC.gofood, backgroundColor:'transparent',
-          fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[3,3] },
-      ]
-    },
-    options:{
-      ...baseOptions(),
-      animation:{ duration:_raceSpeed>500?300:0 },
-      interaction:{mode:'index',intersect:false},
-      plugins:{
-        ...baseOptions().plugins,
-        legend:{display:true,position:'top',labels:{color:TC.text2,font:{size:10},padding:12,usePointStyle:true}}
-      }
+    const barEl=document.getElementById('rbar-'+c.key);
+    if(barEl){
+      barEl.style.width=barW+'%';
+      barEl.style.transition='width '+Math.round(_raceSpeed*0.45)+'ms cubic-bezier(.23,1,.32,1)';
+    }
+    const valEl=document.getElementById('rbval-'+c.key);
+    if(valEl) valEl.textContent=fmtRp(val);
+    const pctEl=document.getElementById('rbpct-'+c.key);
+    if(pctEl) pctEl.textContent=share+'%';
+    const rankEl=document.getElementById('rrank-'+c.key);
+    if(rankEl){
+      rankEl.textContent=i+1;
+      rankEl.style.background=rankColors[i].includes('rgba')?rankColors[i]:rankColors[i]+'33';
+      rankEl.style.color=rankColors[i].includes('rgba')?'var(--t2)':rankColors[i];
     }
   });
+  barsEl.style.display='flex';
+  barsEl.style.flexDirection='column';
+
+  // Trail chart — smooth update, no destroy
+  updateRaceTrail(slice);
+
+  // Detail insight card
+  renderRaceDetail(slice, gmvTotal, achPct, idealAch, dailyTarget, avgDaily);
+}
+
+function updateRaceTrail(slice){
+  const animDur = _raceSpeed > 500 ? 280 : (_raceSpeed > 200 ? 120 : 0);
+  if(!charts.raceTrail){
+    // First time: create chart
+    charts.raceTrail=new Chart(document.getElementById('race-trail-chart'),{
+      type:'line',
+      data:{
+        labels:slice.map(r=>fmtShortDate(r.date)),
+        datasets:[
+          { label:'GMV Harian', data:slice.map(r=>r.gmv||0),
+            borderColor:TC.gmv, backgroundColor:ctx=>grad(ctx,'#f472b6',0.18),
+            fill:true, tension:.4, pointRadius:2, pointHoverRadius:5,
+            borderWidth:2, cubicInterpolationMode:'monotone' },
+          { label:'Offline', data:slice.map(r=>r.offline||0),
+            borderColor:TC.offline, backgroundColor:'transparent',
+            fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[3,3] },
+          { label:'GoFood', data:slice.map(r=>r.gofood||0),
+            borderColor:TC.gofood, backgroundColor:'transparent',
+            fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[3,3] },
+        ]
+      },
+      options:{
+        ...baseOptions(),
+        animation:{ duration: animDur },
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          ...baseOptions().plugins,
+          legend:{display:true,position:'top',labels:{color:TC.text2,font:{size:10},padding:12,usePointStyle:true}}
+        }
+      }
+    });
+  } else {
+    // Smooth update: push new data points
+    const ch=charts.raceTrail;
+    ch.data.labels = slice.map(r=>fmtShortDate(r.date));
+    ch.data.datasets[0].data = slice.map(r=>r.gmv||0);
+    ch.data.datasets[1].data = slice.map(r=>r.offline||0);
+    ch.data.datasets[2].data = slice.map(r=>r.gofood||0);
+    ch.options.animation.duration = animDur;
+    ch.update('none'); // 'none' = no animation flicker, instant
+  }
+}
+
+function renderRaceDetail(slice, gmvTotal, achPct, idealAch, dailyTarget, avgDaily){
+  const card=document.getElementById('race-detail-card');
+  const content=document.getElementById('race-detail-content');
+  card.style.display='';
+
+  const gmvArr=slice.map(r=>r.gmv||0);
+  const elapsed=slice.length;
+
+  // Trend: bandingkan 3 hari terakhir vs 3 sebelumnya
+  const recentN=Math.min(3,Math.floor(elapsed/2));
+  const recentAvg=recentN>0?gmvArr.slice(-recentN).reduce((a,b)=>a+b,0)/recentN:0;
+  const prevAvg=recentN>0&&elapsed>recentN?gmvArr.slice(-recentN*2,-recentN).reduce((a,b)=>a+b,0)/recentN:recentAvg;
+  const trendPct=prevAvg>0?safePct(recentAvg,prevAvg):0;
+  const trendUp=trendPct>=0;
+
+  // Best & worst day
+  const bestIdx=gmvArr.indexOf(Math.max(...gmvArr));
+  const worstIdx=gmvArr.indexOf(Math.min(...gmvArr));
+  const bestDay=slice[bestIdx];
+  const worstDay=slice[worstIdx];
+
+  // Gap vs ideal (rupiah)
+  const idealGmv=_raceTarget*(idealAch/100);
+  const gapIdeal=gmvTotal-idealGmv;
+  const gapBehind=gapIdeal<0;
+
+  // Hari paling jauh dari target (worst gap day)
+  let maxGapDay=null, maxGapVal=-Infinity;
+  slice.forEach((r,i)=>{
+    const cumulGmv=gmvArr.slice(0,i+1).reduce((a,b)=>a+b,0);
+    const idealAtDay=_raceTarget*((i+1)/_raceTotalDays);
+    const gap=cumulGmv-idealAtDay;
+    if(gap<maxGapVal||maxGapDay===null){ maxGapVal=gap; maxGapDay=r; }
+  });
+
+  // Consecutive up/down streak
+  let streak=0, streakDir='';
+  for(let i=gmvArr.length-1;i>0;i--){
+    if(i===gmvArr.length-1){ streakDir=gmvArr[i]>=gmvArr[i-1]?'naik':'turun'; streak=1; }
+    else if(streakDir==='naik'&&gmvArr[i]>=gmvArr[i-1]) streak++;
+    else if(streakDir==='turun'&&gmvArr[i]<=gmvArr[i-1]) streak++;
+    else break;
+  }
+
+  // Alerts
+  const alerts=[];
+  if(gapBehind) alerts.push({type:'bad', icon:'⚠️', msg:`Ketinggalan dari ideal pace sebesar ${fmtRp(Math.abs(gapIdeal))} — perlu boost!`});
+  else alerts.push({type:'good', icon:'✅', msg:`Ahead of ideal pace ${fmtRp(Math.abs(gapIdeal))} — keep it up!`});
+  if(streak>=2) alerts.push({type: streakDir==='naik'?'good':'warn', icon: streakDir==='naik'?'📈':'📉', msg:`Sales ${streakDir} ${streak} hari berturut-turut`});
+  if(maxGapDay) alerts.push({type:'warn', icon:'📍', msg:`Hari paling jauh dari ideal: ${HARI[new Date(maxGapDay.date).getDay()]} ${fmtShortDate(maxGapDay.date)} (gap ${fmtRp(Math.abs(maxGapVal))})`});
+
+  // Forecast remaining
+  const remaining=_raceTotalDays-elapsed;
+  const needed=_raceTarget-gmvTotal;
+  const neededPerDay=remaining>0?needed/remaining:0;
+  const forecastColor=neededPerDay<=avgDaily?'var(--green)':'var(--red)';
+
+  content.innerHTML=`
+    <div style="margin-bottom:12px;">${alerts.map(a=>`
+      <div class="race-alert ${a.type}"><span class="race-alert-icon">${a.icon}</span>${a.msg}</div>`).join('')}
+    </div>
+    <div class="race-insight-grid">
+      <div class="race-insight-item" style="--ri-color:${trendUp?'var(--green)':'var(--red)'}">
+        <div class="ri-label">Short-term Trend</div>
+        <div class="ri-val" style="color:${trendUp?'var(--green)':'var(--red)'}">${trendUp?'↑':'↓'} ${Math.abs(trendPct).toFixed(1)}%</div>
+        <div class="ri-sub">${recentN} hari terakhir vs sebelumnya</div>
+      </div>
+      <div class="race-insight-item" style="--ri-color:var(--amber)">
+        <div class="ri-label">Streak</div>
+        <div class="ri-val" style="color:${streakDir==='naik'?'var(--green)':'var(--red)'}">${streak} hari ${streakDir}</div>
+        <div class="ri-sub">tren terkini</div>
+      </div>
+      <div class="race-insight-item" style="--ri-color:${forecastColor}">
+        <div class="ri-label">Target/Hari (sisa)</div>
+        <div class="ri-val" style="color:${forecastColor}">${fmtRp(neededPerDay)}</div>
+        <div class="ri-sub">avg aktual ${fmtRp(avgDaily)}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Hari Terbaik & Terburuk</div>
+        <div class="race-trend-row">
+          <div class="rtd">🏆 Best</div>
+          <div class="rtv">${HARI[new Date(bestDay.date).getDay()]} ${fmtShortDate(bestDay.date)}</div>
+          <div class="rtb"><span class="badge up">${fmtRp(gmvArr[bestIdx])}</span></div>
+        </div>
+        <div class="race-trend-row">
+          <div class="rtd">💔 Worst</div>
+          <div class="rtv">${HARI[new Date(worstDay.date).getDay()]} ${fmtShortDate(worstDay.date)}</div>
+          <div class="rtb"><span class="badge dn">${fmtRp(gmvArr[worstIdx])}</span></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Gap vs Ideal Pace</div>
+        <div class="race-trend-row">
+          <div class="rtd">Ideal GMV</div>
+          <div class="rtv">${fmtRp(idealGmv)}</div>
+        </div>
+        <div class="race-trend-row">
+          <div class="rtd">Aktual</div>
+          <div class="rtv">${fmtRp(gmvTotal)}</div>
+        </div>
+        <div class="race-trend-row">
+          <div class="rtd">Gap</div>
+          <div class="rtb"><span class="badge ${gapBehind?'dn':'up'}">${gapBehind?'-':'+'}${fmtRp(Math.abs(gapIdeal))}</span></div>
+        </div>
+      </div>
+    </div>`;
 }
 
 loadData();
