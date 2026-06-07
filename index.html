@@ -2456,6 +2456,10 @@ function toggleRace(){
 
 function resetRace(){
   clearInterval(_raceTimer);
+  // Cancel any in-flight counter animations
+  Object.values(_raceCounterRAFs||{}).forEach(id=>cancelAnimationFrame(id));
+  _raceCounterRAFs={};
+  _racePrevVals={};
   _racePlaying=false;
   _raceFrame=0;
   _raceRows=[];
@@ -2499,28 +2503,37 @@ function renderRaceFrame(frameIdx){
   document.getElementById('race-day-display').textContent=
     'Hari '+elapsed+' — '+HARI[dateObj.getDay()]+' '+fmtShortDate(cur.date);
 
-  // Hero GMV
-  document.getElementById('race-gmv').textContent=fmtRp(gmvTotal);
+  // ── Counter animation duration = 80% of step interval ──
+  const cDur = Math.round(_raceSpeed * 0.78);
+
+  // Previous values (default 0 on first frame)
+  const prev = _racePrevVals;
+
+  // Hero GMV — animated counter
+  const prevGmv = prev.gmv || 0;
+  animateCounter('race-gmv', prevGmv, gmvTotal, cDur, fmtRp);
   document.getElementById('race-gmv-sub').textContent=elapsed+' hari · Target '+fmtRp(_raceTarget);
 
-  // Achievement
-  const achColor=achPct>=100?'var(--green)':achPct>=80?'var(--amber)':'var(--red)';
-  const achEl=document.getElementById('race-ach');
-  achEl.textContent=fmtPct(achPct); achEl.style.color=achColor;
-  document.getElementById('race-ach-lbl').textContent=fmtPct(achPct);
+  // Achievement % — animated
+  const prevAch = prev.achPct || 0;
+  animatePct('race-ach', prevAch, achPct, cDur,
+    v => v>=100?'var(--green)':v>=80?'var(--amber)':'var(--red)');
+
+  // Also update label counters
+  animatePct('race-ach-lbl', prevAch, achPct, cDur, null);
   document.getElementById('race-target-lbl').textContent=fmtRp(_raceTarget);
 
-  // Ideal
-  const vsColor=achPct>=idealAch?'var(--green)':'var(--red)';
-  const idealEl=document.getElementById('race-ideal');
-  idealEl.textContent=fmtPct(idealAch); idealEl.style.color=vsColor;
+  // Ideal Ach %
+  const prevIdeal = prev.idealAch || 0;
+  animatePct('race-ideal', prevIdeal, idealAch, cDur,
+    v => achPct >= v ? 'var(--green)' : 'var(--red)');
 
-  // Pace
-  const paceColor=pacePct>=100?'var(--green)':pacePct>=80?'var(--amber)':'var(--red)';
-  const paceEl=document.getElementById('race-pace');
-  paceEl.textContent=fmtPct(pacePct); paceEl.style.color=paceColor;
+  // Pace %
+  const prevPace = prev.pacePct || 0;
+  animatePct('race-pace', prevPace, pacePct, cDur,
+    v => v>=100?'var(--green)':v>=80?'var(--amber)':'var(--red)');
 
-  // Progress fill
+  // Progress fill — smooth CSS transition handles this
   const fillPct=Math.min(achPct,100);
   const pFill=document.getElementById('race-progress-fill');
   pFill.style.width=fillPct.toFixed(1)+'%';
@@ -2532,6 +2545,11 @@ function renderRaceFrame(frameIdx){
 
   // Ideal marker
   document.getElementById('race-ideal-marker').style.left=Math.min(idealAch,100).toFixed(1)+'%';
+
+  // Save current values for next frame
+  _racePrevVals = { gmv: gmvTotal, achPct, idealAch, pacePct };
+  // Also save per-channel for bar counters
+  RACE_CHANNELS.forEach(c => { _racePrevVals['ch_'+c.key] = totals[c.key]||0; });
 
   // Channel bars — sort by cumulative desc (smooth: update bar widths without innerHTML destroy)
   const sorted=[...RACE_CHANNELS].sort((a,b)=>(totals[b.key]||0)-(totals[a.key]||0));
@@ -2567,8 +2585,11 @@ function renderRaceFrame(frameIdx){
       barEl.style.width=barW+'%';
       barEl.style.transition='width '+Math.round(_raceSpeed*0.45)+'ms cubic-bezier(.23,1,.32,1)';
     }
-    const valEl=document.getElementById('rbval-'+c.key);
-    if(valEl) valEl.textContent=fmtRp(val);
+    // Animate bar value counter
+    const prevChVal = _racePrevVals['ch_'+c.key] || 0;
+    if(document.getElementById('rbval-'+c.key)){
+      animateCounter('rbval-'+c.key, prevChVal, val, cDur, fmtRp);
+    }
     const pctEl=document.getElementById('rbpct-'+c.key);
     if(pctEl) pctEl.textContent=share+'%';
     const rankEl=document.getElementById('rrank-'+c.key);
