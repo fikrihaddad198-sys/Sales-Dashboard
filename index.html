@@ -1426,6 +1426,14 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <span class="filter-sep">—</span>
       <input class="inp" type="date" id="race-end"/>
     </div>
+    <div class="filter-group">
+      <span class="filter-label">Target GMV</span>
+      <input class="inp" type="text" id="race-target" placeholder="700000000" style="min-width:140px;"/>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Total Hari</span>
+      <input class="inp inp-sm" type="text" id="race-days" placeholder="30"/>
+    </div>
     <div class="filter-group" style="gap:8px;">
       <span class="filter-label">Speed</span>
       <div class="toggle-group">
@@ -1691,6 +1699,8 @@ function initDefaults(){
   setIfEmpty('summ-p1s',monthStart); setIfEmpty('summ-p1e',yesterday);
   setIfEmpty('d2d-start',monthStart); setIfEmpty('d2d-end',yesterday);
   setIfEmpty('race-start',monthStart); setIfEmpty('race-end',yesterday);
+  setIfEmpty('race-target','700000000');
+  setIfEmpty('race-days',String(new Date(now.getFullYear(),now.getMonth()+1,0).getDate()));
 }
 function setIfEmpty(id,val){ const el=document.getElementById(id); if(el&&!el.value) el.value=val; }
 function getVal(id){ return document.getElementById(id)?.value||''; }
@@ -2385,11 +2395,6 @@ const RACE_CHANNELS=[
 ];
 
 function initRacePage(){
-  // Sync tanggal dari KPI kalau race belum diset
-  const ks=getVal('kpi-start'), ke=getVal('kpi-end');
-  if(!getVal('race-start')&&ks) document.getElementById('race-start').value=ks;
-  if(!getVal('race-end')&&ke)   document.getElementById('race-end').value=ke;
-
   const s=getVal('race-start'), e=getVal('race-end');
   if(!s||!e){ console.warn('Race: tanggal kosong'); return; }
   if(!allData.length){ console.warn('Race: data belum loaded'); return; }
@@ -2397,8 +2402,19 @@ function initRacePage(){
   _raceRows=filterData(s,e);
   if(!_raceRows.length){ console.warn('Race: tidak ada data di range ini'); return; }
 
-  _raceTarget=parseNum(getVal('kpi-target')||'700000000');
-  _raceTotalDays=parseInt(getVal('kpi-days'))||30;
+  // Baca dari input race sendiri — independen dari KPI page
+  const targetInput=getVal('race-target');
+  const daysInput=getVal('race-days');
+  _raceTarget=parseNum(targetInput||'700000000');
+  // Auto-hitung total hari bulan dari tanggal end kalau tidak diisi
+  if(!daysInput){
+    const endDate=new Date(e);
+    _raceTotalDays=new Date(endDate.getFullYear(),endDate.getMonth()+1,0).getDate();
+    document.getElementById('race-days').value=_raceTotalDays;
+  } else {
+    _raceTotalDays=parseInt(daysInput)||30;
+  }
+
   _raceFrame=0;
   _racePlaying=false;
   destroyChart('raceTrail');
