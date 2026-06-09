@@ -1031,6 +1031,21 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 </head>
 <body>
 
+<!-- ═══ DATE RANGE PICKER POPUP ═══ -->
+<div id="drp-popup">
+  <div class="drp-header">
+    <button class="drp-nav" id="drp-prev" onclick="drpNav(-1)">‹</button>
+    <div class="drp-month-label" id="drp-month-label"></div>
+    <button class="drp-nav" id="drp-next" onclick="drpNav(1)">›</button>
+  </div>
+  <div class="drp-grid" id="drp-grid"></div>
+  <div class="drp-hint" id="drp-hint">Pilih tanggal mulai</div>
+  <div class="drp-actions">
+    <button class="drp-clear" onclick="drpClear()">✕ Reset</button>
+  </div>
+</div>
+
+
 <!-- HEADER -->
 <header class="header">
   <div class="header-brand">
@@ -1068,9 +1083,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   <div class="kpi-filter-bar">
     <div class="filter-group">
       <span class="filter-label">Periode</span>
-      <input class="inp" type="date" id="kpi-start"/>
-      <span class="filter-sep">—</span>
-      <input class="inp" type="date" id="kpi-end"/>
+      <input type="hidden" id="kpi-start"/><input type="hidden" id="kpi-end"/><button class="drp-btn" id="drp-btn-kpi" onclick="openDRP(event,'kpi-start','kpi-end','drp-btn-kpi')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-kpi">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
     </div>
     <div class="filter-group">
       <span class="filter-label">Target GMV</span>
@@ -1164,11 +1177,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 <!-- ════════════════════ CHANNEL ════════════════════ -->
 <div class="page" id="page-channel">
   <div class="filter-bar">
-    <span class="filter-label">Dari</span>
-    <input class="inp" type="date" id="ch-start"/>
-    <span class="filter-sep">—</span>
-    <span class="filter-label">Sampai</span>
-    <input class="inp" type="date" id="ch-end"/>
+    <input type="hidden" id="ch-start"/><input type="hidden" id="ch-end"/><button class="drp-btn" id="drp-btn-ch" onclick="openDRP(event,'ch-start','ch-end','drp-btn-ch')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-ch">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
     <button class="btn" onclick="applyChannelFilter()">▶ Terapkan</button>
     <button class="btn-ghost" onclick="resetChannelFilter()">Reset</button>
   </div>
@@ -1210,9 +1219,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="card reveal">
         <div class="period-heading p1c">2 Minggu Lalu</div>
         <div class="row mb12">
-          <input class="inp" style="flex:1" type="date" id="range1s"/>
-          <span class="filter-sep">—</span>
-          <input class="inp" style="flex:1" type="date" id="range1e"/>
+          <input type="hidden" id="range1s"/><input type="hidden" id="range1e"/><button class="drp-btn" id="drp-btn-r1" onclick="openDRP(event,'range1s','range1e','drp-btn-r1')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-r1">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
           <button class="btn" style="padding:0 11px;" onclick="loadPeriod(1)">Apply</button>
         </div>
         <div class="chart-wrap h180"><canvas id="period-chart-1"></canvas></div>
@@ -1221,9 +1228,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="card reveal reveal-delay-1">
         <div class="period-heading p2c">1 Minggu Lalu</div>
         <div class="row mb12">
-          <input class="inp" style="flex:1" type="date" id="range2s"/>
-          <span class="filter-sep">—</span>
-          <input class="inp" style="flex:1" type="date" id="range2e"/>
+          <input type="hidden" id="range2s"/><input type="hidden" id="range2e"/><button class="drp-btn" id="drp-btn-r2" onclick="openDRP(event,'range2s','range2e','drp-btn-r2')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-r2">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
           <button class="btn" style="padding:0 11px;" onclick="loadPeriod(2)">Apply</button>
         </div>
         <div class="chart-wrap h180"><canvas id="period-chart-2"></canvas></div>
@@ -1232,9 +1237,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="card reveal reveal-delay-2">
         <div class="period-heading p3c">Minggu Ini</div>
         <div class="row mb12">
-          <input class="inp" style="flex:1" type="date" id="range3s"/>
-          <span class="filter-sep">—</span>
-          <input class="inp" style="flex:1" type="date" id="range3e"/>
+          <input type="hidden" id="range3s"/><input type="hidden" id="range3e"/><button class="drp-btn" id="drp-btn-r3" onclick="openDRP(event,'range3s','range3e','drp-btn-r3')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-r3">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
           <button class="btn" style="padding:0 11px;" onclick="loadPeriod(3)">Apply</button>
         </div>
         <div class="chart-wrap h180"><canvas id="period-chart-3"></canvas></div>
@@ -1270,9 +1273,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="card reveal">
         <div class="period-heading p1c">Periode 1</div>
         <div class="row mb12">
-          <input class="inp" style="flex:1" type="date" id="crange1s"/>
-          <span class="filter-sep">—</span>
-          <input class="inp" style="flex:1" type="date" id="crange1e"/>
+          <input type="hidden" id="crange1s"/><input type="hidden" id="crange1e"/><button class="drp-btn" id="drp-btn-cr1" onclick="openDRP(event,'crange1s','crange1e','drp-btn-cr1')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-cr1">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
           <button class="btn" style="padding:0 11px;" onclick="loadCustomPeriod(1)">Apply</button>
         </div>
         <div class="chart-wrap h200"><canvas id="custom-chart-1"></canvas></div>
@@ -1281,9 +1282,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="card reveal reveal-delay-1">
         <div class="period-heading p2c">Periode 2</div>
         <div class="row mb12">
-          <input class="inp" style="flex:1" type="date" id="crange2s"/>
-          <span class="filter-sep">—</span>
-          <input class="inp" style="flex:1" type="date" id="crange2e"/>
+          <input type="hidden" id="crange2s"/><input type="hidden" id="crange2e"/><button class="drp-btn" id="drp-btn-cr2" onclick="openDRP(event,'crange2s','crange2e','drp-btn-cr2')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-cr2">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
           <button class="btn" style="padding:0 11px;" onclick="loadCustomPeriod(2)">Apply</button>
         </div>
         <div class="chart-wrap h200"><canvas id="custom-chart-2"></canvas></div>
@@ -1353,18 +1352,14 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="card reveal" style="padding:13px 15px;">
         <div class="period-heading p1c">Periode 1</div>
         <div class="row">
-          <input class="inp" style="flex:1" type="date" id="fldt-c1s"/>
-          <span class="filter-sep">—</span>
-          <input class="inp" style="flex:1" type="date" id="fldt-c1e"/>
+          <input type="hidden" id="fldt-c1s"/><input type="hidden" id="fldt-c1e"/><button class="drp-btn" id="drp-btn-fc1" onclick="openDRP(event,'fldt-c1s','fldt-c1e','drp-btn-fc1')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-fc1">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
           <button class="btn" style="padding:0 11px;" onclick="loadFldtCustom(1)">Apply</button>
         </div>
       </div>
       <div class="card reveal reveal-delay-1" style="padding:13px 15px;">
         <div class="period-heading p2c">Periode 2</div>
         <div class="row">
-          <input class="inp" style="flex:1" type="date" id="fldt-c2s"/>
-          <span class="filter-sep">—</span>
-          <input class="inp" style="flex:1" type="date" id="fldt-c2e"/>
+          <input type="hidden" id="fldt-c2s"/><input type="hidden" id="fldt-c2e"/><button class="drp-btn" id="drp-btn-fc2" onclick="openDRP(event,'fldt-c2s','fldt-c2e','drp-btn-fc2')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-fc2">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
           <button class="btn" style="padding:0 11px;" onclick="loadFldtCustom(2)">Apply</button>
         </div>
       </div>
@@ -1384,13 +1379,9 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 <div class="page" id="page-allsumm">
   <div class="filter-bar mb20">
     <span class="filter-label">Periode 1</span>
-    <input class="inp" type="date" id="summ-p1s"/>
-    <span class="filter-sep">—</span>
-    <input class="inp" type="date" id="summ-p1e"/>
+    <input type="hidden" id="summ-p1s"/><input type="hidden" id="summ-p1e"/><button class="drp-btn" id="drp-btn-sp1" onclick="openDRP(event,'summ-p1s','summ-p1e','drp-btn-sp1')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-sp1">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
     <span class="filter-label">Periode 2 (opt.)</span>
-    <input class="inp" type="date" id="summ-p2s"/>
-    <span class="filter-sep">—</span>
-    <input class="inp" type="date" id="summ-p2e"/>
+    <input type="hidden" id="summ-p2s"/><input type="hidden" id="summ-p2e"/><button class="drp-btn" id="drp-btn-sp2" onclick="openDRP(event,'summ-p2s','summ-p2e','drp-btn-sp2')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-sp2">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
     <button class="btn" onclick="loadAllSumm()">▶ Tampilkan</button>
   </div>
   <div id="summ-content" style="display:none">
@@ -1406,10 +1397,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 <!-- ════════════════════ DAY TO DAY ════════════════════ -->
 <div class="page" id="page-d2d">
   <div class="filter-bar mb20">
-    <span class="filter-label">Dari</span>
-    <input class="inp" type="date" id="d2d-start"/>
-    <span class="filter-label">Sampai</span>
-    <input class="inp" type="date" id="d2d-end"/>
+    <input type="hidden" id="d2d-start"/><input type="hidden" id="d2d-end"/><button class="drp-btn" id="drp-btn-d2d" onclick="openDRP(event,'d2d-start','d2d-end','drp-btn-d2d')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-d2d">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
     <button class="btn" onclick="loadD2D()">▶ Load</button>
   </div>
   <div id="d2d-table-wrap"><div class="empty">Pilih tanggal dan klik Load</div></div>
@@ -1422,9 +1410,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   <div class="race-controls">
     <div class="filter-group">
       <span class="filter-label">Periode</span>
-      <input class="inp" type="date" id="race-start"/>
-      <span class="filter-sep">—</span>
-      <input class="inp" type="date" id="race-end"/>
+      <input type="hidden" id="race-start"/><input type="hidden" id="race-end"/><button class="drp-btn" id="drp-btn-race" onclick="openDRP(event,'race-start','race-end','drp-btn-race')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-race">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
     </div>
     <div class="filter-group">
       <span class="filter-label">Target GMV</span>
@@ -2885,6 +2871,192 @@ function renderRaceDetail(slice, gmvTotal, achPct, idealAch, dailyTarget, avgDai
 }
 
 loadData();
+
+// ═══════════════════════════════════════════════════════
+// DATE RANGE PICKER ENGINE
+// ═══════════════════════════════════════════════════════
+const DRP = {
+  startId: null, endId: null, btnId: null,
+  startVal: null, endVal: null,
+  year: 0, month: 0,  // currently displayed month
+  open: false,
+
+  // map of id -> label id
+  labelMap: {
+    'kpi-start':'drp-lbl-kpi',
+    'ch-start':'drp-lbl-ch',
+    'range1s':'drp-lbl-r1','range2s':'drp-lbl-r2','range3s':'drp-lbl-r3',
+    'crange1s':'drp-lbl-cr1','crange2s':'drp-lbl-cr2',
+    'fldt-c1s':'drp-lbl-fc1','fldt-c2s':'drp-lbl-fc2',
+    'summ-p1s':'drp-lbl-sp1','summ-p2s':'drp-lbl-sp2',
+    'd2d-start':'drp-lbl-d2d',
+    'race-start':'drp-lbl-race',
+  }
+};
+
+function openDRP(evt, startId, endId, btnId){
+  evt.stopPropagation();
+  const popup = document.getElementById('drp-popup');
+
+  // If already open for same button, close it
+  if(DRP.open && DRP.btnId === btnId){
+    closeDRP(); return;
+  }
+
+  DRP.startId = startId; DRP.endId = endId; DRP.btnId = btnId;
+  DRP.open = true;
+
+  // Restore existing values if set
+  const sv = document.getElementById(startId)?.value;
+  const ev = document.getElementById(endId)?.value;
+  DRP.startVal = sv || null;
+  DRP.endVal = ev || null;
+
+  // Position near button
+  const btn = document.getElementById(btnId);
+  const rect = btn.getBoundingClientRect();
+  popup.style.display = 'block';
+  const pw = popup.offsetWidth;
+  const ph = popup.offsetHeight;
+  let left = rect.left;
+  let top = rect.bottom + 6;
+  if(left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
+  if(top + ph > window.innerHeight - 10) top = rect.top - ph - 6;
+  popup.style.left = left + 'px';
+  popup.style.top  = top + 'px';
+
+  // Show month of startVal or today
+  const base = DRP.startVal ? new Date(DRP.startVal + 'T00:00') : new Date();
+  DRP.year  = base.getFullYear();
+  DRP.month = base.getMonth();
+
+  // Mark button active
+  document.querySelectorAll('.drp-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  drpRender();
+}
+
+function closeDRP(){
+  document.getElementById('drp-popup').style.display = 'none';
+  document.querySelectorAll('.drp-btn').forEach(b => b.classList.remove('active'));
+  DRP.open = false;
+}
+
+function drpNav(dir){
+  DRP.month += dir;
+  if(DRP.month > 11){ DRP.month = 0; DRP.year++; }
+  if(DRP.month < 0) { DRP.month = 11; DRP.year--; }
+  drpRender();
+}
+
+function drpClear(){
+  DRP.startVal = null; DRP.endVal = null;
+  if(DRP.startId) document.getElementById(DRP.startId).value = '';
+  if(DRP.endId)   document.getElementById(DRP.endId).value = '';
+  const lblId = DRP.labelMap[DRP.startId];
+  if(lblId) document.getElementById(lblId).textContent = 'Pilih tanggal';
+  drpRender();
+}
+
+function drpSelect(dateStr){
+  if(!DRP.startVal || (DRP.startVal && DRP.endVal)){
+    // Start fresh selection
+    DRP.startVal = dateStr;
+    DRP.endVal = null;
+    document.getElementById('drp-hint').textContent = 'Pilih tanggal akhir';
+  } else {
+    // Second click = end date
+    if(dateStr < DRP.startVal){
+      DRP.endVal = DRP.startVal;
+      DRP.startVal = dateStr;
+    } else {
+      DRP.endVal = dateStr;
+    }
+    // Write to hidden inputs
+    document.getElementById(DRP.startId).value = DRP.startVal;
+    document.getElementById(DRP.endId).value   = DRP.endVal;
+    // Update button label
+    const lblId = DRP.labelMap[DRP.startId];
+    if(lblId){
+      const s = drpFmt(DRP.startVal), e = drpFmt(DRP.endVal);
+      document.getElementById(lblId).textContent = s + '  —  ' + e;
+    }
+    drpRender();
+    // Close after short delay so user sees the selection
+    setTimeout(closeDRP, 280);
+    return;
+  }
+  drpRender();
+}
+
+function drpFmt(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00');
+  return d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'2-digit'});
+}
+
+function drpRender(){
+  const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const DAYS_ID   = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+
+  document.getElementById('drp-month-label').textContent = MONTHS_ID[DRP.month] + ' ' + DRP.year;
+
+  const hint = document.getElementById('drp-hint');
+  if(!DRP.startVal) hint.textContent = 'Klik tanggal mulai';
+  else if(!DRP.endVal) hint.textContent = '✓ ' + drpFmt(DRP.startVal) + '  →  Pilih tanggal akhir';
+  else hint.textContent = drpFmt(DRP.startVal) + '  —  ' + drpFmt(DRP.endVal);
+
+  const grid = document.getElementById('drp-grid');
+  let html = DAYS_ID.map(d => `<div class="drp-dow">${d}</div>`).join('');
+
+  const firstDay = new Date(DRP.year, DRP.month, 1).getDay();
+  const daysInMonth = new Date(DRP.year, DRP.month + 1, 0).getDate();
+
+  // Empty cells before first day
+  for(let i=0; i<firstDay; i++) html += '<div class="drp-day drp-empty"></div>';
+
+  for(let d=1; d<=daysInMonth; d++){
+    const ds = DRP.year + '-' + String(DRP.month+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    let cls = 'drp-day';
+    if(ds === DRP.startVal) cls += ' drp-start';
+    if(ds === DRP.endVal)   cls += ' drp-end';
+    if(DRP.startVal && DRP.endVal && ds > DRP.startVal && ds < DRP.endVal) cls += ' drp-in-range';
+    html += `<div class="${cls}" onclick="drpSelect('${ds}')">${d}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+// Close on outside click
+document.addEventListener('click', e => {
+  if(DRP.open && !document.getElementById('drp-popup').contains(e.target)){
+    closeDRP();
+  }
+});
+
+// ── Override setIfEmpty to also update DRP button labels ──
+const _origSetIfEmpty = typeof setIfEmpty === 'function' ? setIfEmpty : null;
+function setIfEmpty(id, val){
+  const el = document.getElementById(id);
+  if(el && !el.value) el.value = val;
+  // Update corresponding DRP label if applicable
+  const lblId = DRP.labelMap[id];
+  if(lblId){
+    const endId = id.replace(/s$/, 'e').replace('start','end');
+    const endEl = document.getElementById(endId);
+    const startEl = document.getElementById(id);
+    const sv = startEl?.value;
+    const ev = endEl?.value;
+    if(sv && ev){
+      const lbl = document.getElementById(lblId);
+      if(lbl && lbl.textContent === 'Pilih tanggal'){
+        lbl.textContent = drpFmt(sv) + '  —  ' + drpFmt(ev);
+      }
+    }
+  }
+}
+
 </script>
 </body>
 </html>
