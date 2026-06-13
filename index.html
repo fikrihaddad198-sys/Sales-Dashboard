@@ -2220,11 +2220,34 @@ function loadPeriod(n){
   destroyChart('period'+n);
   charts['period'+n]=new Chart(document.getElementById('period-chart-'+n),{
     type:'line',
-    data:{ labels:rows.map(r=>fmtShortDate(r.date)), datasets:[{ label:'GMV', data:rows.map(r=>r.gmv), borderColor:color, backgroundColor:ctx=>grad(ctx,color,0.16), fill:true, tension:.4, pointRadius:2, borderWidth:2, cubicInterpolationMode:'monotone' }] },
-    options:{ ...baseOptions(), plugins:{...baseOptions().plugins,legend:{display:false}} }
+    data:{ labels:rows.map(r=>fmtShortDate(r.date)), datasets:[{ label:'GMV', data:rows.map(r=>r.gmv), borderColor:color, backgroundColor:ctx=>grad(ctx,color,0.16), fill:true, tension:.4, pointRadius:2, pointHoverRadius:5, borderWidth:2, cubicInterpolationMode:'monotone' }] },
+    options:{ ...baseOptions(), interaction:{mode:'index',intersect:false}, plugins:{...baseOptions().plugins,legend:{display:false},tooltip:{
+      ...baseOptions().plugins.tooltip,
+      callbacks:{
+        title:ctx=>{
+          const r=rows[ctx[0].dataIndex];
+          return HARI[new Date(r.date).getDay()]+' '+fmtShortDate(r.date);
+        },
+        label:ctx=>' GMV: '+fmtRp(ctx.parsed.y),
+        afterBody:ctx=>{
+          const r=rows[ctx[0].dataIndex];
+          return [
+            '',
+            ' Offline:  '+fmtRp(r.offline||0),
+            ' GoFood:   '+fmtRp(r.gofood||0),
+            ' GrabFood: '+fmtRp(r.grabfood||0),
+            ' Shopee:   '+fmtRp(r.shopee||0),
+          ];
+        }
+      }
+    }} }
   });
   const d=periodData[n];
-  document.getElementById('period-stats-'+n).innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;">${[{l:'Total GMV',v:fmtRp(d.gmv)},{l:'Avg Daily',v:fmtRp(d.gmv/rows.length)},{l:'ADT Store',v:fmtNum(d.adt_store)},{l:'AT Store',v:fmtRp(d.at_store)},{l:'Food Sold Qty',v:fmtNum(d.food_qty_all)},{l:'Food Offline',v:fmtNum(d.food_off)},{l:'Large Offline',v:fmtNum(d.large_off)},{l:'Diary Offline',v:fmtNum(d.diary_off)},{l:'Topping Offline',v:fmtNum(d.topping_off)}].map(x=>`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:2px;">${x.l}</div><div style="font-size:12px;font-weight:700;color:${color};font-family:var(--mono);">${x.v}</div></div>`).join('')}</div>`;
+  const _foodKont=d.adt_offline>0?(d.food_off/d.adt_offline*100):null;
+  const _largeKont=d.cup_total>0?(d.large_off/d.cup_total*100):null;
+  const _diaryKont=d.cup_total>0?(d.diary_off/d.cup_total*100):null;
+  const _toppingKont=d.cup_total>0?(d.topping_off/d.cup_total*100):null;
+  document.getElementById('period-stats-'+n).innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;">${[{l:'Total GMV',v:fmtRp(d.gmv)},{l:'Avg Daily',v:fmtRp(d.gmv/rows.length)},{l:'ADT Store',v:fmtNum(d.adt_store)},{l:'AT Store',v:fmtRp(d.at_store)},{l:'Food Sold Qty',v:fmtNum(d.food_qty_all)},{l:'Food Offline',v:fmtNum(d.food_off)+(_foodKont!==null?' · '+_foodKont.toFixed(1)+'%':'')},{l:'Large Offline',v:fmtNum(d.large_off)+(_largeKont!==null?' · '+_largeKont.toFixed(1)+'%':'')},{l:'Diary Offline',v:fmtNum(d.diary_off)+(_diaryKont!==null?' · '+_diaryKont.toFixed(1)+'%':'')},{l:'Topping Offline',v:fmtNum(d.topping_off)+(_toppingKont!==null?' · '+_toppingKont.toFixed(1)+'%':'')}].map(x=>`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:2px;">${x.l}</div><div style="font-size:12px;font-weight:700;color:${color};font-family:var(--mono);">${x.v}</div></div>`).join('')}</div>`;
   if(periodData[1]&&periodData[2]&&periodData[3]) buildWeeklySummary();
 }
 function buildWeeklySummary(){
