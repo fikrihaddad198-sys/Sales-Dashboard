@@ -1824,55 +1824,30 @@ function destroyChart(k){ if(charts[k]){ charts[k].destroy(); delete charts[k]; 
 const gmvLabelPlugin = {
   id: 'gmvLabel',
   afterDatasetsDraw(chart, args, opts) {
+    if(!opts || !opts.formatter) return;
     const {ctx} = chart;
     const ds = chart.data.datasets[0];
     const meta = chart.getDatasetMeta(0);
     if(!meta || meta.hidden) return;
-    const fmt = (opts && opts.formatter) || (v=>v);
+    const fmt = opts.formatter;
     ctx.save();
     ctx.font = "700 9px 'JetBrains Mono', monospace";
     ctx.textAlign = 'center';
-    ctx.fillStyle = (opts && opts.color) || TC.text2;
     meta.data.forEach((point, i) => {
       const val = ds.data[i];
       if(val === null || val === undefined) return;
       const label = fmt(val);
       const y = point.y - 10;
-      // subtle bg for readability
       const tw = ctx.measureText(label).width;
-      ctx.fillStyle = (chart._theme==='light') ? 'rgba(255,255,255,0.75)' : 'rgba(7,10,14,0.7)';
+      ctx.fillStyle = (document.documentElement.getAttribute('data-theme')==='light') ? 'rgba(255,255,255,0.8)' : 'rgba(7,10,14,0.75)';
       ctx.fillRect(point.x - tw/2 - 3, y - 10, tw + 6, 13);
-      ctx.fillStyle = (opts && opts.color) || TC.text2;
+      ctx.fillStyle = opts.color || TC.text2;
       ctx.fillText(label, point.x, y);
     });
     ctx.restore();
   }
 };
 Chart.register(gmvLabelPlugin);
-Chart.defaults.plugins.gmvLabel = { display: false };
-gmvLabelPlugin.afterDatasetsDraw = function(chart, args, opts){
-  if(!opts || opts.display === false) return;
-  const {ctx} = chart;
-  const ds = chart.data.datasets[0];
-  const meta = chart.getDatasetMeta(0);
-  if(!meta || meta.hidden) return;
-  const fmt = opts.formatter || (v=>v);
-  ctx.save();
-  ctx.font = "700 9px 'JetBrains Mono', monospace";
-  ctx.textAlign = 'center';
-  meta.data.forEach((point, i) => {
-    const val = ds.data[i];
-    if(val === null || val === undefined) return;
-    const label = fmt(val);
-    const y = point.y - 10;
-    const tw = ctx.measureText(label).width;
-    ctx.fillStyle = (document.documentElement.getAttribute('data-theme')==='light') ? 'rgba(255,255,255,0.8)' : 'rgba(7,10,14,0.75)';
-    ctx.fillRect(point.x - tw/2 - 3, y - 10, tw + 6, 13);
-    ctx.fillStyle = opts.color || TC.text2;
-    ctx.fillText(label, point.x, y);
-  });
-  ctx.restore();
-};
 
 function baseOptions(yFmt='rp'){
   return{
