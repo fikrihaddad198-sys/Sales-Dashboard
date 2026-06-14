@@ -1610,6 +1610,19 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
     <div class="race-day-display" id="race-day-display">—</div>
   </div>
 
+  <div class="race-controls" style="margin-top:10px;">
+    <div class="filter-group" style="gap:8px;">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">
+        <input type="checkbox" id="race-compare-toggle" onchange="toggleRaceCompare()" style="width:16px;height:16px;accent-color:var(--cyan);cursor:pointer;"/>
+        <span class="filter-label" style="margin:0;">🔁 Compare Periode</span>
+      </label>
+    </div>
+    <div class="filter-group" id="race-compare-date-group" style="display:none;">
+      <span class="filter-label">Periode 2</span>
+      <input type="hidden" id="race-cmp-start"/><input type="hidden" id="race-cmp-end"/><button class="drp-btn" id="drp-btn-racecmp" onclick="openDRP(event,'race-cmp-start','race-cmp-end','drp-btn-racecmp')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-racecmp">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
+    </div>
+  </div>
+
   <!-- HERO PROGRESS RACE -->
   <div class="race-hero" id="race-hero">
     <div class="race-hero-inner">
@@ -2658,6 +2671,7 @@ function downloadFldtPDF(){ alert('Gunakan Print to PDF (Ctrl+P → Save as PDF)
    PAGE: RACE
 ═══════════════════════════════════════════════════ */
 let _raceRows=[], _raceFrame=0, _raceTimer=null, _racePlaying=false, _raceSpeed=5000;
+let _raceCompareRows=[], _raceCompareEnabled=false;
 let _raceGapMs=800; // jeda antar hari (ms) setelah animasi selesai
 let _raceTarget=0, _raceTotalDays=30;
 const RACE_CHANNELS=[
@@ -2674,6 +2688,18 @@ function initRacePage(){
 
   _raceRows=filterData(s,e);
   if(!_raceRows.length){ console.warn('Race: tidak ada data di range ini'); return; }
+
+  // ── Compare mode: load periode 2 (sliced to same length as main) ──
+  _raceCompareRows=[];
+  if(_raceCompareEnabled){
+    const cs=getVal('race-cmp-start'), ce=getVal('race-cmp-end');
+    if(cs && ce){
+      const cmpRows=filterData(cs,ce);
+      if(cmpRows.length){
+        _raceCompareRows=cmpRows.slice(0,_raceRows.length);
+      }
+    }
+  }
 
   // Baca dari input race sendiri — independen dari KPI page
   const targetInput=getVal('race-target');
@@ -2694,6 +2720,24 @@ function initRacePage(){
   document.getElementById('race-play-btn').textContent='▶ Play';
   document.getElementById('race-detail-card').style.display='none';
   setTimeout(()=>renderRaceFrame(0), 80);
+}
+
+function toggleRaceCompare(){
+  _raceCompareEnabled = document.getElementById('race-compare-toggle').checked;
+  document.getElementById('race-compare-date-group').style.display = _raceCompareEnabled ? '' : 'none';
+  if(!_raceCompareEnabled){
+    _raceCompareRows=[];
+    destroyChart('raceTrail');
+    if(_raceRows.length) renderRaceFrame(_raceFrame);
+  } else {
+    // If date already picked, reload immediately
+    const cs=getVal('race-cmp-start'), ce=getVal('race-cmp-end');
+    if(cs && ce && _raceRows.length){
+      _raceCompareRows = filterData(cs,ce).slice(0,_raceRows.length);
+      destroyChart('raceTrail');
+      renderRaceFrame(_raceFrame);
+    }
+  }
 }
 
 function setRaceSpeed(ms){
@@ -2945,24 +2989,36 @@ function renderRaceFrame(frameIdx){
 function updateRaceTrail(slice){
   // Trail animates for the full step duration so line draws smoothly
   const animDur = Math.round(_raceSpeed * 0.9);
+  const hasCompare = _raceCompareEnabled && _raceCompareRows.length;
+  const cmpSlice = hasCompare ? _raceCompareRows.slice(0, slice.length) : [];
+
   if(!charts.raceTrail){
     // First time: create chart
+    const datasets=[
+      { label:'GMV Harian', data:slice.map(r=>r.gmv||0),
+        borderColor:TC.gmv, backgroundColor:ctx=>grad(ctx,'#f472b6',0.18),
+        fill:true, tension:.4, pointRadius:2, pointHoverRadius:5,
+        borderWidth:2, cubicInterpolationMode:'monotone' },
+      { label:'Offline', data:slice.map(r=>r.offline||0),
+        borderColor:TC.offline, backgroundColor:'transparent',
+        fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[3,3] },
+      { label:'GoFood', data:slice.map(r=>r.gofood||0),
+        borderColor:TC.gofood, backgroundColor:'transparent',
+        fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[3,3] },
+    ];
+    if(hasCompare){
+      datasets.push({
+        label:'GMV (Periode 2 — Ghost)', data:cmpSlice.map(r=>r.gmv||0),
+        borderColor:'rgba(255,255,255,0.35)', backgroundColor:'transparent',
+        fill:false, tension:.4, pointRadius:0, borderWidth:2, borderDash:[6,4],
+        order:99
+      });
+    }
     charts.raceTrail=new Chart(document.getElementById('race-trail-chart'),{
       type:'line',
       data:{
         labels:slice.map(r=>fmtShortDate(r.date)),
-        datasets:[
-          { label:'GMV Harian', data:slice.map(r=>r.gmv||0),
-            borderColor:TC.gmv, backgroundColor:ctx=>grad(ctx,'#f472b6',0.18),
-            fill:true, tension:.4, pointRadius:2, pointHoverRadius:5,
-            borderWidth:2, cubicInterpolationMode:'monotone' },
-          { label:'Offline', data:slice.map(r=>r.offline||0),
-            borderColor:TC.offline, backgroundColor:'transparent',
-            fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[3,3] },
-          { label:'GoFood', data:slice.map(r=>r.gofood||0),
-            borderColor:TC.gofood, backgroundColor:'transparent',
-            fill:false, tension:.4, pointRadius:0, borderWidth:1.5, borderDash:[3,3] },
-        ]
+        datasets
       },
       options:{
         ...baseOptions(),
@@ -2982,6 +3038,22 @@ function updateRaceTrail(slice){
     ch.data.datasets[0].data = slice.map(r=>r.gmv||0);
     ch.data.datasets[1].data = slice.map(r=>r.offline||0);
     ch.data.datasets[2].data = slice.map(r=>r.gofood||0);
+
+    if(hasCompare){
+      if(ch.data.datasets.length < 4){
+        ch.data.datasets.push({
+          label:'GMV (Periode 2 — Ghost)', data:cmpSlice.map(r=>r.gmv||0),
+          borderColor:'rgba(255,255,255,0.35)', backgroundColor:'transparent',
+          fill:false, tension:.4, pointRadius:0, borderWidth:2, borderDash:[6,4],
+          order:99
+        });
+      } else {
+        ch.data.datasets[3].data = cmpSlice.map(r=>r.gmv||0);
+      }
+    } else if(ch.data.datasets.length >= 4){
+      ch.data.datasets.splice(3,1);
+    }
+
     ch.options.animation = { duration: animDur };
     ch.update(animDur === 0 ? 'none' : undefined);
   }
@@ -3118,6 +3190,7 @@ const DRP = {
     'summ-p1s':'drp-lbl-sp1','summ-p2s':'drp-lbl-sp2',
     'd2d-start':'drp-lbl-d2d',
     'race-start':'drp-lbl-race',
+    'race-cmp-start':'drp-lbl-racecmp',
   }
 };
 
@@ -3212,6 +3285,12 @@ function drpSelect(dateStr){
     drpRender();
     // Close after short delay so user sees the selection
     setTimeout(closeDRP, 280);
+    // If this is the race compare date picker, reload comparison data
+    if(DRP.startId === 'race-cmp-start' && _raceCompareEnabled && _raceRows.length){
+      _raceCompareRows = filterData(DRP.startVal, DRP.endVal).slice(0,_raceRows.length);
+      destroyChart('raceTrail');
+      renderRaceFrame(_raceFrame);
+    }
     return;
   }
   drpRender();
