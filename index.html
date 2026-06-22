@@ -357,7 +357,7 @@ body::after {
   display: none; flex: 1; overflow-y: auto;
   padding: var(--sp6); scroll-behavior: smooth;
 }
-.page.active { display: block; }
+.page.active { display: block; height: calc(100dvh - 54px - 42px); min-height: 0; }
 .page::-webkit-scrollbar { width: 3px; }
 
 /* ─────────────────────────────────────────────────────
@@ -1692,13 +1692,23 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
    SCROLL REVEAL ENGINE
 ═══════════════════════════════════════════════════ */
 (function(){
-  const obs = new IntersectionObserver((entries)=>{
-    entries.forEach(e=>{
-      if(e.isIntersecting){ e.target.classList.add('visible'); obs.unobserve(e.target); }
-    });
-  }, { threshold:0.07, rootMargin:'0px 0px -20px 0px' });
+  // One observer per scrollable page container, so elements inside scrollable divs are detected
+  const observerMap = new WeakMap();
+  function getObs(root){
+    if(!root) root = null;
+    if(observerMap.has(root||window)) return observerMap.get(root||window);
+    const o = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){ e.target.classList.add('visible'); o.unobserve(e.target); }
+      });
+    }, { root: root, threshold:0.05, rootMargin:'0px 0px 40px 0px' });
+    observerMap.set(root||window, o);
+    return o;
+  }
 
   function attachReveal(root){
+    const scrollRoot = (root instanceof Element && root.classList.contains('page')) ? root : null;
+    const obs = getObs(scrollRoot);
     (root||document).querySelectorAll('.reveal:not(.visible)').forEach(el=>{
       if(!el.classList.contains('_obs')){ el.classList.add('_obs'); obs.observe(el); }
     });
@@ -1985,7 +1995,8 @@ function showPage(p,btn){
   if(btn) btn.classList.add('active');
   currentPage=p;
   if(allData.length) renderPage(p);
-  setTimeout(()=>window.attachReveal&&window.attachReveal(), 100);
+  // Trigger reveal on the new active page (as scroll root)
+  setTimeout(()=>{ if(window.attachReveal){ window.attachReveal(pageEl); window.attachReveal(); } }, 50);
 }
 function renderCurrentPage(){ renderPage(currentPage); }
 function renderPage(p){
