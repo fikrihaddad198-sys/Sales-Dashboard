@@ -55,7 +55,7 @@
 
   /* Text */
   --t1: #f0f6ff;
-  --t2: #8899b0;
+  --t2: #9db0c8;
   --t3: #4d637d;
   --t4: #1e2d3d;
 
@@ -120,6 +120,7 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   position: relative;
 }
 
@@ -450,27 +451,29 @@ body::after {
 .hero-grid { display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: start; margin-bottom: 24px; }
 .hero-eyebrow {
   font-size: 9px; font-weight: 700; color: var(--cyan);
-  letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; opacity: 0.85;
+  letter-spacing: 3.5px; text-transform: uppercase; margin-bottom: 10px; opacity: 1;
 }
 .hero-num {
-  font-size: clamp(38px, 4.5vw, 60px); font-weight: 900;
-  color: var(--t1); line-height: 0.95; letter-spacing: -2.5px;
-  margin-bottom: 10px;
+  font-size: clamp(40px, 5vw, 64px); font-weight: 900;
+  color: var(--t1); line-height: 0.9; letter-spacing: -3px;
+  margin-bottom: 12px;
   animation: number-count 0.4s ease forwards;
+  font-variant-numeric: tabular-nums;
 }
-.hero-sub { font-size: 11px; color: var(--t3); font-family: var(--mono); letter-spacing: 0.3px; }
+.hero-sub { font-size: 11px; color: var(--t3); font-family: var(--mono); letter-spacing: 0.4px; opacity: 0.85; }
 
 .hero-kpis {
   display: flex; flex-direction: column; gap: 10px; min-width: 190px;
 }
 .hero-kpi-item { text-align: right; }
 .hero-kpi-label {
-  font-size: 9px; color: var(--t3); text-transform: uppercase;
-  letter-spacing: 1.5px; margin-bottom: 2px; font-weight: 600;
+  font-size: 8.5px; color: var(--t3); text-transform: uppercase;
+  letter-spacing: 2px; margin-bottom: 4px; font-weight: 700;
 }
 .hero-kpi-val {
-  font-size: 24px; font-weight: 800; line-height: 1; letter-spacing: -0.8px;
+  font-size: 26px; font-weight: 800; line-height: 1; letter-spacing: -1px;
   animation: number-count 0.4s ease forwards;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Progress bar */
@@ -530,14 +533,15 @@ body::after {
   box-shadow: var(--e2), 0 0 16px rgba(34,211,238,0.04);
 }
 .mc-label {
-  font-size: 9px; font-weight: 700; color: var(--t3);
-  letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 6px;
+  font-size: 9px; font-weight: 600; color: var(--t3);
+  letter-spacing: 1.8px; text-transform: uppercase; margin-bottom: 8px;
 }
 .mc-val {
-  font-size: 17px; font-weight: 800; color: var(--t1);
-  letter-spacing: -0.5px; line-height: 1; margin-bottom: 3px;
+  font-size: 22px; font-weight: 800; color: var(--t1);
+  letter-spacing: -0.8px; line-height: 1; margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
 }
-.mc-sub { font-size: 10px; color: var(--t3); }
+.mc-sub { font-size: 10px; color: var(--t3); letter-spacing: 0.2px; }
 
 /* ─────────────────────────────────────────────────────
    SECTION HEADER
@@ -547,8 +551,9 @@ body::after {
   flex-wrap: wrap; gap: var(--sp2); margin-bottom: var(--sp4);
 }
 .section-title {
-  font-size: 12px; font-weight: 700; color: var(--t2);
+  font-size: 11px; font-weight: 800; color: var(--t2);
   display: flex; align-items: center; gap: 7px;
+  letter-spacing: 0.3px;
 }
 .sdot {
   width: 5px; height: 5px; border-radius: 50%;
@@ -556,9 +561,10 @@ body::after {
 }
 
 .card-hdr {
-  font-size: 11px; font-weight: 700; color: var(--t2);
+  font-size: 11px; font-weight: 800; color: var(--t2);
   margin-bottom: 14px;
   display: flex; align-items: center; gap: 7px;
+  letter-spacing: 0.2px;
 }
 .card-hdr-dot {
   width: 4px; height: 4px; border-radius: 50%;
