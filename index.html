@@ -1947,15 +1947,21 @@ const gmvLabelPlugin = {
     ctx.save();
     ctx.font = "700 9px 'JetBrains Mono', monospace";
     ctx.textAlign = 'center';
-    meta.data.forEach((point, i) => {
+    const isLightMode = document.documentElement.getAttribute('data-theme')==='light';
+  meta.data.forEach((point, i) => {
       const val = ds.data[i];
       if(val === null || val === undefined) return;
       const label = fmt(val);
       const y = point.y - 10;
       const tw = ctx.measureText(label).width;
-      ctx.fillStyle = (document.documentElement.getAttribute('data-theme')==='light') ? 'rgba(255,255,255,0.8)' : 'rgba(7,10,14,0.75)';
-      ctx.fillRect(point.x - tw/2 - 3, y - 10, tw + 6, 13);
-      ctx.fillStyle = opts.color || TC.text2;
+      // Light mode: white bg + dark text for max contrast
+      // Dark mode: near-black bg + colored text
+      ctx.fillStyle = isLightMode ? 'rgba(255,255,255,0.92)' : 'rgba(5,8,14,0.82)';
+      const pad=3;
+      ctx.beginPath();
+      ctx.roundRect(point.x - tw/2 - pad, y - 11, tw + pad*2, 14, 3);
+      ctx.fill();
+      ctx.fillStyle = isLightMode ? 'rgba(15,23,42,0.85)' : (opts.color || TC.text2);
       ctx.fillText(label, point.x, y);
     });
     ctx.restore();
@@ -2147,6 +2153,10 @@ function toggleTheme(){
   TC.grid=isDark?'rgba(0,0,0,0.06)':'rgba(255,255,255,0.04)';
   Chart.defaults.color=TC.text2;
   if(allData.length) renderPage(currentPage);
+  // Also rebuild custom period charts if on different page
+  if(currentPage!=='period'&&(periodData[1]||periodData[2]||periodData[3])){
+    [1,2,3].forEach(n=>{ if(periodData[n]&&getVal('range'+n+'s')&&getVal('range'+n+'e')) destroyChart('period'+n); });
+  }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -2387,7 +2397,16 @@ function setPeriodMode(m){
   document.getElementById('mode-weekly').classList.toggle('active',m==='weekly');
   document.getElementById('mode-custom').classList.toggle('active',m==='custom');
 }
-function initPeriodPage(){ if(periodData[1]&&periodData[2]&&periodData[3]) buildWeeklySummary(); else{ loadPeriod(1); loadPeriod(2); loadPeriod(3); } }
+function initPeriodPage(){
+  // Always recreate period charts so theme colors update correctly
+  [1,2,3].forEach(n=>{
+    if(periodData[n] && getVal('range'+n+'s') && getVal('range'+n+'e')) loadPeriod(n);
+  });
+  if(!periodData[1]&&!periodData[2]&&!periodData[3]){
+    loadPeriod(1); loadPeriod(2); loadPeriod(3);
+  }
+  if(periodData[1]&&periodData[2]&&periodData[3]) buildWeeklySummary();
+}
 function loadPeriod(n){
   const s=getVal('range'+n+'s'), e=getVal('range'+n+'e');
   if(!s||!e||!allData.length) return;
@@ -2425,7 +2444,10 @@ function loadPeriod(n){
   const _largeKont=d.cup_total>0?(d.large_off/d.cup_total*100):null;
   const _diaryKont=d.cup_total>0?(d.diary_off/d.cup_total*100):null;
   const _toppingKont=d.cup_total>0?(d.topping_off/d.cup_total*100):null;
-  document.getElementById('period-stats-'+n).innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;">${[{l:'Total GMV',v:fmtRp(d.gmv)},{l:'Avg Daily',v:fmtRp(d.gmv/rows.length)},{l:'ADT Store',v:fmtNum(d.adt_store)},{l:'AT Store',v:fmtRp(d.at_store)},{l:'Food Sold Qty',v:fmtNum(d.food_qty_all)},{l:'Food Offline',v:fmtNum(d.food_off)+(_foodKont!==null?' · '+_foodKont.toFixed(1)+'%':'')},{l:'Large Offline',v:fmtNum(d.large_off)+(_largeKont!==null?' · '+_largeKont.toFixed(1)+'%':'')},{l:'Diary Offline',v:fmtNum(d.diary_off)+(_diaryKont!==null?' · '+_diaryKont.toFixed(1)+'%':'')},{l:'Topping Offline',v:fmtNum(d.topping_off)+(_toppingKont!==null?' · '+_toppingKont.toFixed(1)+'%':'')}].map(x=>`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:2px;">${x.l}</div><div style="font-size:12px;font-weight:700;color:${color};font-family:var(--mono);">${x.v}</div></div>`).join('')}</div>`;
+  // Use CSS custom property so color adapts when theme changes
+  const statEl = document.getElementById('period-stats-'+n);
+  statEl.style.setProperty('--ps-color', color);
+  statEl.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;">${[{l:'Total GMV',v:fmtRp(d.gmv)},{l:'Avg Daily',v:fmtRp(d.gmv/rows.length)},{l:'ADT Store',v:fmtNum(d.adt_store)},{l:'AT Store',v:fmtRp(d.at_store)},{l:'Food Sold Qty',v:fmtNum(d.food_qty_all)},{l:'Food Offline',v:fmtNum(d.food_off)+(_foodKont!==null?' · '+_foodKont.toFixed(1)+'%':'')},{l:'Large Offline',v:fmtNum(d.large_off)+(_largeKont!==null?' · '+_largeKont.toFixed(1)+'%':'')},{l:'Diary Offline',v:fmtNum(d.diary_off)+(_diaryKont!==null?' · '+_diaryKont.toFixed(1)+'%':'')},{l:'Topping Offline',v:fmtNum(d.topping_off)+(_toppingKont!==null?' · '+_toppingKont.toFixed(1)+'%':'')}].map(x=>`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:2px;">${x.l}</div><div class="ps-val" style="font-size:12px;font-weight:700;color:var(--ps-color);font-family:var(--mono);">${x.v}</div></div>`).join('')}</div>`;
   if(periodData[1]&&periodData[2]&&periodData[3]) buildWeeklySummary();
 }
 function buildWeeklySummary(){
