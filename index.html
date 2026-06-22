@@ -1116,120 +1116,158 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
 
 /* ─── DATE RANGE PICKER ─── */
+/* ── DATE RANGE PICKER — Liquid Glass, iOS-style ── */
 #drp-popup{
   position:fixed;z-index:9999;
-  /* Liquid glass */
-  background:rgba(10,15,22,0.75);
-  border:1px solid rgba(255,255,255,0.1);
-  backdrop-filter:blur(32px) saturate(200%);
-  -webkit-backdrop-filter:blur(32px) saturate(200%);
-  border-radius:20px;
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.08) inset,
-    0 -1px 0 rgba(0,0,0,0.2) inset,
-    0 24px 64px rgba(0,0,0,0.6),
-    0 0 0 1px rgba(255,255,255,0.04);
-  padding:18px;min-width:290px;
+  min-width:340px;
+  padding:22px 20px 18px;
   display:none;
-  animation:fadeUp .2s cubic-bezier(.4,0,.2,1);
   overflow:hidden;
+  border-radius:26px;
+  animation:scale-in .2s cubic-bezier(.34,1.4,.64,1);
+  /* Liquid glass core */
+  background:rgba(12,16,24,0.72);
+  border:1px solid rgba(255,255,255,0.12);
+  backdrop-filter:blur(48px) saturate(220%) brightness(1.1);
+  -webkit-backdrop-filter:blur(48px) saturate(220%) brightness(1.1);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.1) inset,
+    0 -1px 0 rgba(0,0,0,0.25) inset,
+    0 32px 80px rgba(0,0,0,0.65),
+    0 8px 24px rgba(0,0,0,0.4);
 }
 #drp-popup::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent);
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 15% 10%, rgba(56,189,248,0.07) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 90%, rgba(52,211,153,0.05) 0%, transparent 50%);
 }
 #drp-popup::after{
-  content:'';position:absolute;
-  top:-60px;right:-60px;width:160px;height:160px;border-radius:50%;
-  background:radial-gradient(circle,rgba(0,229,255,0.06),transparent 70%);
-  pointer-events:none;
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 10%,rgba(255,255,255,0.16) 50%,transparent 90%);
 }
 [data-theme="light"] #drp-popup{
-  background:rgba(255,255,255,0.82);
-  border:1px solid rgba(255,255,255,0.95);
+  background:rgba(245,248,255,0.85);
+  border:1px solid rgba(255,255,255,0.98);
+  backdrop-filter:blur(48px) saturate(180%);
+  -webkit-backdrop-filter:blur(48px) saturate(180%);
   box-shadow:
     0 2px 0 rgba(255,255,255,1) inset,
-    0 24px 64px rgba(15,23,42,0.18);
+    0 32px 80px rgba(15,23,42,0.2),
+    0 8px 24px rgba(15,23,42,0.1);
 }
-[data-theme="light"] #drp-popup::after{
-  background:radial-gradient(circle,rgba(2,132,199,0.05),transparent 70%);
-}
-.drp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.drp-month-label{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--text,#e2e8f0);letter-spacing:.3px;}
-.drp-nav{
-  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
-  color:var(--text2,#94a3b8);font-size:16px;cursor:pointer;
-  width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
-  backdrop-filter:blur(8px);transition:all .15s;
-}
-.drp-nav:hover{background:rgba(255,255,255,0.1);color:var(--text,#e2e8f0);border-color:rgba(255,255,255,0.18);}
-[data-theme="light"] .drp-nav{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.08);}
-[data-theme="light"] .drp-nav:hover{background:rgba(0,0,0,0.07);}
 
-.drp-grid{display:grid !important;grid-template-columns:repeat(7,1fr) !important;gap:3px;margin-bottom:6px;}
-.drp-dow{
-  text-align:center;font-size:9px;font-family:'Syne',sans-serif;
-  font-weight:800;letter-spacing:1.2px;color:var(--text3,#475569);
-  padding:2px 0 10px;text-transform:uppercase;
+/* Header */
+.drp-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;
 }
-.drp-day{
-  text-align:center;padding:0;border-radius:50%;
-  font-size:13px;font-weight:500;cursor:pointer;
-  color:var(--text,#e2e8f0);line-height:1;
-  width:36px;height:36px;
+.drp-month-label{
+  font-family:'Inter',sans-serif;font-size:17px;font-weight:700;
+  color:#fff;letter-spacing:-.3px;
+}
+[data-theme="light"] .drp-month-label{color:#0f172a;}
+.drp-navs{display:flex;gap:6px;}
+.drp-nav{
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.7);
+  font-size:15px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  margin:0 auto;
-  transition:background .15s,color .15s;
+  transition:all .15s;backdrop-filter:blur(8px);
 }
+.drp-nav:hover{background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.2);}
+[data-theme="light"] .drp-nav{background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.1);color:rgba(0,0,0,0.5);}
+[data-theme="light"] .drp-nav:hover{background:rgba(0,0,0,0.1);color:#0f172a;}
+
+/* Day grid */
+.drp-grid{display:grid !important;grid-template-columns:repeat(7,1fr) !important;gap:2px;}
+.drp-dow{
+  text-align:center;
+  font-size:11px;font-family:'Inter',sans-serif;font-weight:600;
+  color:rgba(255,255,255,0.35);
+  padding:0 0 12px;text-transform:uppercase;letter-spacing:.5px;
+}
+[data-theme="light"] .drp-dow{color:rgba(0,0,0,0.3);}
+
+/* Day cells */
+.drp-day{
+  text-align:center;
+  font-size:17px;font-weight:400;cursor:pointer;
+  color:#fff;line-height:1;
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto;border-radius:50%;
+  transition:background .12s,color .12s,transform .1s;
+  font-family:'Inter',sans-serif;
+}
+[data-theme="light"] .drp-day{color:#0f172a;}
 .drp-day:hover:not(.drp-empty):not(.drp-disabled){
-  background:rgba(0,229,255,0.15);color:var(--accent,#00e5ff);
+  background:rgba(255,255,255,0.12);
+  transform:scale(1.08);
 }
 [data-theme="light"] .drp-day:hover:not(.drp-empty):not(.drp-disabled){
-  background:rgba(2,132,199,0.12);color:var(--accent,#0284c7);
+  background:rgba(0,0,0,0.07);
 }
-.drp-empty,.drp-disabled{cursor:default;opacity:.18;}
-.drp-today{color:var(--accent,#00e5ff);font-weight:700;}
-[data-theme="light"] .drp-today{color:var(--accent,#0284c7);}
+.drp-empty,.drp-disabled{cursor:default;opacity:.15;pointer-events:none;}
 
-/* Start & End — filled circle */
+/* Today */
+.drp-today{color:#38bdf8 !important;font-weight:600;}
+[data-theme="light"] .drp-today{color:#0284c7 !important;}
+
+/* Selected start & end */
 .drp-start,.drp-end{
-  background:var(--accent,#00e5ff) !important;
-  color:#000 !important;font-weight:800;
+  background:#38bdf8 !important;
+  color:#000 !important;font-weight:700;
   border-radius:50% !important;
-  box-shadow:0 0 16px rgba(0,229,255,0.35);
+  box-shadow:0 4px 16px rgba(56,189,248,0.45);
+  transform:scale(1.05);
 }
 [data-theme="light"] .drp-start,[data-theme="light"] .drp-end{
-  color:#fff !important;
-  box-shadow:0 0 16px rgba(2,132,199,0.3);
+  background:#0284c7 !important;color:#fff !important;
+  box-shadow:0 4px 16px rgba(2,132,199,0.35);
 }
 
-/* In-range — subtle fill, squared */
+/* In-range */
 .drp-in-range{
-  background:rgba(0,229,255,0.1) !important;
-  border-radius:0 !important;color:var(--text,#e2e8f0);
-  width:100%;margin:0;
+  background:rgba(56,189,248,0.15) !important;
+  border-radius:0 !important;
+  color:#fff !important;width:100%;margin:0;
 }
-[data-theme="light"] .drp-in-range{background:rgba(2,132,199,0.08) !important;}
-.drp-start{border-radius:50% 0 0 50% !important;margin-left:auto;}
-.drp-end{border-radius:0 50% 50% 0 !important;margin-right:auto;}
-.drp-start.drp-end{border-radius:50% !important;margin:0 auto;}
+[data-theme="light"] .drp-in-range{
+  background:rgba(2,132,199,0.1) !important;color:#0f172a !important;
+}
+.drp-start{border-radius:50% 0 0 50% !important;width:100%;justify-content:center;}
+.drp-end{border-radius:0 50% 50% 0 !important;width:100%;justify-content:center;}
+.drp-start.drp-end{border-radius:50% !important;width:44px;margin:0 auto;}
 
+/* Hint */
 .drp-hint{
-  text-align:center;font-size:10px;font-family:'JetBrains Mono',monospace;
-  color:var(--accent,#00e5ff);min-height:18px;letter-spacing:.5px;
-  margin-top:8px;opacity:.8;
+  text-align:center;font-size:11px;font-family:'Inter',sans-serif;font-weight:500;
+  color:rgba(255,255,255,0.45);min-height:18px;margin-top:14px;
+  letter-spacing:.2px;
 }
-.drp-actions{display:flex;gap:6px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.07);}
-[data-theme="light"] .drp-actions{border-top:1px solid rgba(0,0,0,0.06);}
+[data-theme="light"] .drp-hint{color:rgba(0,0,0,0.35);}
+
+/* Actions */
+.drp-actions{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:16px;padding-top:14px;
+  border-top:1px solid rgba(255,255,255,0.07);
+}
+[data-theme="light"] .drp-actions{border-top:1px solid rgba(0,0,0,0.07);}
 .drp-clear{
-  flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);
-  color:var(--text3,#475569);padding:9px;border-radius:10px;
-  font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;
-  backdrop-filter:blur(8px);transition:all .15s;
+  background:none;border:none;
+  color:rgba(255,255,255,0.55);
+  padding:8px 4px;border-radius:8px;
+  font-size:14px;font-weight:500;cursor:pointer;
+  font-family:'Inter',sans-serif;
+  transition:color .15s;
 }
-.drp-clear:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);color:var(--text,#e2e8f0);}
-[data-theme="light"] .drp-clear{background:rgba(0,0,0,0.04);border-color:rgba(0,0,0,0.08);}
-[data-theme="light"] .drp-clear:hover{background:rgba(0,0,0,0.08);}
+.drp-clear:hover{color:#fff;}
+[data-theme="light"] .drp-clear{color:rgba(0,0,0,0.45);}
+[data-theme="light"] .drp-clear:hover{color:#0f172a;}
 .drp-btn{
   display:inline-flex;align-items:center;gap:9px;
   /* Liquid glass */
@@ -1295,14 +1333,16 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 <!-- ═══ DATE RANGE PICKER POPUP ═══ -->
 <div id="drp-popup">
   <div class="drp-header">
-    <button class="drp-nav" id="drp-prev" onclick="drpNav(-1)">‹</button>
     <div class="drp-month-label" id="drp-month-label"></div>
-    <button class="drp-nav" id="drp-next" onclick="drpNav(1)">›</button>
+    <div class="drp-navs">
+      <button class="drp-nav" id="drp-prev" onclick="drpNav(-1)">‹</button>
+      <button class="drp-nav" id="drp-next" onclick="drpNav(1)">›</button>
+    </div>
   </div>
   <div class="drp-grid" id="drp-grid"></div>
   <div class="drp-hint" id="drp-hint">Pilih tanggal mulai</div>
   <div class="drp-actions">
-    <button class="drp-clear" onclick="drpClear()">✕ Reset</button>
+    <button class="drp-clear" onclick="drpClear()">Reset</button>
   </div>
 </div>
 
