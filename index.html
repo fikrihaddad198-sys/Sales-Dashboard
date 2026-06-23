@@ -1409,6 +1409,49 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 #page-kpi .btn:active { transform: scale(0.98); box-shadow: none; filter: none; }
 #page-kpi .inp:focus  { box-shadow: 0 0 0 2px rgba(47,158,106,0.18); }
 
+/* Hero 3-column layout */
+#page-kpi .hero-3col {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 0;
+  align-items: start;
+  margin-bottom: 26px;
+}
+#page-kpi .h-col { padding: 0 32px; }
+#page-kpi .h-col-gmv { padding-left: 0; border-right: 1px solid var(--border); }
+#page-kpi .h-col-mid { border-right: 1px solid var(--border); }
+#page-kpi .h-col-right { padding-right: 0; }
+#page-kpi .hero-num {
+  font-size: clamp(32px, 4.5vw, 54px);
+  white-space: nowrap;
+  letter-spacing: -2px;
+}
+#page-kpi .hero-kpi-val {
+  font-size: 44px !important;
+  font-weight: 800;
+  letter-spacing: -2px;
+  line-height: 1;
+  margin: 8px 0 6px;
+}
+#page-kpi .hero-kpi-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--t3);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+#page-kpi .h-col-sub {
+  font-size: 12px;
+  color: var(--t2);
+  font-family: var(--mono);
+  margin-top: 4px;
+}
+@media (max-width: 680px) {
+  #page-kpi .hero-3col { grid-template-columns: 1fr; gap: 18px; }
+  #page-kpi .h-col { padding: 0; border: none !important; }
+  #page-kpi .h-col-gmv { border-bottom: 1px solid var(--border) !important; padding-bottom: 18px; }
+}
+
 /* Channel Contribution — per-channel breakdown cards */
 .contrib-grid {
   display: grid;
@@ -1544,25 +1587,21 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="hero-banner reveal mb18" id="hero-banner-el">
         <div class="orb1"></div>
         <div class="orb2"></div>
-        <div class="hero-grid">
-          <div>
+        <div class="hero-3col">
+          <div class="h-col h-col-gmv">
             <div class="hero-eyebrow">Current GMV</div>
             <div class="hero-num" id="h-gmv">—</div>
             <div class="hero-sub" id="h-gmv-sub"></div>
           </div>
-          <div class="hero-kpis">
-            <div class="hero-kpi-item">
-              <div class="hero-kpi-label">Achievement</div>
-              <div class="hero-kpi-val arr-up" id="h-ach" style="font-size:30px;">—</div>
-            </div>
-            <div class="hero-kpi-item">
-              <div class="hero-kpi-label">Ideal Achievement</div>
-              <div class="hero-kpi-val" id="h-vsideal" style="font-size:20px;">—</div>
-            </div>
-            <div class="hero-kpi-item">
-              <div class="hero-kpi-label">Daily Pace</div>
-              <div class="hero-kpi-val" id="h-pace" style="font-size:20px;">—</div>
-            </div>
+          <div class="h-col h-col-mid">
+            <div class="hero-kpi-label">Achievement</div>
+            <div class="hero-kpi-val arr-up" id="h-ach">—</div>
+            <div class="h-col-sub">Ideal: <span id="h-vsideal">—</span></div>
+          </div>
+          <div class="h-col h-col-right">
+            <div class="hero-kpi-label">Daily Pace</div>
+            <div class="hero-kpi-val" id="h-pace">—</div>
+            <div class="h-col-sub">Avg <span id="h-pace-sub">—</span> / hari</div>
           </div>
         </div>
         <div class="progress-wrap">
@@ -2388,6 +2427,8 @@ function calcKpi(){
   const paceEl=document.getElementById('h-pace');
   paceEl.style.color=paceColor;
   animateCounter(paceEl, pacePct, v=>fmtPct(v), 900);
+  const paceSubEl=document.getElementById('h-pace-sub');
+  if(paceSubEl) paceSubEl.textContent=fmtRpJt(avgDaily);
 
   /* Metric strip — 8 cards */
   const stripItems=[
