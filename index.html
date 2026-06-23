@@ -3879,24 +3879,20 @@ function setIfEmpty(id, val){
 let _chPopupCharts=[], _activeNoteCtx={}, _currentChKey='', _currentLabels=[], _lastCardEl=null, _lastCardRect=null;
 let _onPopupOpened=null; /* callback fired after open animation completes */
 
-/* Re-animate charts after popup expand */
+/* Re-animate charts — called exactly when popup finishes expanding */
 function _animateChartsIn(){
+  /* Charts already at zero (built that way) — just animate to real values */
   [
-    {chart:_chPopupCharts[0], dur:650, delay:0},
-    {chart:_chPopupCharts[1], dur:800, delay:130},
+    {chart:_chPopupCharts[0], dur:620, delay:0},
+    {chart:_chPopupCharts[1], dur:750, delay:100},
   ].forEach(({chart,dur,delay})=>{
     if(!chart) return;
     const ds=chart.data.datasets[0];
     const real=ds._realData; if(!real) return;
     setTimeout(()=>{
-      ds.data=real.map(()=>0);
-      chart.options.animation=false;
+      ds.data=real;
+      chart.options.animation={duration:dur, easing:'easeOutQuart'};
       chart.update();
-      requestAnimationFrame(()=>{
-        ds.data=real;
-        chart.options.animation={duration:dur, easing:'easeOutQuart'};
-        chart.update();
-      });
     }, delay);
   });
 }
@@ -3965,7 +3961,7 @@ function _popupOpen(cardEl){
 
   popup.style.borderRadius = '10px';
   popup.style.transform    = `translate(${dx}px,${dy}px) scale(${sx},${sy})`;
-  popup.style.opacity      = '1';   /* visible from card size — shows growth clearly */
+  popup.style.opacity      = '0';   /* stay invisible until rAF — prevents flicker */
 
   backdrop.style.display    = 'block';
   backdrop.style.transition = 'none';
@@ -3975,7 +3971,7 @@ function _popupOpen(cardEl){
   /* double-rAF: ensures browser committed layout before animating */
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     /* opacity:1 from start so growth-from-card is visible immediately */
-    popup.style.transition   = 'transform 0.62s cubic-bezier(0.16,1,0.3,1), border-radius 0.62s ease';
+    popup.style.transition   = 'transform 0.62s cubic-bezier(0.16,1,0.3,1), opacity 0.2s ease, border-radius 0.62s ease';
     popup.style.transform    = 'none';
     popup.style.opacity      = '1';
     popup.style.borderRadius = '18px';
@@ -4075,7 +4071,7 @@ function _buildCharts(key, color, labels, gmvs, contribs){
   const barColors=labels.map(l=>getNote(key,l)?color:color+'88');
   _chPopupCharts.push(new Chart(document.getElementById('ch-popup-chart'),{
     type:'bar',
-    data:{labels,datasets:[{data:gmvs,backgroundColor:barColors,hoverBackgroundColor:color,
+    data:{labels,datasets:[{data:gmvs.map(()=>0),backgroundColor:barColors,hoverBackgroundColor:color,
       borderColor:color,borderWidth:1.5,borderRadius:4,borderSkipped:false,_baseColor:color,_realData:gmvs.slice()}]},
     plugins:[noteDotPlugin],
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -4092,7 +4088,7 @@ function _buildCharts(key, color, labels, gmvs, contribs){
 
   _chPopupCharts.push(new Chart(document.getElementById('ch-popup-contrib-chart'),{
     type:'line',
-    data:{labels,datasets:[{data:contribs,borderColor:color,backgroundColor:color+'28',fill:true,
+    data:{labels,datasets:[{data:contribs.map(()=>0),borderColor:color,backgroundColor:color+'28',fill:true,
       tension:0.4,pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:color,
       pointHoverBorderColor:ttBg,pointHoverBorderWidth:2,borderWidth:2,_realData:contribs.slice()}]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
