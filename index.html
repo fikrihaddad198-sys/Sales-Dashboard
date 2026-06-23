@@ -829,6 +829,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 }
 .badge.up   { background: rgba(47,158,106,0.12); color: var(--green); }
 .badge.dn   { background: rgba(239,68,68,0.12);  color: var(--red);   }
+.badge.warn { background: rgba(212,160,90,0.14);  color: var(--amber); }
 .badge.neu  { background: var(--surface);         color: var(--t3);    }
 .arr-up { color: var(--green); }
 .arr-dn { color: var(--red);   }
@@ -2390,7 +2391,12 @@ function calcKpi(){
   /* Hero numbers with counter animation */
   const gmvEl=document.getElementById('h-gmv');
   animateCounter(gmvEl, data.gmv, v=>fmtRp(v), 1000);
-  document.getElementById('h-gmv-sub').textContent=elapsed+' hari data · Target '+fmtRp(target);
+  const paceStatus=pacePct>=100
+    ?`<span class="badge up">↑ Ahead</span>`
+    :pacePct>=80
+    ?`<span class="badge warn">↓ Slightly Behind</span>`
+    :`<span class="badge dn">↓ Behind</span>`;
+  document.getElementById('h-gmv-sub').innerHTML=elapsed+' hari berjalan &nbsp;'+paceStatus;
 
   /* Progress bar */
   const pFill=document.getElementById('h-progress');
