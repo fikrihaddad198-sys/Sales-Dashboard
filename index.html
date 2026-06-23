@@ -1522,24 +1522,10 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <!-- 8-metric strip -->
       <div class="metric-grid mb18" id="kpi-strip-grid"></div>
 
-      <!-- Analytics row: Gauge + Contrib + Pace -->
-      <div class="g3 mb14">
-        <div class="card reveal gauge-wrap" style="min-height:200px;" id="gauge-card-el">
-          <div class="card-hdr"><div class="card-hdr-dot"></div>GMV Achievement</div>
-          <canvas id="gaugeChart" style="height:130px!important;"></canvas>
-          <div class="gauge-center">
-            <div class="gauge-pct" id="gauge-pct">0%</div>
-            <div class="gauge-lbl">dari target</div>
-          </div>
-        </div>
-        <div class="card reveal reveal-delay-1" id="contrib-card-el">
-          <div class="card-hdr"><div class="card-hdr-dot"></div>Channel Contribution</div>
-          <div class="chan-bars" id="kpi-contrib"></div>
-        </div>
-        <div class="card reveal reveal-delay-2" id="pace-card-el">
-          <div class="card-hdr"><div class="card-hdr-dot"></div>Pace vs Target</div>
-          <div id="pace-info"></div>
-        </div>
+      <!-- Channel Contribution — full width -->
+      <div class="card reveal mb14" id="contrib-card-el">
+        <div class="card-hdr"><div class="card-hdr-dot"></div>Channel Contribution</div>
+        <div class="chan-bars" id="kpi-contrib"></div>
       </div>
 
       <!-- Charts -->
@@ -2379,8 +2365,9 @@ function calcKpi(){
       <div class="cbp" style="color:${c.color}">${fmtPct(c.val)}</div>
     </div>`).join('');
 
-  /* Pace card */
-  document.getElementById('pace-info').innerHTML=`
+  /* Pace card (removed from KPI page — guard kept for safety) */
+  const paceInfoEl=document.getElementById('pace-info');
+  if(paceInfoEl) paceInfoEl.innerHTML=`
     <div style="margin-bottom:16px;">
       <div style="font-size:34px;font-weight:900;color:${paceColor};line-height:1;letter-spacing:-1.5px;text-shadow:0 0 20px ${paceColor}44;">${fmtPct(pacePct)}</div>
       <div style="font-size:10px;color:var(--t3);margin-top:4px;">pace vs daily target</div>
@@ -2399,14 +2386,17 @@ function computeMA(rows,key,w){ return rows.map((d,i)=>{ const sl=rows.slice(Mat
 
 function buildGauge(pct2){
   destroyChart('gauge');
+  const gaugeCanvas=document.getElementById('gaugeChart');
+  if(!gaugeCanvas) return;  /* element removed from KPI page */
   const clamped=Math.min(pct2,100);
   const color=pct2>=100?TC.accent2:pct2>=80?TC.amber:'#f87171';
-  charts.gauge=new Chart(document.getElementById('gaugeChart'),{
+  charts.gauge=new Chart(gaugeCanvas,{
     type:'doughnut',
     data:{ datasets:[{ data:[clamped,100-clamped], backgroundColor:[color,'rgba(255,255,255,0.04)'], borderWidth:0, circumference:220, rotation:-110 }] },
     options:{ responsive:true, cutout:'84%', animation:{duration:1200,easing:'easeInOutCubic'}, plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
   });
   const gpct=document.getElementById('gauge-pct');
+  if(!gpct) return;
   gpct.textContent=fmtPct(pct2);
   gpct.style.color=color;
   gpct.style.textShadow=`0 0 18px ${color}55`;
