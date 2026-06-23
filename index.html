@@ -2514,7 +2514,7 @@ function calcKpi(){
     {name:'Shopee',   gmv:data.shopee,   val:contrib.shopee,   color:TC.shopee},
   ].sort((a,b)=>b.val-a.val);
   document.getElementById('kpi-contrib').innerHTML='<div class="contrib-grid">'+contribItems.map((c,i)=>
-    '<div class="contrib-ch-card" style="--ch-color:'+c.color+'" onclick="openChannelPopup(\''+c.name.toLowerCase()+'\',\''+c.name+'\',\''+c.color+'\')">'+
+    '<div class="contrib-ch-card" style="--ch-color:'+c.color+'" onclick="openChannelPopup(\''+c.name.toLowerCase()+'\',\''+c.name+'\',\''+c.color+'\',this)">'+
       '<div class="contrib-rank">'+( i+1)+'</div>'+
       '<div class="contrib-ch-name">'+c.name+'</div>'+
       '<div class="contrib-ch-gmv" style="color:'+c.color+'">'+fmtRpJt(c.gmv)+'</div>'+
@@ -3807,16 +3807,15 @@ function setIfEmpty(id, val){
 </script>
 <!-- Channel Detail Popup -->
 <style>
+/* Note panel uses popupIn for slide-in only */
 @keyframes popupIn {
   from { opacity:0; transform:translate(-50%,-50%) scale(0.94); }
   to   { opacity:1; transform:translate(-50%,-50%) scale(1); }
 }
-@keyframes backdropIn { from{opacity:0} to{opacity:1} }
-#ch-popup         { animation: popupIn 0.22s cubic-bezier(0.34,1.56,0.64,1) both; }
-#ch-popup-backdrop{ animation: backdropIn 0.18s ease both; }
+#ch-note-panel { animation: none; } /* overridden inline */
 </style>
-<div id="ch-popup-backdrop" onclick="closeChannelPopup()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.80);z-index:900;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);"></div>
-<div id="ch-popup" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:901;width:min(92vw,680px);max-height:82vh;overflow-y:auto;border-radius:18px;background:var(--bg2);border:1px solid var(--border-md);box-shadow:0 32px 80px rgba(0,0,0,0.5);">
+<div id="ch-popup-backdrop" onclick="closeChannelPopup()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.80);z-index:900;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;"></div>
+<div id="ch-popup" style="display:none;position:fixed;top:0;left:0;z-index:901;width:min(92vw,680px);max-height:82vh;overflow-y:hidden;border-radius:18px;background:var(--bg2);border:1px solid var(--border-md);box-shadow:0 32px 80px rgba(0,0,0,0.5);opacity:0;will-change:transform,opacity;">
   <div style="padding:22px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
     <div>
       <div id="ch-popup-eyebrow" style="font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--t3);margin-bottom:4px;">Daily Breakdown</div>
@@ -3831,8 +3830,24 @@ function setIfEmpty(id, val){
     </div>
   </div>
   <div style="padding:20px 24px;">
-    <div style="font-size:11px;font-weight:600;color:var(--t3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">GMV Harian</div>
-    <div style="height:190px;position:relative;margin-bottom:22px;"><canvas id="ch-popup-chart"></canvas></div>
+    <div style="font-size:11px;font-weight:600;color:var(--t3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">GMV Harian <span style="font-size:9px;font-weight:500;color:var(--t3);text-transform:none;letter-spacing:0;">· tap bar untuk catatan</span></div>
+    <div style="height:190px;position:relative;margin-bottom:12px;"><canvas id="ch-popup-chart"></canvas></div>
+
+    <!-- Note panel — slides in when a bar is tapped -->
+    <div id="ch-note-panel" style="display:none;margin-bottom:16px;background:var(--bg3);border:1px solid var(--border-md);border-radius:12px;overflow:hidden;">
+      <div style="padding:10px 14px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+        <div style="font-size:11px;font-weight:700;color:var(--t2);">📝 Catatan — <span id="ch-note-date" style="color:var(--t1);"></span></div>
+        <button onclick="closeNotePanel()" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px;padding:2px 6px;">✕</button>
+      </div>
+      <div style="padding:10px 14px;">
+        <textarea id="ch-note-text" rows="2" placeholder="Tulis catatan untuk hari ini... (contoh: promo aktif, event, cuaca buruk)" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;line-height:1.5;"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
+          <button onclick="deleteCurrentNote()" id="ch-note-del-btn" style="display:none;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.25);border-radius:8px;padding:7px 14px;color:#f87171;font-size:12px;font-weight:600;cursor:pointer;">Hapus</button>
+          <button onclick="saveCurrentNote()" id="ch-note-save-btn" style="background:var(--green);border:none;border-radius:8px;padding:7px 16px;color:#06140d;font-size:12px;font-weight:700;cursor:pointer;">Simpan</button>
+        </div>
+      </div>
+    </div>
+
     <div style="font-size:11px;font-weight:600;color:var(--t3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">Kontribusi Harian (%)</div>
     <div style="height:140px;position:relative;margin-bottom:22px;"><canvas id="ch-popup-contrib-chart"></canvas></div>
     <div id="ch-popup-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
@@ -3840,160 +3855,226 @@ function setIfEmpty(id, val){
 </div>
 
 <script>
-let _chPopupCharts=[];
+let _chPopupCharts=[], _activeNoteCtx={}, _currentChKey='', _currentLabels=[], _lastCardEl=null;
 
-/* Restart CSS animation by cloning element */
-function replayAnim(id){
-  const el=document.getElementById(id);
-  const clone=el.cloneNode(true);
-  el.parentNode.replaceChild(clone,el);
-  return clone;
+/* ── Note storage ── */
+function _nKey(ch,lbl){ return 'fore_note_'+ch+'_'+lbl.replace(/\s/g,'_'); }
+function getNote(ch,lbl){ try{ return localStorage.getItem(_nKey(ch,lbl))||''; }catch(e){ return ''; } }
+function setNote(ch,lbl,txt){ try{
+  if(txt.trim()) localStorage.setItem(_nKey(ch,lbl),txt.trim());
+  else           localStorage.removeItem(_nKey(ch,lbl));
+}catch(e){} }
+
+/* ── Note panel ── */
+function openNotePanel(ch,lbl){
+  _activeNoteCtx={ch,lbl};
+  document.getElementById('ch-note-date').textContent=lbl;
+  const existing=getNote(ch,lbl);
+  document.getElementById('ch-note-text').value=existing;
+  document.getElementById('ch-note-del-btn').style.display=existing?'inline-block':'none';
+  const panel=document.getElementById('ch-note-panel');
+  panel.style.display='block';
+  panel.style.animation='none'; panel.offsetHeight;
+  panel.style.animation='popupIn 0.18s ease both';
+  setTimeout(()=>document.getElementById('ch-note-text').focus(), 50);
+}
+function closeNotePanel(){ document.getElementById('ch-note-panel').style.display='none'; }
+function saveCurrentNote(){
+  setNote(_activeNoteCtx.ch,_activeNoteCtx.lbl,document.getElementById('ch-note-text').value);
+  closeNotePanel(); refreshBarColors();
+}
+function deleteCurrentNote(){
+  setNote(_activeNoteCtx.ch,_activeNoteCtx.lbl,'');
+  closeNotePanel(); refreshBarColors();
+}
+function refreshBarColors(){
+  const chart=_chPopupCharts[0]; if(!chart) return;
+  const color=chart.data.datasets[0]._baseColor;
+  chart.data.datasets[0].backgroundColor=_currentLabels.map(l=>getNote(_currentChKey,l)?color:color+'88');
+  chart.update('none');
 }
 
-function openChannelPopup(key, name, color){
+/* ── iOS-style FLIP animation ── */
+function _popupOpen(cardEl){
+  const popup    = document.getElementById('ch-popup');
+  const backdrop = document.getElementById('ch-popup-backdrop');
+
+  /* 1. Show invisible at top-left to measure natural size */
+  popup.style.transition  = 'none';
+  popup.style.opacity     = '0';
+  popup.style.transform   = 'none';
+  popup.style.display     = 'block';
+  popup.style.overflowY   = 'hidden';
+
+  /* 2. Measure and compute centered position */
+  const pw = popup.offsetWidth,  ph = popup.offsetHeight;
+  const vw = window.innerWidth,  vh = window.innerHeight;
+  const finalLeft = Math.round(Math.max(8, (vw-pw)/2));
+  const finalTop  = Math.round(Math.max(16, Math.min((vh-ph)/2, vh-ph-16)));
+  popup.style.left = finalLeft+'px';
+  popup.style.top  = finalTop+'px';
+
+  /* 3. Calculate FLIP delta from popup center → card center */
+  const cardRect = cardEl.getBoundingClientRect();
+  const ccx = cardRect.left + cardRect.width/2;
+  const ccy = cardRect.top  + cardRect.height/2;
+  const pcx = finalLeft + pw/2;
+  const pcy = finalTop  + ph/2;
+  const dx  = ccx - pcx, dy = ccy - pcy;
+  const sx  = cardRect.width/pw, sy = cardRect.height/ph;
+
+  /* 4. Snap to card position/scale */
+  popup.style.borderRadius = '12px';
+  popup.style.transform    = `translate(${dx}px,${dy}px) scale(${sx},${sy})`;
+
+  /* show backdrop */
+  backdrop.style.display    = 'block';
+  backdrop.style.transition = 'none';
+  backdrop.style.opacity    = '0';
+
+  /* 5. Double-rAF ensures browser committed layout before animation */
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    popup.style.transition   = 'transform 0.44s cubic-bezier(0.32,0.72,0,1), opacity 0.22s ease, border-radius 0.44s ease';
+    popup.style.transform    = 'none';
+    popup.style.opacity      = '1';
+    popup.style.borderRadius = '18px';
+
+    backdrop.style.transition = 'opacity 0.22s ease';
+    backdrop.style.opacity    = '1';
+
+    /* restore scroll after animation */
+    setTimeout(()=>{ popup.style.overflowY='auto'; }, 460);
+  }));
+
+  document.body.style.overflow = 'hidden';
+}
+
+function _popupClose(){
+  const popup    = document.getElementById('ch-popup');
+  const backdrop = document.getElementById('ch-popup-backdrop');
+  if(popup.style.display==='none') return;
+
+  popup.style.overflowY = 'hidden';
+
+  /* Reverse FLIP: shrink back to card origin */
+  let dx=0, dy=0, sx=0.08, sy=0.08;
+  if(_lastCardEl){
+    try{
+      const cardRect = _lastCardEl.getBoundingClientRect();
+      const popRect  = popup.getBoundingClientRect();
+      dx = (cardRect.left+cardRect.width/2)  - (popRect.left+popRect.width/2);
+      dy = (cardRect.top +cardRect.height/2) - (popRect.top +popRect.height/2);
+      sx = cardRect.width  / popRect.width;
+      sy = cardRect.height / popRect.height;
+    }catch(e){}
+  }
+
+  popup.style.transition   = 'transform 0.36s cubic-bezier(0.6,0,0.6,1), opacity 0.22s ease, border-radius 0.36s ease';
+  popup.style.transform    = `translate(${dx}px,${dy}px) scale(${sx},${sy})`;
+  popup.style.opacity      = '0';
+  popup.style.borderRadius = '10px';
+
+  backdrop.style.transition = 'opacity 0.22s ease';
+  backdrop.style.opacity    = '0';
+
+  let done=false;
+  function cleanup(){
+    if(done) return; done=true;
+    popup.style.display     = 'none';
+    popup.style.transform   = 'none';
+    popup.style.transition  = '';
+    popup.style.opacity     = '0';
+    popup.style.overflowY   = 'hidden';
+    backdrop.style.display  = 'none';
+    backdrop.style.opacity  = '0';
+    backdrop.style.transition = '';
+    document.body.style.overflow = '';
+    closeNotePanel();
+    _chPopupCharts.forEach(c=>{try{c.destroy();}catch(e){}});
+    _chPopupCharts=[];
+  }
+  popup.addEventListener('transitionend', cleanup, {once:true});
+  setTimeout(cleanup, 420); /* safety fallback */
+}
+
+/* ── Main popup ── */
+function openChannelPopup(key, name, color, cardEl){
   if(!_kpiRows.length) return;
+  _currentChKey=key; _lastCardEl=cardEl;
 
   const days=_kpiRows.map(r=>({
-    date: r._date instanceof Date
-      ? r._date.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})
-      : String(r.date||''),
-    gmv:   r[key]||0,
-    total: (r.offline||0)+(r.gofood||0)+(r.grabfood||0)+(r.shopee||0)||1
+    date: r._date instanceof Date ? r._date.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) : String(r.date||''),
+    gmv:r[key]||0, total:(r.offline||0)+(r.gofood||0)+(r.grabfood||0)+(r.shopee||0)||1
   }));
-  const labels  = days.map(d=>d.date);
-  const gmvs    = days.map(d=>d.gmv);
-  const contribs= days.map(d=>+(d.gmv/d.total*100).toFixed(1));
-  const totalGmv= gmvs.reduce((a,b)=>a+b,0);
-  const avgCtrib= (contribs.reduce((a,b)=>a+b,0)/contribs.length).toFixed(1);
-  const maxIdx  = gmvs.indexOf(Math.max(...gmvs));
-  const maxDay  = days[maxIdx]||{date:'—'};
+  const labels=days.map(d=>d.date), gmvs=days.map(d=>d.gmv);
+  const contribs=days.map(d=>+(d.gmv/d.total*100).toFixed(1));
+  const totalGmv=gmvs.reduce((a,b)=>a+b,0);
+  const avgCtrib=(contribs.reduce((a,b)=>a+b,0)/contribs.length).toFixed(1);
+  const maxIdx=gmvs.indexOf(Math.max(...gmvs)), maxDay=days[maxIdx]||{date:'—'};
+  _currentLabels=labels;
 
-  /* header */
   document.getElementById('ch-popup-title').textContent=name;
   document.getElementById('ch-popup-title').style.color=color;
   document.getElementById('ch-popup-total-val').textContent=fmtRpJt(totalGmv);
   document.getElementById('ch-popup-total-val').style.color=color;
-
-  /* stat cards */
   document.getElementById('ch-popup-stats').innerHTML=[
-    {l:'Avg / hari',     v:fmtRpJt(totalGmv/days.length)},
-    {l:'Avg kontribusi', v:avgCtrib+'%'},
-    {l:'Hari terbaik',   v:maxDay.date},
-  ].map(s=>'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">'
-    +'<div style="font-size:10px;color:var(--t3);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px;">'+s.l+'</div>'
-    +'<div style="font-size:16px;font-weight:700;color:'+color+'">'+s.v+'</div>'
-    +'</div>').join('');
+    {l:'Avg / hari',v:fmtRpJt(totalGmv/days.length)},
+    {l:'Avg kontribusi',v:avgCtrib+'%'},
+    {l:'Hari terbaik',v:maxDay.date},
+  ].map(s=>'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;"><div style="font-size:10px;color:var(--t3);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px;">'+s.l+'</div><div style="font-size:16px;font-weight:700;color:'+color+'">'+s.v+'</div></div>').join('');
 
-  /* destroy old charts */
+  closeNotePanel();
   _chPopupCharts.forEach(c=>{try{c.destroy();}catch(e){}});
   _chPopupCharts=[];
 
-  /* show with animation — replay by toggling display */
-  const backdrop=document.getElementById('ch-popup-backdrop');
-  const popup   =document.getElementById('ch-popup');
-  backdrop.style.display='block';
-  popup.style.display='block';
-  /* trigger reflow so animation replays */
-  popup.style.animation='none'; popup.offsetHeight;
-  popup.style.animation='';
-  backdrop.style.animation='none'; backdrop.offsetHeight;
-  backdrop.style.animation='';
-  document.body.style.overflow='hidden';
+  /* Fire iOS-style open animation */
+  _popupOpen(cardEl);
 
-  /* Chart.js tooltip uses real hex (CSS vars not supported inside Chart.js) */
   const isDark=document.documentElement.getAttribute('data-theme')!=='light';
-  const ttBg    = isDark ? '#1a221b' : '#fffefb';
-  const ttBorder= color+'55';
-  const ttTitle = isDark ? '#eef2ee' : '#16201a';
-  const ttBody  = isDark ? '#889389' : '#4e5a50';
-  const gridClr = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
-  const tickClr = isDark ? '#515c54' : '#8d978c';
-
-  const sharedTooltip = {
-    backgroundColor: ttBg,
-    borderColor: ttBorder,
-    borderWidth: 1,
-    titleColor: ttTitle,
-    bodyColor: ttBody,
-    padding: 11,
-    cornerRadius: 8,
-    displayColors: false,
-  };
-  const sharedScales = {
-    x:{ grid:{display:false}, border:{display:false}, ticks:{color:tickClr, font:{size:9}, maxTicksLimit:10} },
-    y:{ grid:{color:gridClr}, border:{display:false}, ticks:{color:tickClr, font:{size:9}, maxTicksLimit:4} }
+  const ttBg=isDark?'#1a221b':'#fffefb', ttTitle=isDark?'#eef2ee':'#16201a';
+  const ttBody=isDark?'#889389':'#4e5a50', gridClr=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)', tickClr=isDark?'#515c54':'#8d978c';
+  const sharedTT={backgroundColor:ttBg,borderColor:color+'55',borderWidth:1,titleColor:ttTitle,bodyColor:ttBody,padding:11,cornerRadius:8,displayColors:false};
+  const sharedScales={
+    x:{grid:{display:false},border:{display:false},ticks:{color:tickClr,font:{size:9},maxTicksLimit:10}},
+    y:{grid:{color:gridClr},border:{display:false},ticks:{color:tickClr,font:{size:9},maxTicksLimit:4}}
   };
 
-  /* GMV bar chart */
+  const noteDotPlugin={id:'noteDot',afterDatasetsDraw(chart){
+    const ctx=chart.ctx, meta=chart.getDatasetMeta(0);
+    labels.forEach((lbl,i)=>{
+      if(!getNote(key,lbl)) return;
+      const bar=meta.data[i]; ctx.save();
+      ctx.beginPath(); ctx.arc(bar.x,bar.y-7,3.5,0,Math.PI*2);
+      ctx.fillStyle=color; ctx.fill(); ctx.restore();
+    });
+  }};
+
+  const barColors=labels.map(l=>getNote(key,l)?color:color+'88');
   _chPopupCharts.push(new Chart(document.getElementById('ch-popup-chart'),{
     type:'bar',
-    data:{ labels, datasets:[{
-      data: gmvs,
-      backgroundColor: color+'88',
-      hoverBackgroundColor: color,
-      borderColor: color,
-      borderWidth: 1.5,
-      borderRadius: 4,
-      borderSkipped: false,
-    }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{ mode:'index', intersect:false },
-      plugins:{
-        legend:{display:false},
-        tooltip:{ ...sharedTooltip, callbacks:{
-          title: i=>i[0].label,
-          label: c=>fmtRpJt(c.parsed.y)
-        }}
-      },
-      scales:{
-        ...sharedScales,
-        y:{ ...sharedScales.y, ticks:{...sharedScales.y.ticks, callback:v=>fmtRpJt(v)} }
-      }
+    data:{labels,datasets:[{data:gmvs,backgroundColor:barColors,hoverBackgroundColor:color,borderColor:color,borderWidth:1.5,borderRadius:4,borderSkipped:false,_baseColor:color}]},
+    plugins:[noteDotPlugin],
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      onClick:(evt,elements)=>{ if(elements.length>0) openNotePanel(key,labels[elements[0].index]); },
+      plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{
+        title:i=>i[0].label+(getNote(key,i[0].label)?' 📝':''),
+        label:c=>fmtRpJt(c.parsed.y),
+        afterLabel:c=>{ const n=getNote(key,labels[c.dataIndex]); return n?'"'+n.slice(0,40)+(n.length>40?'…':'')+'"':''; }
+      }}},
+      scales:{...sharedScales,y:{...sharedScales.y,ticks:{...sharedScales.y.ticks,callback:v=>fmtRpJt(v)}}}
     }
   }));
-
-  /* Kontribusi line chart */
   _chPopupCharts.push(new Chart(document.getElementById('ch-popup-contrib-chart'),{
     type:'line',
-    data:{ labels, datasets:[{
-      data: contribs,
-      borderColor: color,
-      backgroundColor: color+'28',
-      fill: true,
-      tension: 0.4,
-      pointRadius: 0,
-      pointHoverRadius: 5,
-      pointHoverBackgroundColor: color,
-      pointHoverBorderColor: ttBg,
-      pointHoverBorderWidth: 2,
-      borderWidth: 2,
-    }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{ mode:'index', intersect:false },
-      plugins:{
-        legend:{display:false},
-        tooltip:{ ...sharedTooltip, callbacks:{
-          title: i=>i[0].label,
-          label: c=>c.parsed.y.toFixed(1)+'%  dari total harian'
-        }}
-      },
-      scales:{
-        ...sharedScales,
-        y:{ ...sharedScales.y, ticks:{...sharedScales.y.ticks, callback:v=>v+'%'} }
-      }
+    data:{labels,datasets:[{data:contribs,borderColor:color,backgroundColor:color+'28',fill:true,tension:0.4,pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:color,pointHoverBorderColor:ttBg,pointHoverBorderWidth:2,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{title:i=>i[0].label,label:c=>c.parsed.y.toFixed(1)+'%  dari total harian'}}},
+      scales:{...sharedScales,y:{...sharedScales.y,ticks:{...sharedScales.y.ticks,callback:v=>v+'%'}}}
     }
   }));
 }
 
-function closeChannelPopup(){
-  document.getElementById('ch-popup-backdrop').style.display='none';
-  document.getElementById('ch-popup').style.display='none';
-  document.body.style.overflow='';
-  _chPopupCharts.forEach(c=>{try{c.destroy();}catch(e){}});
-  _chPopupCharts=[];
-}
+function closeChannelPopup(){ _popupClose(); }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(); });
 </script>
 </body>
