@@ -3806,6 +3806,15 @@ function setIfEmpty(id, val){
 
 </script>
 <!-- Channel Detail Popup -->
+<style>
+@keyframes popupIn {
+  from { opacity:0; transform:translate(-50%,-50%) scale(0.94); }
+  to   { opacity:1; transform:translate(-50%,-50%) scale(1); }
+}
+@keyframes backdropIn { from{opacity:0} to{opacity:1} }
+#ch-popup         { animation: popupIn 0.22s cubic-bezier(0.34,1.56,0.64,1) both; }
+#ch-popup-backdrop{ animation: backdropIn 0.18s ease both; }
+</style>
 <div id="ch-popup-backdrop" onclick="closeChannelPopup()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.80);z-index:900;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);"></div>
 <div id="ch-popup" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:901;width:min(92vw,680px);max-height:82vh;overflow-y:auto;border-radius:18px;background:var(--bg2);border:1px solid var(--border-md);box-shadow:0 32px 80px rgba(0,0,0,0.5);">
   <div style="padding:22px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
@@ -3832,20 +3841,32 @@ function setIfEmpty(id, val){
 
 <script>
 let _chPopupCharts=[];
+
+/* Restart CSS animation by cloning element */
+function replayAnim(id){
+  const el=document.getElementById(id);
+  const clone=el.cloneNode(true);
+  el.parentNode.replaceChild(clone,el);
+  return clone;
+}
+
 function openChannelPopup(key, name, color){
   if(!_kpiRows.length) return;
-  /* build daily series */
+
   const days=_kpiRows.map(r=>({
-    date: r._date instanceof Date ? r._date.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) : r.date,
-    gmv: r[key]||0,
+    date: r._date instanceof Date
+      ? r._date.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})
+      : String(r.date||''),
+    gmv:   r[key]||0,
     total: (r.offline||0)+(r.gofood||0)+(r.grabfood||0)+(r.shopee||0)||1
   }));
-  const labels=days.map(d=>d.date);
-  const gmvs=days.map(d=>d.gmv);
-  const contribs=days.map(d=>+(d.gmv/d.total*100).toFixed(1));
-  const totalGmv=gmvs.reduce((a,b)=>a+b,0);
-  const avgContrib=(contribs.reduce((a,b)=>a+b,0)/contribs.length).toFixed(1);
-  const maxDay=days[gmvs.indexOf(Math.max(...gmvs))];
+  const labels  = days.map(d=>d.date);
+  const gmvs    = days.map(d=>d.gmv);
+  const contribs= days.map(d=>+(d.gmv/d.total*100).toFixed(1));
+  const totalGmv= gmvs.reduce((a,b)=>a+b,0);
+  const avgCtrib= (contribs.reduce((a,b)=>a+b,0)/contribs.length).toFixed(1);
+  const maxIdx  = gmvs.indexOf(Math.max(...gmvs));
+  const maxDay  = days[maxIdx]||{date:'—'};
 
   /* header */
   document.getElementById('ch-popup-title').textContent=name;
@@ -3853,11 +3874,11 @@ function openChannelPopup(key, name, color){
   document.getElementById('ch-popup-total-val').textContent=fmtRpJt(totalGmv);
   document.getElementById('ch-popup-total-val').style.color=color;
 
-  /* stats row */
+  /* stat cards */
   document.getElementById('ch-popup-stats').innerHTML=[
-    {l:'Avg / hari', v:fmtRpJt(totalGmv/days.length)},
-    {l:'Avg kontribusi', v:avgContrib+'%'},
-    {l:'Hari terbaik', v:maxDay?maxDay.date:'—'},
+    {l:'Avg / hari',     v:fmtRpJt(totalGmv/days.length)},
+    {l:'Avg kontribusi', v:avgCtrib+'%'},
+    {l:'Hari terbaik',   v:maxDay.date},
   ].map(s=>'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">'
     +'<div style="font-size:10px;color:var(--t3);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px;">'+s.l+'</div>'
     +'<div style="font-size:16px;font-weight:700;color:'+color+'">'+s.v+'</div>'
@@ -3867,35 +3888,111 @@ function openChannelPopup(key, name, color){
   _chPopupCharts.forEach(c=>{try{c.destroy();}catch(e){}});
   _chPopupCharts=[];
 
-  const grad1=document.getElementById('ch-popup-chart').getContext('2d').createLinearGradient(0,0,0,190);
-  grad1.addColorStop(0,color+'55'); grad1.addColorStop(1,color+'00');
+  /* show with animation — replay by toggling display */
+  const backdrop=document.getElementById('ch-popup-backdrop');
+  const popup   =document.getElementById('ch-popup');
+  backdrop.style.display='block';
+  popup.style.display='block';
+  /* trigger reflow so animation replays */
+  popup.style.animation='none'; popup.offsetHeight;
+  popup.style.animation='';
+  backdrop.style.animation='none'; backdrop.offsetHeight;
+  backdrop.style.animation='';
+  document.body.style.overflow='hidden';
+
+  /* Chart.js tooltip uses real hex (CSS vars not supported inside Chart.js) */
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const ttBg    = isDark ? '#1a221b' : '#fffefb';
+  const ttBorder= color+'55';
+  const ttTitle = isDark ? '#eef2ee' : '#16201a';
+  const ttBody  = isDark ? '#889389' : '#4e5a50';
+  const gridClr = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
+  const tickClr = isDark ? '#515c54' : '#8d978c';
+
+  const sharedTooltip = {
+    backgroundColor: ttBg,
+    borderColor: ttBorder,
+    borderWidth: 1,
+    titleColor: ttTitle,
+    bodyColor: ttBody,
+    padding: 11,
+    cornerRadius: 8,
+    displayColors: false,
+  };
+  const sharedScales = {
+    x:{ grid:{display:false}, border:{display:false}, ticks:{color:tickClr, font:{size:9}, maxTicksLimit:10} },
+    y:{ grid:{color:gridClr}, border:{display:false}, ticks:{color:tickClr, font:{size:9}, maxTicksLimit:4} }
+  };
+
+  /* GMV bar chart */
   _chPopupCharts.push(new Chart(document.getElementById('ch-popup-chart'),{
     type:'bar',
-    data:{labels,datasets:[{data:gmvs,backgroundColor:color+'99',borderColor:color,borderWidth:1.5,borderRadius:4,hoverBackgroundColor:color}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'var(--bg3)',borderColor:color+'66',borderWidth:1,titleColor:'var(--t1)',bodyColor:'var(--t2)',padding:10,displayColors:false,callbacks:{label:c=>fmtRpJt(c.parsed.y)}}},
-      scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#515c54',font:{size:9},maxTicksLimit:10}},
-              y:{grid:{color:'rgba(255,255,255,0.04)'},border:{display:false},ticks:{color:'#515c54',font:{size:9},maxTicksLimit:4,callback:v=>fmtRpJt(v)}}}}
+    data:{ labels, datasets:[{
+      data: gmvs,
+      backgroundColor: color+'88',
+      hoverBackgroundColor: color,
+      borderColor: color,
+      borderWidth: 1.5,
+      borderRadius: 4,
+      borderSkipped: false,
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{display:false},
+        tooltip:{ ...sharedTooltip, callbacks:{
+          title: i=>i[0].label,
+          label: c=>fmtRpJt(c.parsed.y)
+        }}
+      },
+      scales:{
+        ...sharedScales,
+        y:{ ...sharedScales.y, ticks:{...sharedScales.y.ticks, callback:v=>fmtRpJt(v)} }
+      }
+    }
   }));
 
+  /* Kontribusi line chart */
   _chPopupCharts.push(new Chart(document.getElementById('ch-popup-contrib-chart'),{
     type:'line',
-    data:{labels,datasets:[{data:contribs,borderColor:color,backgroundColor:color+'22',fill:true,tension:0.4,pointRadius:0,pointHoverRadius:4,borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{backgroundColor:'var(--bg3)',borderColor:color+'66',borderWidth:1,titleColor:'var(--t1)',bodyColor:'var(--t2)',padding:10,displayColors:false,callbacks:{label:c=>c.parsed.y.toFixed(1)+'%'}}},
-      scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#515c54',font:{size:9},maxTicksLimit:10}},
-              y:{grid:{color:'rgba(255,255,255,0.04)'},border:{display:false},ticks:{color:'#515c54',font:{size:9},maxTicksLimit:4,callback:v=>v+'%'}}}}
+    data:{ labels, datasets:[{
+      data: contribs,
+      borderColor: color,
+      backgroundColor: color+'28',
+      fill: true,
+      tension: 0.4,
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: color,
+      pointHoverBorderColor: ttBg,
+      pointHoverBorderWidth: 2,
+      borderWidth: 2,
+    }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{display:false},
+        tooltip:{ ...sharedTooltip, callbacks:{
+          title: i=>i[0].label,
+          label: c=>c.parsed.y.toFixed(1)+'%  dari total harian'
+        }}
+      },
+      scales:{
+        ...sharedScales,
+        y:{ ...sharedScales.y, ticks:{...sharedScales.y.ticks, callback:v=>v+'%'} }
+      }
+    }
   }));
-
-  /* show */
-  document.getElementById('ch-popup-backdrop').style.display='block';
-  document.getElementById('ch-popup').style.display='block';
-  document.body.style.overflow='hidden';
 }
+
 function closeChannelPopup(){
   document.getElementById('ch-popup-backdrop').style.display='none';
   document.getElementById('ch-popup').style.display='none';
   document.body.style.overflow='';
+  _chPopupCharts.forEach(c=>{try{c.destroy();}catch(e){}});
+  _chPopupCharts=[];
 }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(); });
 </script>
