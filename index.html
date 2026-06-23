@@ -2286,8 +2286,48 @@ function aggregateData(rows){
 /* ═══════════════════════════════════════════════════
    INIT / DEFAULTS
 ═══════════════════════════════════════════════════ */
+/* ── Target persistence: save/load per bulan ── */
+function targetKey(){
+  const n=new Date();
+  return `fore_target_${n.getFullYear()}_${n.getMonth()+1}`;
+}
+function saveTarget(){
+  const val={
+    target: getVal('kpi-target'),
+    days:   getVal('kpi-days'),
+    saved:  new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})
+  };
+  try{ localStorage.setItem(targetKey(), JSON.stringify(val)); }catch(e){}
+}
+function loadSavedTarget(){
+  try{
+    const raw=localStorage.getItem(targetKey());
+    if(!raw) return false;
+    const val=JSON.parse(raw);
+    const tEl=document.getElementById('kpi-target');
+    const dEl=document.getElementById('kpi-days');
+    const rEl=document.getElementById('race-target');
+    const rdEl=document.getElementById('race-days');
+    if(tEl&&val.target){ tEl.value=val.target; }
+    if(dEl&&val.days)  { dEl.value=val.days;   }
+    if(rEl&&val.target){ rEl.value=val.target; }
+    if(rdEl&&val.days) { rdEl.value=val.days;  }
+    /* show small saved badge next to target input */
+    const existing=document.getElementById('target-saved-lbl');
+    if(!existing){
+      const badge=document.createElement('span');
+      badge.id='target-saved-lbl';
+      badge.textContent='✓ tersimpan';
+      badge.style.cssText='font-size:10px;font-weight:600;color:var(--green);opacity:0.7;margin-left:6px;letter-spacing:0.04em;';
+      tEl?.parentNode?.appendChild(badge);
+    }
+    return val.saved||true;
+  }catch(e){ return false; }
+}
+
 function initDefaults(){
   if(!allData.length) return;
+  loadSavedTarget();   /* load saved target before setIfEmpty so it wins */
   const now=new Date();
   const yesterday=toInputDate(new Date(now.getFullYear(),now.getMonth(),now.getDate()-1));
   const monthStart=toInputDate(new Date(now.getFullYear(),now.getMonth(),1));
@@ -2373,6 +2413,7 @@ function calcKpi(){
   const s=getVal('kpi-start'), e=getVal('kpi-end');
   if(!s||!e||!allData.length) return;
   const rows=filterData(s,e); if(!rows.length) return;
+  saveTarget();   /* persist target for this month */
   const target=parseNum(getVal('kpi-target')||'0');
   const totalDays=parseInt(getVal('kpi-days'))||30;
   const data=aggregateData(rows);
