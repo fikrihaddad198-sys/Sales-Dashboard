@@ -3877,6 +3877,29 @@ function setIfEmpty(id, val){
 
 <script>
 let _chPopupCharts=[], _activeNoteCtx={}, _currentChKey='', _currentLabels=[], _lastCardEl=null, _lastCardRect=null;
+let _onPopupOpened=null; /* callback fired after open animation completes */
+
+/* Re-animate charts after popup expand */
+function _animateChartsIn(){
+  [
+    {chart:_chPopupCharts[0], dur:650, delay:0},
+    {chart:_chPopupCharts[1], dur:800, delay:130},
+  ].forEach(({chart,dur,delay})=>{
+    if(!chart) return;
+    const ds=chart.data.datasets[0];
+    const real=ds._realData; if(!real) return;
+    setTimeout(()=>{
+      ds.data=real.map(()=>0);
+      chart.options.animation=false;
+      chart.update();
+      requestAnimationFrame(()=>{
+        ds.data=real;
+        chart.options.animation={duration:dur, easing:'easeOutQuart'};
+        chart.update();
+      });
+    }, delay);
+  });
+}
 
 /* ── Note storage ── */
 function _nKey(ch,lbl){ return 'fore_note_'+ch+'_'+lbl.replace(/\s/g,'_'); }
@@ -3942,7 +3965,7 @@ function _popupOpen(cardEl){
 
   popup.style.borderRadius = '10px';
   popup.style.transform    = `translate(${dx}px,${dy}px) scale(${sx},${sy})`;
-  popup.style.opacity      = '0';
+  popup.style.opacity      = '1';   /* visible from card size — shows growth clearly */
 
   backdrop.style.display    = 'block';
   backdrop.style.transition = 'none';
@@ -3951,19 +3974,21 @@ function _popupOpen(cardEl){
 
   /* double-rAF: ensures browser committed layout before animating */
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    popup.style.transition   = 'transform 0.52s cubic-bezier(0.34,1.12,0.64,1), opacity 0.28s ease, border-radius 0.52s ease';
+    /* opacity:1 from start so growth-from-card is visible immediately */
+    popup.style.transition   = 'transform 0.62s cubic-bezier(0.16,1,0.3,1), border-radius 0.62s ease';
     popup.style.transform    = 'none';
     popup.style.opacity      = '1';
     popup.style.borderRadius = '18px';
-    backdrop.style.transition = 'opacity 0.28s ease';
+    backdrop.style.transition = 'opacity 0.3s ease';
     backdrop.style.opacity    = '1';
   }));
 
-  /* restore scroll ONLY after transition ends — not on timer */
+  /* restore scroll + fire onComplete after expand */
   popup.addEventListener('transitionend', function onDone(e){
     if(e.propertyName !== 'transform') return;
     popup.removeEventListener('transitionend', onDone);
     popup.style.overflowY = 'auto';
+    if(typeof _onPopupOpened === 'function') _onPopupOpened();
   });
 
   document.body.style.overflow = 'hidden';
@@ -3987,7 +4012,7 @@ function _popupClose(){
   }
 
   /* opacity delayed — popup stays visible while shrinking, fades at end */
-  popup.style.transition   = 'transform 0.38s cubic-bezier(0.36,0,0.66,0), opacity 0.18s ease 0.18s, border-radius 0.38s ease';
+  popup.style.transition   = 'transform 0.42s cubic-bezier(0.5,0,0.75,0), opacity 0.18s ease 0.20s, border-radius 0.42s ease';
   popup.style.transform    = `translate(${dx}px,${dy}px) scale(${sx},${sy})`;
   popup.style.opacity      = '0';
   popup.style.borderRadius = '10px';
@@ -4051,7 +4076,7 @@ function _buildCharts(key, color, labels, gmvs, contribs){
   _chPopupCharts.push(new Chart(document.getElementById('ch-popup-chart'),{
     type:'bar',
     data:{labels,datasets:[{data:gmvs,backgroundColor:barColors,hoverBackgroundColor:color,
-      borderColor:color,borderWidth:1.5,borderRadius:4,borderSkipped:false,_baseColor:color}]},
+      borderColor:color,borderWidth:1.5,borderRadius:4,borderSkipped:false,_baseColor:color,_realData:gmvs.slice()}]},
     plugins:[noteDotPlugin],
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       onClick:(evt,elements)=>{ if(elements.length>0) openNotePanel(key,labels[elements[0].index]); },
@@ -4069,7 +4094,7 @@ function _buildCharts(key, color, labels, gmvs, contribs){
     type:'line',
     data:{labels,datasets:[{data:contribs,borderColor:color,backgroundColor:color+'28',fill:true,
       tension:0.4,pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:color,
-      pointHoverBorderColor:ttBg,pointHoverBorderWidth:2,borderWidth:2}]},
+      pointHoverBorderColor:ttBg,pointHoverBorderWidth:2,borderWidth:2,_realData:contribs.slice()}]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       animation:{duration:0},
       plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{
@@ -4119,6 +4144,9 @@ function openChannelPopup(key, name, color, cardEl){
 
   /* Build charts NOW (invisible) — no animation jank */
   _buildCharts(key, color, labels, gmvs, contribs);
+
+  /* Wire chart animation to fire after popup expand completes */
+  _onPopupOpened = _animateChartsIn;
 
   /* Start iOS FLIP animation */
   _popupOpen(cardEl);
