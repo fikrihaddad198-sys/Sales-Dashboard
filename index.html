@@ -1408,6 +1408,64 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 #page-kpi .btn:hover  { transform: none; box-shadow: none; filter: brightness(1.07); }
 #page-kpi .btn:active { transform: scale(0.98); box-shadow: none; filter: none; }
 #page-kpi .inp:focus  { box-shadow: 0 0 0 2px rgba(47,158,106,0.18); }
+
+/* Channel Contribution — per-channel breakdown cards */
+.contrib-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.contrib-ch-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--ch-color);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.contrib-rank {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: var(--t3);
+  letter-spacing: 0.05em;
+}
+.contrib-ch-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t2);
+  letter-spacing: 0.01em;
+}
+.contrib-ch-gmv {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.contrib-bar-wrap {
+  height: 4px;
+  background: var(--bg4);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.contrib-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1.1s cubic-bezier(0.23,1,0.32,1);
+}
+.contrib-ch-pct {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--mono);
+  letter-spacing: 0.01em;
+}
+@media (max-width: 700px) {
+  .contrib-grid { grid-template-columns: repeat(2,1fr); }
+}
 </style>
 </head>
 <body>
@@ -2029,6 +2087,7 @@ Chart.defaults.elements.bar.borderRadius = 6;
 const fmtRp=v=>{v=v||0;const neg=v<0,abs=Math.abs(v);let s=abs>=1e9?'Rp '+(abs/1e9).toFixed(2)+'M':abs>=1e6?'Rp '+(abs/1e6).toFixed(1)+'jt':abs>=1e3?'Rp '+(abs/1e3).toFixed(0)+'rb':'Rp '+Math.round(abs);return neg?'-'+s:s;};
 const fmtNum=v=>new Intl.NumberFormat('id-ID').format(Math.round(v||0));
 const fmtPct=v=>(v||0).toFixed(1)+'%';
+const fmtRpJt=v=>{v=v||0;const neg=v<0,abs=Math.abs(v);const s=abs>=1e9?'Rp '+(abs/1e9).toFixed(2)+'M':abs>=1e6?'Rp '+(abs/1e6).toFixed(1)+'jt':abs>=1e3?'Rp '+(abs/1e3).toFixed(0)+'rb':'Rp '+Math.round(abs);return neg?'-'+s:s;};
 const fmtShortDate=s=>{if(!s)return'—';const[y,m,d]=s.split('-').map(Number);const dt=new Date(y,m-1,d);return String(dt.getDate()).padStart(2,'0')+'/'+String(dt.getMonth()+1).padStart(2,'0');};
 const toInputDate=d=>{const dd=String(d.getDate()).padStart(2,'0'),mm=String(d.getMonth()+1).padStart(2,'0');return`${d.getFullYear()}-${mm}-${dd}`;};
 const parseNum=s=>{if(!s||s.trim()==='')return 0;return parseFloat(s.replace(/[^0-9.-]/g,''))||0;};
@@ -2353,17 +2412,20 @@ function calcKpi(){
 
   /* Contribution bars */
   const contribItems=[
-    {name:'GoFood',   val:contrib.gofood,   color:TC.gofood},
-    {name:'Offline',  val:contrib.offline,  color:TC.offline},
-    {name:'GrabFood', val:contrib.grabfood, color:TC.grabfood},
-    {name:'Shopee',   val:contrib.shopee,   color:TC.shopee},
+    {name:'Offline',  gmv:data.offline,  val:contrib.offline,  color:TC.offline},
+    {name:'GrabFood', gmv:data.grabfood, val:contrib.grabfood, color:TC.grabfood},
+    {name:'GoFood',   gmv:data.gofood,   val:contrib.gofood,   color:TC.gofood},
+    {name:'Shopee',   gmv:data.shopee,   val:contrib.shopee,   color:TC.shopee},
   ].sort((a,b)=>b.val-a.val);
-  document.getElementById('kpi-contrib').innerHTML=contribItems.map(c=>`
-    <div class="chan-bar-row">
-      <div class="cbl">${c.name}</div>
-      <div class="cbt"><div class="cbf" style="width:${Math.min(c.val,100)}%;background:${c.color};box-shadow:0 0 8px ${c.color}44;"></div></div>
-      <div class="cbp" style="color:${c.color}">${fmtPct(c.val)}</div>
-    </div>`).join('');
+  document.getElementById('kpi-contrib').innerHTML='<div class="contrib-grid">'+contribItems.map((c,i)=>
+    '<div class="contrib-ch-card" style="--ch-color:'+c.color+'">'+
+      '<div class="contrib-rank">'+( i+1)+'</div>'+
+      '<div class="contrib-ch-name">'+c.name+'</div>'+
+      '<div class="contrib-ch-gmv" style="color:'+c.color+'">'+fmtRpJt(c.gmv)+'</div>'+
+      '<div class="contrib-bar-wrap"><div class="contrib-bar-fill" style="width:'+Math.min(c.val,100)+'%;background:'+c.color+'"></div></div>'+
+      '<div class="contrib-ch-pct" style="color:'+c.color+'">'+fmtPct(c.val)+'</div>'+
+    '</div>'
+  ).join('')+'</div>';
 
   /* Pace card (removed from KPI page — guard kept for safety) */
   const paceInfoEl=document.getElementById('pace-info');
