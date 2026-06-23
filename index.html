@@ -3874,9 +3874,11 @@ function openNotePanel(ch,lbl){
   document.getElementById('ch-note-del-btn').style.display=existing?'inline-block':'none';
   const panel=document.getElementById('ch-note-panel');
   panel.style.display='block';
-  panel.style.animation='none'; panel.offsetHeight;
-  panel.style.animation='popupIn 0.18s ease both';
-  setTimeout(()=>document.getElementById('ch-note-text').focus(), 50);
+  /* scroll note panel into view inside popup */
+  setTimeout(()=>{
+    panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+    document.getElementById('ch-note-text').focus();
+  }, 60);
 }
 function closeNotePanel(){ document.getElementById('ch-note-panel').style.display='none'; }
 function saveCurrentNote(){
@@ -3899,52 +3901,49 @@ function _popupOpen(cardEl){
   const popup    = document.getElementById('ch-popup');
   const backdrop = document.getElementById('ch-popup-backdrop');
 
-  /* 1. Show invisible at top-left to measure natural size */
-  popup.style.transition  = 'none';
-  popup.style.opacity     = '0';
-  popup.style.transform   = 'none';
-  popup.style.display     = 'block';
-  popup.style.overflowY   = 'hidden';
+  /* popup already display:block + opacity:0 (set before chart build)
+     just need to position and animate */
+  popup.style.transition = 'none';
+  popup.style.transform  = 'none';
 
-  /* 2. Measure and compute centered position */
-  const pw = popup.offsetWidth,  ph = popup.offsetHeight;
-  const vw = window.innerWidth,  vh = window.innerHeight;
+  const pw = popup.offsetWidth, ph = popup.offsetHeight;
+  const vw = window.innerWidth, vh = window.innerHeight;
   const finalLeft = Math.round(Math.max(8, (vw-pw)/2));
   const finalTop  = Math.round(Math.max(16, Math.min((vh-ph)/2, vh-ph-16)));
   popup.style.left = finalLeft+'px';
   popup.style.top  = finalTop+'px';
 
-  /* 3. Calculate FLIP delta from popup center → card center */
   const cardRect = cardEl.getBoundingClientRect();
-  const ccx = cardRect.left + cardRect.width/2;
-  const ccy = cardRect.top  + cardRect.height/2;
-  const pcx = finalLeft + pw/2;
-  const pcy = finalTop  + ph/2;
-  const dx  = ccx - pcx, dy = ccy - pcy;
-  const sx  = cardRect.width/pw, sy = cardRect.height/ph;
+  const dx = (cardRect.left + cardRect.width/2)  - (finalLeft + pw/2);
+  const dy = (cardRect.top  + cardRect.height/2) - (finalTop  + ph/2);
+  const sx = cardRect.width  / pw;
+  const sy = cardRect.height / ph;
 
-  /* 4. Snap to card position/scale */
-  popup.style.borderRadius = '12px';
+  popup.style.borderRadius = '10px';
   popup.style.transform    = `translate(${dx}px,${dy}px) scale(${sx},${sy})`;
+  popup.style.opacity      = '0';
 
-  /* show backdrop */
   backdrop.style.display    = 'block';
   backdrop.style.transition = 'none';
   backdrop.style.opacity    = '0';
+  backdrop.offsetHeight; /* flush */
 
-  /* 5. Double-rAF ensures browser committed layout before animation */
+  /* double-rAF: ensures browser committed layout before animating */
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-    popup.style.transition   = 'transform 0.44s cubic-bezier(0.32,0.72,0,1), opacity 0.22s ease, border-radius 0.44s ease';
+    popup.style.transition   = 'transform 0.52s cubic-bezier(0.34,1.12,0.64,1), opacity 0.28s ease, border-radius 0.52s ease';
     popup.style.transform    = 'none';
     popup.style.opacity      = '1';
     popup.style.borderRadius = '18px';
-
-    backdrop.style.transition = 'opacity 0.22s ease';
+    backdrop.style.transition = 'opacity 0.28s ease';
     backdrop.style.opacity    = '1';
-
-    /* restore scroll after animation */
-    setTimeout(()=>{ popup.style.overflowY='auto'; }, 460);
   }));
+
+  /* restore scroll ONLY after transition ends — not on timer */
+  popup.addEventListener('transitionend', function onDone(e){
+    if(e.propertyName !== 'transform') return;
+    popup.removeEventListener('transitionend', onDone);
+    popup.style.overflowY = 'auto';
+  });
 
   document.body.style.overflow = 'hidden';
 }
@@ -3956,7 +3955,6 @@ function _popupClose(){
 
   popup.style.overflowY = 'hidden';
 
-  /* Reverse FLIP: shrink back to card origin */
   let dx=0, dy=0, sx=0.08, sy=0.08;
   if(_lastCardEl){
     try{
@@ -3969,12 +3967,11 @@ function _popupClose(){
     }catch(e){}
   }
 
-  popup.style.transition   = 'transform 0.36s cubic-bezier(0.6,0,0.6,1), opacity 0.22s ease, border-radius 0.36s ease';
+  popup.style.transition   = 'transform 0.34s cubic-bezier(0.36,0,0.66,0), opacity 0.22s ease, border-radius 0.34s ease';
   popup.style.transform    = `translate(${dx}px,${dy}px) scale(${sx},${sy})`;
   popup.style.opacity      = '0';
   popup.style.borderRadius = '10px';
-
-  backdrop.style.transition = 'opacity 0.22s ease';
+  backdrop.style.transition = 'opacity 0.24s ease';
   backdrop.style.opacity    = '0';
 
   let done=false;
@@ -3993,8 +3990,74 @@ function _popupClose(){
     _chPopupCharts.forEach(c=>{try{c.destroy();}catch(e){}});
     _chPopupCharts=[];
   }
-  popup.addEventListener('transitionend', cleanup, {once:true});
-  setTimeout(cleanup, 420); /* safety fallback */
+  popup.addEventListener('transitionend', function onClose(e){
+    if(e.propertyName!=='transform') return;
+    popup.removeEventListener('transitionend', onClose);
+    cleanup();
+  });
+  setTimeout(cleanup, 400);
+}
+
+/* ── Build charts (call before _popupOpen so no jank during animation) ── */
+function _buildCharts(key, color, labels, gmvs, contribs){
+  _chPopupCharts.forEach(c=>{try{c.destroy();}catch(e){}});
+  _chPopupCharts=[];
+
+  const isDark = document.documentElement.getAttribute('data-theme')!=='light';
+  const ttBg   = isDark?'#1a221b':'#fffefb';
+  const ttTitle= isDark?'#eef2ee':'#16201a';
+  const ttBody = isDark?'#889389':'#4e5a50';
+  const gridClr= isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)';
+  const tickClr= isDark?'#515c54':'#8d978c';
+
+  const sharedTT={backgroundColor:ttBg,borderColor:color+'55',borderWidth:1,
+    titleColor:ttTitle,bodyColor:ttBody,padding:11,cornerRadius:8,displayColors:false};
+  const sharedScales={
+    x:{grid:{display:false},border:{display:false},ticks:{color:tickClr,font:{size:9},maxTicksLimit:10}},
+    y:{grid:{color:gridClr},border:{display:false},ticks:{color:tickClr,font:{size:9},maxTicksLimit:4}}
+  };
+
+  const noteDotPlugin={id:'noteDot',afterDatasetsDraw(chart){
+    const ctx=chart.ctx, meta=chart.getDatasetMeta(0);
+    labels.forEach((lbl,i)=>{
+      if(!getNote(key,lbl)) return;
+      const bar=meta.data[i]; ctx.save();
+      ctx.beginPath(); ctx.arc(bar.x, bar.y-7, 3.5, 0, Math.PI*2);
+      ctx.fillStyle=color; ctx.fill(); ctx.restore();
+    });
+  }};
+
+  const barColors=labels.map(l=>getNote(key,l)?color:color+'88');
+  _chPopupCharts.push(new Chart(document.getElementById('ch-popup-chart'),{
+    type:'bar',
+    data:{labels,datasets:[{data:gmvs,backgroundColor:barColors,hoverBackgroundColor:color,
+      borderColor:color,borderWidth:1.5,borderRadius:4,borderSkipped:false,_baseColor:color}]},
+    plugins:[noteDotPlugin],
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      onClick:(evt,elements)=>{ if(elements.length>0) openNotePanel(key,labels[elements[0].index]); },
+      animation:{duration:0}, /* no chart animation — popup animation is the focus */
+      plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{
+        title:i=>i[0].label+(getNote(key,i[0].label)?' 📝':''),
+        label:c=>fmtRpJt(c.parsed.y),
+        afterLabel:c=>{ const n=getNote(key,labels[c.dataIndex]); return n?'"'+n.slice(0,40)+(n.length>40?'…':'')+'"':''; }
+      }}},
+      scales:{...sharedScales,y:{...sharedScales.y,ticks:{...sharedScales.y.ticks,callback:v=>fmtRpJt(v)}}}
+    }
+  }));
+
+  _chPopupCharts.push(new Chart(document.getElementById('ch-popup-contrib-chart'),{
+    type:'line',
+    data:{labels,datasets:[{data:contribs,borderColor:color,backgroundColor:color+'28',fill:true,
+      tension:0.4,pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:color,
+      pointHoverBorderColor:ttBg,pointHoverBorderWidth:2,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      animation:{duration:0},
+      plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{
+        title:i=>i[0].label,label:c=>c.parsed.y.toFixed(1)+'%  dari total harian'
+      }}},
+      scales:{...sharedScales,y:{...sharedScales.y,ticks:{...sharedScales.y.ticks,callback:v=>v+'%'}}}
+    }
+  }));
 }
 
 /* ── Main popup ── */
@@ -4013,6 +4076,7 @@ function openChannelPopup(key, name, color, cardEl){
   const maxIdx=gmvs.indexOf(Math.max(...gmvs)), maxDay=days[maxIdx]||{date:'—'};
   _currentLabels=labels;
 
+  /* Update content */
   document.getElementById('ch-popup-title').textContent=name;
   document.getElementById('ch-popup-title').style.color=color;
   document.getElementById('ch-popup-total-val').textContent=fmtRpJt(totalGmv);
@@ -4022,56 +4086,21 @@ function openChannelPopup(key, name, color, cardEl){
     {l:'Avg kontribusi',v:avgCtrib+'%'},
     {l:'Hari terbaik',v:maxDay.date},
   ].map(s=>'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;"><div style="font-size:10px;color:var(--t3);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px;">'+s.l+'</div><div style="font-size:16px;font-weight:700;color:'+color+'">'+s.v+'</div></div>').join('');
-
   closeNotePanel();
-  _chPopupCharts.forEach(c=>{try{c.destroy();}catch(e){}});
-  _chPopupCharts=[];
 
-  /* Fire iOS-style open animation */
+  /* Show popup invisible so canvases have dimensions for Chart.js */
+  const popup = document.getElementById('ch-popup');
+  popup.style.transition = 'none';
+  popup.style.opacity    = '0';
+  popup.style.display    = 'block';
+  popup.style.overflowY  = 'hidden';
+  popup.offsetHeight; /* force layout so canvases are measurable */
+
+  /* Build charts NOW (invisible) — no animation jank */
+  _buildCharts(key, color, labels, gmvs, contribs);
+
+  /* Start iOS FLIP animation */
   _popupOpen(cardEl);
-
-  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
-  const ttBg=isDark?'#1a221b':'#fffefb', ttTitle=isDark?'#eef2ee':'#16201a';
-  const ttBody=isDark?'#889389':'#4e5a50', gridClr=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)', tickClr=isDark?'#515c54':'#8d978c';
-  const sharedTT={backgroundColor:ttBg,borderColor:color+'55',borderWidth:1,titleColor:ttTitle,bodyColor:ttBody,padding:11,cornerRadius:8,displayColors:false};
-  const sharedScales={
-    x:{grid:{display:false},border:{display:false},ticks:{color:tickClr,font:{size:9},maxTicksLimit:10}},
-    y:{grid:{color:gridClr},border:{display:false},ticks:{color:tickClr,font:{size:9},maxTicksLimit:4}}
-  };
-
-  const noteDotPlugin={id:'noteDot',afterDatasetsDraw(chart){
-    const ctx=chart.ctx, meta=chart.getDatasetMeta(0);
-    labels.forEach((lbl,i)=>{
-      if(!getNote(key,lbl)) return;
-      const bar=meta.data[i]; ctx.save();
-      ctx.beginPath(); ctx.arc(bar.x,bar.y-7,3.5,0,Math.PI*2);
-      ctx.fillStyle=color; ctx.fill(); ctx.restore();
-    });
-  }};
-
-  const barColors=labels.map(l=>getNote(key,l)?color:color+'88');
-  _chPopupCharts.push(new Chart(document.getElementById('ch-popup-chart'),{
-    type:'bar',
-    data:{labels,datasets:[{data:gmvs,backgroundColor:barColors,hoverBackgroundColor:color,borderColor:color,borderWidth:1.5,borderRadius:4,borderSkipped:false,_baseColor:color}]},
-    plugins:[noteDotPlugin],
-    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      onClick:(evt,elements)=>{ if(elements.length>0) openNotePanel(key,labels[elements[0].index]); },
-      plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{
-        title:i=>i[0].label+(getNote(key,i[0].label)?' 📝':''),
-        label:c=>fmtRpJt(c.parsed.y),
-        afterLabel:c=>{ const n=getNote(key,labels[c.dataIndex]); return n?'"'+n.slice(0,40)+(n.length>40?'…':'')+'"':''; }
-      }}},
-      scales:{...sharedScales,y:{...sharedScales.y,ticks:{...sharedScales.y.ticks,callback:v=>fmtRpJt(v)}}}
-    }
-  }));
-  _chPopupCharts.push(new Chart(document.getElementById('ch-popup-contrib-chart'),{
-    type:'line',
-    data:{labels,datasets:[{data:contribs,borderColor:color,backgroundColor:color+'28',fill:true,tension:0.4,pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:color,pointHoverBorderColor:ttBg,pointHoverBorderWidth:2,borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{title:i=>i[0].label,label:c=>c.parsed.y.toFixed(1)+'%  dari total harian'}}},
-      scales:{...sharedScales,y:{...sharedScales.y,ticks:{...sharedScales.y.ticks,callback:v=>v+'%'}}}
-    }
-  }));
 }
 
 function closeChannelPopup(){ _popupClose(); }
