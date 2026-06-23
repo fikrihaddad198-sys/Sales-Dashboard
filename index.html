@@ -2391,12 +2391,6 @@ function calcKpi(){
   /* Hero numbers with counter animation */
   const gmvEl=document.getElementById('h-gmv');
   animateCounter(gmvEl, data.gmv, v=>fmtRp(v), 1000);
-  const paceStatus=pacePct>=100
-    ?`<span class="badge up">↑ Ahead</span>`
-    :pacePct>=80
-    ?`<span class="badge warn">↓ Slightly Behind</span>`
-    :`<span class="badge dn">↓ Behind</span>`;
-  document.getElementById('h-gmv-sub').innerHTML=elapsed+' hari berjalan &nbsp;'+paceStatus;
 
   /* Progress bar */
   const pFill=document.getElementById('h-progress');
@@ -2435,6 +2429,12 @@ function calcKpi(){
   animateCounter(paceEl, pacePct, v=>fmtPct(v), 900);
   const paceSubEl=document.getElementById('h-pace-sub');
   if(paceSubEl) paceSubEl.textContent=fmtRpJt(avgDaily);
+  const paceStatus=pacePct>=100
+    ?'<span class="badge up">↑ Ahead</span>'
+    :pacePct>=80
+    ?'<span class="badge warn">↓ Slightly Behind</span>'
+    :'<span class="badge dn">↓ Behind</span>';
+  document.getElementById('h-gmv-sub').innerHTML=elapsed+' hari berjalan &nbsp;'+paceStatus;
 
   /* Metric strip — 8 cards */
   const stripItems=[
