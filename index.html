@@ -1453,6 +1453,20 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   #page-kpi .h-col-gmv { border-bottom: 1px solid var(--border) !important; padding-bottom: 18px; }
 }
 
+/* Hero micro-stats (Total Transaksi + Avg IPT) */
+#page-kpi .hero-micro-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+#page-kpi .hms-item { display: flex; align-items: baseline; gap: 5px; }
+#page-kpi .hms-val  { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--t1); font-variant-numeric: tabular-nums; }
+#page-kpi .hms-lbl  { font-size: 11px; color: var(--t3); font-weight: 500; }
+#page-kpi .hms-dot  { color: var(--t3); font-size: 11px; }
+
 /* Channel Contribution — per-channel breakdown cards */
 .contrib-grid {
   display: grid;
@@ -1610,6 +1624,11 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
             <div class="hero-kpi-val" id="h-pace">—</div>
             <div class="h-col-sub">Avg <span id="h-pace-sub">—</span> / hari</div>
           </div>
+        </div>
+        <div class="hero-micro-stats">
+          <span class="hms-item"><span class="hms-val" id="h-total-trx">—</span> <span class="hms-lbl">transaksi</span></span>
+          <span class="hms-dot">·</span>
+          <span class="hms-item"><span class="hms-val" id="h-avg-ipt">—</span> <span class="hms-lbl">item/trx</span></span>
         </div>
         <div class="progress-wrap">
           <div class="progress-track">
@@ -2490,11 +2509,7 @@ function calcKpi(){
     {l:'Target GMV',    v:fmtRp(target),      s:'bulan ini',       c:'var(--cyan)'},
     {l:'Gap to Target', v:fmtRp(Math.abs(target-data.gmv)), s:target-data.gmv<=0?'✓ Tercapai':'Kurang', c:target-data.gmv<=0?'var(--green)':'var(--red)'},
     {l:'Daily Target',  v:fmtRp(dailyTarget),  s:'per hari',        c:'var(--amber)'},
-    {l:'Avg Daily GMV', v:fmtRp(avgDaily),     s:'aktual',          c:'var(--blue)'},
     {l:'Forecast EOM',  v:fmtRp(forecastEom),  s:forecastEom>=target?'✓ On track':'⚠ Risk', c:forecastEom>=target?'var(--green)':'var(--red)'},
-    {l:'Total Transaksi',v:fmtNum(sum(rows,'adt_store')), s:'all channels', c:'var(--violet)'},
-    {l:'Avg IPT',       v:avg(rows,'ipt').toFixed(2), s:'item/transaksi', c:'var(--amber)'},
-    {l:'Sisa Hari',     v:remaining+' hari',   s:'tersisa',         c:'var(--pink)'},
   ];
   document.getElementById('kpi-strip-grid').innerHTML=stripItems.map((k,i)=>`
     <div class="metric-card reveal reveal-delay-${(i%4)+1}" style="--mc:${k.c}">
@@ -2503,6 +2518,12 @@ function calcKpi(){
       <div class="mc-sub">${k.s}</div>
     </div>`).join('');
   setTimeout(()=>window.attachReveal&&window.attachReveal(), 50);
+
+  /* Micro-stats inside hero */
+  const trxEl=document.getElementById('h-total-trx');
+  if(trxEl) trxEl.textContent=fmtNum(sum(rows,'adt_store'));
+  const iptEl=document.getElementById('h-avg-ipt');
+  if(iptEl) iptEl.textContent=avg(rows,'ipt').toFixed(2);
 
   buildGauge(achPct);
 
