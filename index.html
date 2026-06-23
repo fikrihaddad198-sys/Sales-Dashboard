@@ -3855,7 +3855,7 @@ function setIfEmpty(id, val){
 </div>
 
 <script>
-let _chPopupCharts=[], _activeNoteCtx={}, _currentChKey='', _currentLabels=[], _lastCardEl=null;
+let _chPopupCharts=[], _activeNoteCtx={}, _currentChKey='', _currentLabels=[], _lastCardEl=null, _lastCardRect=null;
 
 /* ── Note storage ── */
 function _nKey(ch,lbl){ return 'fore_note_'+ch+'_'+lbl.replace(/\s/g,'_'); }
@@ -3956,22 +3956,21 @@ function _popupClose(){
   popup.style.overflowY = 'hidden';
 
   let dx=0, dy=0, sx=0.08, sy=0.08;
-  if(_lastCardEl){
-    try{
-      const cardRect = _lastCardEl.getBoundingClientRect();
-      const popRect  = popup.getBoundingClientRect();
-      dx = (cardRect.left+cardRect.width/2)  - (popRect.left+popRect.width/2);
-      dy = (cardRect.top +cardRect.height/2) - (popRect.top +popRect.height/2);
-      sx = cardRect.width  / popRect.width;
-      sy = cardRect.height / popRect.height;
-    }catch(e){}
+  if(_lastCardRect){
+    const cardRect = _lastCardRect;   /* use snapshot — element may be detached */
+    const popRect  = popup.getBoundingClientRect();
+    dx = (cardRect.left+cardRect.width/2)  - (popRect.left+popRect.width/2);
+    dy = (cardRect.top +cardRect.height/2) - (popRect.top +popRect.height/2);
+    sx = cardRect.width  / popRect.width;
+    sy = cardRect.height / popRect.height;
   }
 
-  popup.style.transition   = 'transform 0.34s cubic-bezier(0.36,0,0.66,0), opacity 0.22s ease, border-radius 0.34s ease';
+  /* opacity delayed — popup stays visible while shrinking, fades at end */
+  popup.style.transition   = 'transform 0.38s cubic-bezier(0.36,0,0.66,0), opacity 0.18s ease 0.18s, border-radius 0.38s ease';
   popup.style.transform    = `translate(${dx}px,${dy}px) scale(${sx},${sy})`;
   popup.style.opacity      = '0';
   popup.style.borderRadius = '10px';
-  backdrop.style.transition = 'opacity 0.24s ease';
+  backdrop.style.transition = 'opacity 0.28s ease';
   backdrop.style.opacity    = '0';
 
   let done=false;
@@ -4064,6 +4063,7 @@ function _buildCharts(key, color, labels, gmvs, contribs){
 function openChannelPopup(key, name, color, cardEl){
   if(!_kpiRows.length) return;
   _currentChKey=key; _lastCardEl=cardEl;
+  _lastCardRect=cardEl.getBoundingClientRect(); /* snapshot BEFORE DOM can change */
 
   const days=_kpiRows.map(r=>({
     date: r._date instanceof Date ? r._date.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) : String(r.date||''),
