@@ -677,10 +677,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
    Visibility controlled via ::before pseudo-element opacity only.
 ───────────────────────────────────────────────────── */
 .card {
+  --card-top: var(--cyan);
   background: transparent;
   backdrop-filter: blur(20px) saturate(170%);
   -webkit-backdrop-filter: blur(20px) saturate(170%);
   border: 1px solid transparent;
+  border-top: 2px solid transparent;
   border-radius: var(--r5);
   padding: 20px 24px;
   position: relative; overflow: hidden;
@@ -701,16 +703,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   opacity: 0;
   transition: opacity 0.50s cubic-bezier(0.22,1,0.36,1);
 }
-/* top shimmer line */
-.card::after {
-  content: ''; position: absolute;
-  top: 0; left: 0; right: 0; height: 1px; z-index: 2;
-  background: linear-gradient(90deg, transparent 0%, rgba(201,168,76,0.35) 40%, rgba(201,168,76,0.22) 70%, transparent 100%);
-  opacity: 0;
-  transition: opacity 0.50s cubic-bezier(0.22,1,0.36,1);
-}
 .card:hover {
   border-color: rgba(201,168,76,0.20);
+  border-top-color: var(--card-top);
   box-shadow:
     0 1px 0 rgba(255,255,255,0.07) inset,
     0 -1px 0 rgba(0,0,0,0.22) inset,
@@ -725,7 +720,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     linear-gradient(145deg, rgba(24,21,16,0.84) 0%, rgba(14,12,10,0.70) 100%);
   opacity: 1;
 }
-.card:hover::after { opacity: 1; }
 
 /* Chart wrappers */
 .chart-wrap { position: relative; }
@@ -889,10 +883,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   gap: 12px; margin-bottom: 18px;
 }
 .metric-card {
+  --card-top: var(--mc, var(--cyan));
   background: transparent;
   backdrop-filter: blur(20px) saturate(170%);
   -webkit-backdrop-filter: blur(20px) saturate(170%);
   border: 1px solid transparent;
+  border-top: 2px solid transparent;
   border-radius: var(--r4);
   padding: 18px 20px 16px;
   position: relative; overflow: hidden;
@@ -903,14 +899,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     box-shadow   0.50s cubic-bezier(0.22,1,0.36,1),
     transform    0.50s cubic-bezier(0.22,1,0.36,1);
   cursor: default;
-}
-/* top accent line — fades in on hover */
-.metric-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 1; /* above fill, visible */
-  background: linear-gradient(90deg, var(--mc, var(--acc, var(--cyan))) 0%, rgba(201,168,76,0.65) 100%);
-  opacity: 0;
-  box-shadow: 0 0 14px var(--mc, var(--acc, var(--cyan)));
-  transition: opacity 0.50s cubic-bezier(0.22,1,0.36,1);
 }
 /* glass fill — fades in on hover */
 .metric-card::after {
@@ -924,6 +912,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .metric-card:hover {
   border-color: rgba(201,168,76,0.22);
+  border-top-color: var(--card-top);
   transform: translateY(-6px) scale(1.013);
   box-shadow:
     0 1px 0 rgba(255,255,255,0.08) inset,
@@ -931,7 +920,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     var(--e3),
     0 0 40px rgba(201,168,76,0.13);
 }
-.metric-card:hover::before { opacity: 0.95; }
 .metric-card:hover::after  { opacity: 1; }
 
 /* JS-driven hover state — reliable on iPad where CSS :hover can misbehave.
@@ -939,6 +927,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
    .ghost-off is added when pointer leaves — overrides stuck :hover. */
 .ghost-on {
   border-color: rgba(201,168,76,0.20) !important;
+  border-top-color: var(--card-top, var(--cyan)) !important;
   transform: translateY(-4px) scale(1.006) !important;
   box-shadow: var(--e3), 0 0 40px rgba(201,168,76,0.08) !important;
 }
@@ -957,6 +946,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .ghost-off {
   transform: none !important;
   border-color: transparent !important;
+  border-top-color: transparent !important;
   box-shadow: none !important;
 }
 .ghost-off::before,
@@ -964,10 +954,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 /* Period page stat cards — ghost reveal */
 .ps-card {
+  --card-top: var(--cyan);
   /* no backdrop-filter here: ~27 of these on Week to Week, live blur per
      card tanks scroll performance on iPad Safari. The gradient fill below
      already reads as glass over the dark surface. */
   border: 1px solid transparent;
+  border-top: 2px solid transparent;
   border-radius: 8px; padding: 8px 10px;
   position: relative; overflow: hidden;
   isolation: isolate;
@@ -989,7 +981,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     radial-gradient(100px circle at var(--gx, 50%) var(--gy, 50%), rgba(201,168,76,0.12) 0%, transparent 70%),
     linear-gradient(145deg, rgba(255,255,255,0.90) 0%, rgba(240,248,244,0.85) 100%);
 }
-.ps-card:hover { border-color: rgba(201,168,76,0.18); transform: translateY(-2px); box-shadow: var(--e1); }
+.ps-card:hover { border-color: rgba(201,168,76,0.18); border-top-color: var(--card-top); transform: translateY(-2px); box-shadow: var(--e1); }
 .ps-card:hover::before { opacity: 1; }
 .ps-label { font-size: 9px; font-weight: 600; color: var(--t3); text-transform: uppercase; letter-spacing: 1.1px; margin-bottom: 2px; position: relative; z-index: 2; }
 .ps-val   { font-size: 12px; font-weight: 700; font-family: var(--mono); position: relative; z-index: 2; }
@@ -1255,10 +1247,12 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
    FLDT CARDS
 ───────────────────────────────────────────────────── */
 .fldt-card {
+  --card-top: var(--fc-color, var(--cyan));
   background: transparent;
   backdrop-filter: blur(20px) saturate(170%);
   -webkit-backdrop-filter: blur(20px) saturate(170%);
   border: 1px solid transparent;
+  border-top: 2px solid transparent;
   border-radius: var(--r5);
   padding: 18px 20px;
   position: relative; overflow: hidden;
@@ -1267,13 +1261,6 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   transition: border-color 0.45s cubic-bezier(0.22,1,0.36,1),
               box-shadow   0.45s cubic-bezier(0.22,1,0.36,1),
               transform    0.45s cubic-bezier(0.22,1,0.36,1);
-}
-.fldt-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 1;
-  background: var(--fc-color, var(--cyan));
-  box-shadow: 0 0 16px var(--fc-color, var(--cyan));
-  opacity: 0;
-  transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1);
 }
 .fldt-card::after {
   content: ''; position: absolute; inset: 0; z-index: -1;
@@ -1286,10 +1273,10 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 }
 .fldt-card:hover {
   border-color: rgba(201,168,76,0.22);
+  border-top-color: var(--card-top);
   transform: translateY(-5px) scale(1.01);
   box-shadow: var(--e3), 0 0 30px rgba(201,168,76,0.10);
 }
-.fldt-card:hover::before { opacity: 1; }
 .fldt-card:hover::after  { opacity: 1; }
 .fc-icon { font-size: 20px; margin-bottom: 10px; position: relative; z-index: 2; }
 .fc-name {
@@ -1317,10 +1304,12 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 ───────────────────────────────────────────────────── */
 .kpi-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 18px; }
 .kpi-mini {
+  --card-top: var(--kc, var(--cyan));
   background: transparent;
   backdrop-filter: blur(20px) saturate(170%);
   -webkit-backdrop-filter: blur(20px) saturate(170%);
   border: 1px solid transparent;
+  border-top: 2px solid transparent;
   border-radius: var(--r4); padding: 14px 16px;
   position: relative; overflow: hidden;
   isolation: isolate;
@@ -1337,17 +1326,8 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   opacity: 0;
   transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1);
 }
-.kpi-mini::after {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; z-index: 1;
-  background: var(--kc, var(--cyan));
-  box-shadow: 2px 0 12px var(--kc, var(--cyan));
-  border-radius: 0 2px 2px 0;
-  opacity: 0;
-  transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1);
-}
-.kpi-mini:hover { border-color: rgba(201,168,76,0.18); transform: translateY(-3px); box-shadow: var(--e2); }
+.kpi-mini:hover { border-color: rgba(201,168,76,0.18); border-top-color: var(--card-top); transform: translateY(-3px); box-shadow: var(--e2); }
 .kpi-mini:hover::before { opacity: 1; }
-.kpi-mini:hover::after  { opacity: 1; }
 .kpi-mini-label { font-size: 9px; font-weight: 700; color: var(--t3); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 6px; position: relative; z-index: 2; }
 .kpi-mini-val   { font-size: 16px; font-weight: 800; color: var(--t1); position: relative; z-index: 2; }
 
@@ -1375,8 +1355,10 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 /* Summary KPI row */
 .summ-kpi-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 18px; }
 .summ-kpi-card {
+  --card-top: var(--cyan);
   background: transparent;
   border: 1px solid transparent;
+  border-top: 2px solid transparent;
   border-radius: var(--r5); padding: 18px 20px;
   position: relative; overflow: hidden;
   isolation: isolate;
@@ -1401,6 +1383,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 .summ-kpi-card:hover::before { opacity: 1; }
 .summ-kpi-card:hover {
   border-color: rgba(201,168,76,0.18);
+  border-top-color: var(--card-top);
   transform: translateY(-3px);
   box-shadow: var(--e2), 0 0 32px rgba(201,168,76,0.07);
 }
@@ -1926,6 +1909,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   gap: 12px;
 }
 .contrib-ch-card {
+  --card-top: var(--ch-color);
   background: transparent;
   border: 1px solid transparent;
   border-top: 2px solid transparent;
@@ -2599,8 +2583,8 @@ const HARI=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
    CHART COLORS
 ═══════════════════════════════════════════════════ */
 const TC = {
-  gmv:'#c9a84c', offline:'#7d9bb5', online:'#9a958c',
-  gofood:'#d4a05a', grabfood:'#9a958c', shopee:'#c97b6a',
+  gmv:'#c9a84c', offline:'#7d9bb5', online:'#6baed4',
+  gofood:'#d4a05a', grabfood:'#7aab6e', shopee:'#c97b6a',
   accent:'#c9a84c', accent2:'#9a958c', amber:'#d4a05a',
   text2:'#998f82', text3:'#5c554b',
   bg:'#0f0d0b', bg2:'#1a1712', bg3:'#221e18',
@@ -2936,8 +2920,8 @@ function calcKpi(){
   const forecastEom=data.gmv+avgDaily*remaining;
   const achPct=target?pct(data.gmv,target):0;
   const ma7=computeMA(rows,'gmv',7);
-  const total=data.offline+data.gofood+data.grabfood+data.shopee||1;
-  const contrib={offline:pct(data.offline,total),gofood:pct(data.gofood,total),grabfood:pct(data.grabfood,total),shopee:pct(data.shopee,total)};
+  const total=data.offline+data.online+data.gofood+data.grabfood+data.shopee||1;
+  const contrib={offline:pct(data.offline,total),online:pct(data.online,total),gofood:pct(data.gofood,total),grabfood:pct(data.grabfood,total),shopee:pct(data.shopee,total)};
 
   document.getElementById('kpi-hero').style.display='';
 
@@ -3029,6 +3013,7 @@ function calcKpi(){
   /* Contribution bars */
   const contribItems=[
     {name:'Offline',  gmv:data.offline,  val:contrib.offline,  color:TC.offline},
+    {name:'Online',   gmv:data.online,   val:contrib.online,   color:TC.online},
     {name:'GrabFood', gmv:data.grabfood, val:contrib.grabfood, color:TC.grabfood},
     {name:'GoFood',   gmv:data.gofood,   val:contrib.gofood,   color:TC.gofood},
     {name:'Shopee',   gmv:data.shopee,   val:contrib.shopee,   color:TC.shopee},
