@@ -2274,12 +2274,18 @@ async function loadData(){
   const el=document.getElementById('last-updated');
   el.textContent='loading…';
   try{
-    const res=await fetch(CSV_URL+'&t='+Date.now());
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),15000);
+    const res=await fetch(CSV_URL+'&t='+Date.now(),{signal:ctrl.signal});
+    clearTimeout(tid);
     const text=await res.text();
     allData=parseCSV(text);
     el.textContent=new Date().toLocaleTimeString('id-ID');
     initDefaults(); renderCurrentPage();
-  }catch(e){ el.textContent='ERROR'; console.error(e); }
+  }catch(e){
+    el.textContent=e.name==='AbortError'?'TIMEOUT':'ERROR';
+    console.error('loadData:',e);
+  }
 }
 function parseCSV(text){
   const lines=text.trim().split('\n');
