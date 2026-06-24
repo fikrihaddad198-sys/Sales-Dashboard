@@ -3835,16 +3835,18 @@ function setIfEmpty(id, val){
 /* Dual-panel width transition handled via .is-expanding / .is-collapsing class */
 #ch-popup.is-expanding { transition: width 0.44s cubic-bezier(0.16,1,0.3,1), left 0.44s cubic-bezier(0.16,1,0.3,1) !important; }
 #ch-popup.is-collapsing { transition: width 0.44s cubic-bezier(0.16,1,0.3,1), left 0.44s cubic-bezier(0.16,1,0.3,1) !important; }
-#ch-popup.is-dual { width: min(96vw, 1020px) !important; }
+#ch-popup.is-dual { width: min(96vw, 1040px) !important; }
 /* Inner flex row with gap */
 #ch-popup-inner { display:flex; flex-direction:row; min-height:0; gap:0; }
-#ch-panel-main  { flex:0 0 auto; width:min(92vw,660px); min-width:0; transition:width 0.44s cubic-bezier(0.16,1,0.3,1); overflow-y:auto; max-height:82vh; }
-#ch-popup.is-dual #ch-panel-main { width:508px; border-right:1px solid var(--border); }
+#ch-panel-main  { flex:0 0 min(92vw,660px); width:min(92vw,660px); min-width:0; overflow-y:auto; max-height:82vh; }
+/* panel-main width NEVER changes — prevents Chart.js resize stutter */
+#ch-popup.is-dual #ch-panel-main { border-right:1px solid var(--border); }
+#ch-panel-detail { flex:0 0 360px; width:360px; }
 /* Detail panel */
 #ch-panel-detail {
-  flex:1 1 0; min-width:0; display:none; overflow-y:auto; max-height:82vh;
+  display:none; overflow-y:auto; max-height:82vh;
   opacity:0; transform:translateX(20px);
-  transition: opacity 0.32s ease 0.08s, transform 0.42s cubic-bezier(0.16,1,0.3,1) 0.04s;
+  transition: opacity 0.32s ease 0.06s, transform 0.4s cubic-bezier(0.16,1,0.3,1);
 }
 #ch-popup.is-dual #ch-panel-detail { display:block; }
 #ch-panel-detail.is-visible { opacity:1; transform:translateX(0); }
@@ -3947,98 +3949,120 @@ function openDetailPanel(mode, dayLabel){
   const moreBtn= document.getElementById('ch-more-btn');
   const heading= document.getElementById('ch-detail-heading');
   const body   = document.getElementById('ch-detail-body');
-  _detailOpen  = true;
 
-  // Build content
-  if(mode === 'note'){
-    heading.textContent = '📝 Catatan — '+dayLabel;
-    const existing = getNote(_currentChKey, dayLabel);
-    _activeNoteCtx = {ch:_currentChKey, lbl:dayLabel};
-    body.innerHTML =
-      '<textarea id="ch-note-text" rows="4" placeholder="Tulis catatan... (contoh: promo aktif, event, cuaca buruk)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;line-height:1.5;margin-bottom:10px;"></textarea>'+
+  /* If already open — cross-fade content without closing panel */
+  if(_detailOpen){
+    heading.style.transition='opacity 0.15s ease';
+    body.style.transition='opacity 0.15s ease';
+    heading.style.opacity='0'; body.style.opacity='0';
+    setTimeout(()=>{
+      _renderDetailContent(mode, dayLabel, heading, body);
+      heading.style.opacity='1'; body.style.opacity='1';
+    }, 165);
+    return;
+  }
+
+  /* First open — build content then expand popup */
+  _renderDetailContent(mode, dayLabel, heading, body);
+  _detailOpen=true;
+
+  const vw=window.innerWidth;
+  const dualW=Math.min(Math.round(vw*0.96),1040);
+  const newLeft=Math.round(Math.max(8,(vw-dualW)/2));
+  popup.classList.add('is-expanding');
+  requestAnimationFrame(()=>{
+    popup.classList.add('is-dual');
+    popup.style.left=newLeft+'px';
+    setTimeout(()=>{ popup.classList.remove('is-expanding'); },460);
+  });
+  moreBtn.classList.add('is-active');
+  moreBtn.textContent='− Less';
+  setTimeout(()=>{ panel.classList.add('is-visible'); },60);
+}
+
+function _renderDetailContent(mode, dayLabel, heading, body){
+  const popup=document.getElementById('ch-popup');
+  const moreBtn=document.getElementById('ch-more-btn');
+  /* destroy any existing detail charts */
+  ['ch-detail-chart','ch-detail-ipt-chart'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    const c=Chart.getChart(el); if(c) c.destroy();
+  });
+
+  if(mode==='note'){
+    heading.textContent='📝 Catatan — '+( dayLabel||'');
+    heading.style.color=_currentColor;
+    moreBtn.textContent='＋ More Detail';
+    moreBtn.onclick=()=>openDetailPanel('overview',null);
+    const existing=dayLabel?getNote(_currentChKey,dayLabel):'';
+    _activeNoteCtx={ch:_currentChKey,lbl:dayLabel};
+    body.innerHTML=
+      '<textarea id="ch-note-text" rows="5" placeholder="Tulis catatan... (contoh: promo aktif, event, cuaca buruk)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;line-height:1.5;margin-bottom:10px;box-sizing:border-box;"></textarea>'+
       '<div style="display:flex;gap:8px;justify-content:flex-end;">'+
       '<button id="ch-note-del-btn" onclick="deleteCurrentNote()" style="display:'+(existing?'inline-flex':'none')+';align-items:center;gap:5px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);border-radius:8px;padding:7px 13px;color:#f87171;font-size:12px;font-weight:600;cursor:pointer;">Hapus</button>'+
       '<button onclick="saveCurrentNote()" style="background:var(--green);border:none;border-radius:8px;padding:7px 16px;color:#06140d;font-size:12px;font-weight:700;cursor:pointer;">Simpan</button>'+
       '</div>';
-    document.getElementById('ch-note-text').value = existing;
-    setTimeout(()=>{ const t=document.getElementById('ch-note-text'); if(t) t.focus(); }, 80);
+    document.getElementById('ch-note-text').value=existing;
+    setTimeout(()=>{ const t=document.getElementById('ch-note-text'); if(t) t.focus(); },80);
   } else {
-    // ADT overview or per-day detail
-    const adtKey = _currentChKey==='offline' ? 'adt_offline' : 'adt_online';
-    const days   = _kpiRows.map(r=>({
-      date: r._date instanceof Date ? r._date.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) : String(r.date||''),
-      adt:  r[adtKey]||0,
-      ipt:  r.ipt||0
+    const adtKey=_currentChKey==='offline'?'adt_offline':'adt_online';
+    const days=_kpiRows.map(r=>({
+      date:r._date instanceof Date?r._date.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}):String(r.date||''),
+      adt:r[adtKey]||0, ipt:r.ipt||0
     }));
-    const labels  = days.map(d=>d.date);
-    const adtVals = days.map(d=>d.adt);
-    const iptVals = days.map(d=>+(d.ipt||0).toFixed(2));
-    const totalTrx= adtVals.reduce((a,b)=>a+b,0);
-    const avgIpt  = iptVals.length ? (iptVals.reduce((a,b)=>a+b,0)/iptVals.length).toFixed(2) : '—';
-    const focusIdx= dayLabel ? labels.indexOf(dayLabel) : -1;
-
-    const lbl = _currentChKey==='offline'?'Offline':'Online';
-    heading.textContent = (focusIdx>=0 ? labels[focusIdx]+' — ' : '') + lbl+' Transactions';
+    const labels=days.map(d=>d.date);
+    const adtVals=days.map(d=>d.adt);
+    const iptVals=days.map(d=>+(d.ipt||0).toFixed(2));
+    const totalTrx=adtVals.reduce((a,b)=>a+b,0);
+    const avgIpt=iptVals.length?(iptVals.reduce((a,b)=>a+b,0)/iptVals.length).toFixed(2):'—';
+    const focusIdx=dayLabel?labels.indexOf(dayLabel):-1;
+    const chanName=_currentChKey==='offline'?'Offline':'Online';
+    heading.textContent=(focusIdx>=0?labels[focusIdx]+' — ':'')+chanName+' Transactions';
+    heading.style.color=_currentColor;
+    moreBtn.textContent='📝 Tambah Catatan';
+    moreBtn.onclick=()=>openDetailPanel('note',dayLabel);
 
     const isDark=document.documentElement.getAttribute('data-theme')!=='light';
     const ttBg=isDark?'#1a221b':'#fffefb', ttTitle=isDark?'#eef2ee':'#16201a';
     const ttBody=isDark?'#889389':'#4e5a50', gridClr=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.06)', tickClr=isDark?'#515c54':'#8d978c';
-
-    body.innerHTML =
+    body.innerHTML=
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">'+
       '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 13px;"><div style="font-size:9px;color:var(--t3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Total Transaksi</div><div style="font-size:18px;font-weight:800;color:'+_currentColor+'">'+totalTrx+'</div></div>'+
       '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 13px;"><div style="font-size:9px;color:var(--t3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">Avg IPT</div><div style="font-size:18px;font-weight:800;color:'+_currentColor+'">'+avgIpt+'</div></div>'+
       '</div>'+
       '<div style="font-size:10px;font-weight:600;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">Transaksi per Hari</div>'+
-      '<div style="height:180px;position:relative;margin-bottom:16px;"><canvas id="ch-detail-chart"></canvas></div>'+
+      '<div style="height:160px;position:relative;margin-bottom:14px;"><canvas id="ch-detail-chart"></canvas></div>'+
       '<div style="font-size:10px;font-weight:600;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">IPT per Hari</div>'+
-      '<div style="height:120px;position:relative;"><canvas id="ch-detail-ipt-chart"></canvas></div>';
+      '<div style="height:110px;position:relative;"><canvas id="ch-detail-ipt-chart"></canvas></div>';
 
-    // Small delay so DOM is ready for Chart.js
     setTimeout(()=>{
-      const barColors = labels.map((l,i)=> i===focusIdx ? _currentColor : _currentColor+'77');
-      const sharedTT  = {backgroundColor:ttBg,borderColor:_currentColor+'55',borderWidth:1,titleColor:ttTitle,bodyColor:ttBody,padding:10,cornerRadius:8,displayColors:false};
-      const sharedScales = {
+      const sharedTT={backgroundColor:ttBg,borderColor:_currentColor+'55',borderWidth:1,titleColor:ttTitle,bodyColor:ttBody,padding:10,cornerRadius:8,displayColors:false};
+      const sharedScales={
         x:{grid:{display:false},border:{display:false},ticks:{color:tickClr,font:{size:8},maxTicksLimit:10}},
         y:{grid:{color:gridClr},border:{display:false},ticks:{color:tickClr,font:{size:8},maxTicksLimit:4}}
       };
+      const bc=labels.map((_,i)=>i===focusIdx?_currentColor:_currentColor+'77');
       const c1=document.getElementById('ch-detail-chart');
       const c2=document.getElementById('ch-detail-ipt-chart');
-      if(c1) new Chart(c1,{type:'bar',data:{labels,datasets:[{data:adtVals.map(()=>0),backgroundColor:barColors,borderColor:_currentColor,borderWidth:1,borderRadius:4,borderSkipped:false,_realData:adtVals.slice()}]},
+      if(c1) new Chart(c1,{type:'bar',data:{labels,datasets:[{data:adtVals.map(()=>0),backgroundColor:bc,borderColor:_currentColor,borderWidth:1,borderRadius:4,borderSkipped:false,_realData:adtVals.slice()}]},
         options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},animation:{duration:0},
           plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{title:i=>i[0].label,label:c=>c.parsed.y+' trx'}}},
           scales:{...sharedScales,y:{...sharedScales.y,ticks:{...sharedScales.y.ticks,callback:v=>v+' trx'}}}}});
-      if(c2) new Chart(c2,{type:'line',data:{labels,datasets:[{data:iptVals.map(()=>0),borderColor:_currentColor,backgroundColor:_currentColor+'22',fill:true,tension:0.4,pointRadius:focusIdx>=0?iptVals.map((_,i)=>i===focusIdx?5:0):[0],pointHoverRadius:4,borderWidth:2,_realData:iptVals.slice()}]},
+      if(c2) new Chart(c2,{type:'line',data:{labels,datasets:[{data:iptVals.map(()=>0),borderColor:_currentColor,backgroundColor:_currentColor+'22',fill:true,tension:0.4,pointRadius:0,pointHoverRadius:4,borderWidth:2,_realData:iptVals.slice()}]},
         options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},animation:{duration:0},
-          plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{title:i=>i[0].label,label:c=>c.parsed.y.toFixed(2)+' item/trx'}}},
+          plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{title:i=>i[0].label,label:c=>c.parsed.y.toFixed(2)+' ipt'}}},
           scales:{...sharedScales,y:{...sharedScales.y,ticks:{...sharedScales.y.ticks,callback:v=>v+' ipt'}}}}});
-      // Animate in
       setTimeout(()=>{
         [document.getElementById('ch-detail-chart'),document.getElementById('ch-detail-ipt-chart')].forEach((c,ci)=>{
           const chart=Chart.getChart(c); if(!chart) return;
-          const ds=chart.data.datasets[0];
-          ds.data=ds._realData;
-          chart.options.animation={duration:600+ci*100,easing:'easeOutQuart'};
-          chart.update();
+          const ds=chart.data.datasets[0]; ds.data=ds._realData;
+          chart.options.animation={duration:550+ci*100,easing:'easeOutQuart'}; chart.update();
         });
-      }, 80);
-    }, 30);
+      },80);
+    },30);
   }
-
-  // Expand popup + re-center + show panel
-  const vw = window.innerWidth;
-  const dualW = Math.min(Math.round(vw * 0.96), 1020);
-  const newLeft = Math.round(Math.max(8, (vw - dualW) / 2));
-  popup.classList.add('is-expanding');
-  requestAnimationFrame(()=>{
-    popup.classList.add('is-dual');
-    popup.style.left = newLeft + 'px';
-    setTimeout(()=>{ popup.classList.remove('is-expanding'); }, 460);
-  });
-  moreBtn.classList.add('is-active');
-  moreBtn.textContent = '− Less';
-  setTimeout(()=>{ panel.classList.add('is-visible'); }, 60);
 }
+
 
 function closeDetailPanel(){
   const popup  = document.getElementById('ch-popup');
