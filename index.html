@@ -913,10 +913,23 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .metric-card:hover::before { opacity: 0.95; }
 .metric-card:hover::after  { opacity: 1; }
 
+/* Force-reset for cards the pointer has left. iPadOS Safari keeps :hover
+   "stuck" on nested elements, leaving the glow behind; JS adds .ghost-off
+   the moment the pointer exits a card, and !important overrides the stuck
+   :hover so the fill + lift cleanly fade out. */
+.ghost-off {
+  transform: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+.ghost-off::before,
+.ghost-off::after { opacity: 0 !important; }
+
 /* Period page stat cards — ghost reveal */
 .ps-card {
-  backdrop-filter: blur(20px) saturate(170%);
-  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  /* no backdrop-filter here: ~27 of these on Week to Week, live blur per
+     card tanks scroll performance on iPad Safari. The gradient fill below
+     already reads as glass over the dark surface. */
   border: 1px solid transparent;
   border-radius: 8px; padding: 8px 10px;
   position: relative; overflow: hidden;
@@ -4919,26 +4932,42 @@ function closeChannelPopup(){
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(); });
 
 /* ── Ghost Card: cursor-following glow ──
-   Single delegated pointermove listener. Walks up from the event target
-   and updates --gx/--gy on EVERY ghost-card ancestor. This works for
-   cards that are created or rebuilt dynamically (KPI metric strip, Week
-   to Week ps-cards, etc.) without needing to re-attach per-card listeners. */
+   One delegated pointermove walks up from the event target and updates
+   --gx/--gy on every ghost-card ancestor (works for cards rebuilt
+   dynamically — KPI metric strip, Week to Week ps-cards, etc).
+
+   It also tracks the set of cards currently under the pointer. Any card
+   the pointer has LEFT gets a .ghost-off class, which force-resets its
+   fill + lift. This is needed because iPadOS Safari keeps :hover stuck on
+   nested cards, leaving the glow behind when the cursor exits a small card. */
 (function(){
   const GHOST_SELECTOR = '.card, .metric-card, .kpi-mini, .fldt-card, .contrib-ch-card, .summ-kpi-card, .ps-card';
+  let active = [];
   function onMove(e){
+    const next = [];
     let node = e.target;
     while(node && node.nodeType === 1){
       if(node.matches && node.matches(GHOST_SELECTOR)){
         const r = node.getBoundingClientRect();
         node.style.setProperty('--gx', (e.clientX - r.left) + 'px');
         node.style.setProperty('--gy', (e.clientY - r.top) + 'px');
+        node.classList.remove('ghost-off');
+        next.push(node);
       }
       node = node.parentElement;
     }
+    /* cards the pointer just left → force them off */
+    for(const el of active){ if(next.indexOf(el) === -1) el.classList.add('ghost-off'); }
+    active = next;
+  }
+  function clearAll(){
+    for(const el of active) el.classList.add('ghost-off');
+    active = [];
   }
   document.addEventListener('pointermove', onMove, { passive: true });
-  /* kept for backward compatibility with existing call sites — now a no-op
-     since the delegated listener above covers every ghost card */
+  document.addEventListener('pointerleave', clearAll);   /* pointer left the window */
+  document.addEventListener('pointercancel', clearAll);
+  /* kept for backward compatibility with existing call sites — now a no-op */
   window.attachGhostGlow = function(){};
 })();
 </script>
