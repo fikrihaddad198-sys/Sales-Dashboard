@@ -1598,7 +1598,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <span class="filter-label">Hari</span>
       <input class="inp inp-sm" type="text" id="kpi-days" placeholder="30"/>
     </div>
-    <button class="btn" onclick="calcKpi()">▶ Hitung</button>
+    
   </div>
 
   <div class="kpi-scroll">
@@ -1670,7 +1670,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 <div class="page" id="page-channel">
   <div class="filter-bar">
     <input type="hidden" id="ch-start"/><input type="hidden" id="ch-end"/><button class="drp-btn" id="drp-btn-ch" onclick="openDRP(event,'ch-start','ch-end','drp-btn-ch')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-ch">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
-    <button class="btn" onclick="applyChannelFilter()">▶ Terapkan</button>
+    
     <button class="btn-ghost" onclick="resetChannelFilter()">Reset</button>
   </div>
   <div class="kpi-grid" id="ch-kpi-cards"></div>
@@ -1712,7 +1712,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
         <div class="period-heading p1c">2 Minggu Lalu</div>
         <div class="row mb12">
           <input type="hidden" id="range1s"/><input type="hidden" id="range1e"/><button class="drp-btn" id="drp-btn-r1" onclick="openDRP(event,'range1s','range1e','drp-btn-r1')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-r1">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
-          <button class="btn" style="padding:0 11px;" onclick="loadPeriod(1)">Apply</button>
+          
         </div>
         <div class="chart-wrap h180"><canvas id="period-chart-1"></canvas></div>
         <div id="period-stats-1" class="mt8"></div>
@@ -1721,7 +1721,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
         <div class="period-heading p2c">1 Minggu Lalu</div>
         <div class="row mb12">
           <input type="hidden" id="range2s"/><input type="hidden" id="range2e"/><button class="drp-btn" id="drp-btn-r2" onclick="openDRP(event,'range2s','range2e','drp-btn-r2')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-r2">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
-          <button class="btn" style="padding:0 11px;" onclick="loadPeriod(2)">Apply</button>
+          
         </div>
         <div class="chart-wrap h180"><canvas id="period-chart-2"></canvas></div>
         <div id="period-stats-2" class="mt8"></div>
@@ -1730,7 +1730,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
         <div class="period-heading p3c">Minggu Ini</div>
         <div class="row mb12">
           <input type="hidden" id="range3s"/><input type="hidden" id="range3e"/><button class="drp-btn" id="drp-btn-r3" onclick="openDRP(event,'range3s','range3e','drp-btn-r3')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-r3">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
-          <button class="btn" style="padding:0 11px;" onclick="loadPeriod(3)">Apply</button>
+          
         </div>
         <div class="chart-wrap h180"><canvas id="period-chart-3"></canvas></div>
         <div id="period-stats-3" class="mt8"></div>
@@ -1766,7 +1766,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
         <div class="period-heading p1c">Periode 1</div>
         <div class="row mb12">
           <input type="hidden" id="crange1s"/><input type="hidden" id="crange1e"/><button class="drp-btn" id="drp-btn-cr1" onclick="openDRP(event,'crange1s','crange1e','drp-btn-cr1')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-cr1">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
-          <button class="btn" style="padding:0 11px;" onclick="loadCustomPeriod(1)">Apply</button>
+          
         </div>
         <div class="chart-wrap h200"><canvas id="custom-chart-1"></canvas></div>
         <div id="custom-stats-1"></div>
@@ -1775,7 +1775,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
         <div class="period-heading p2c">Periode 2</div>
         <div class="row mb12">
           <input type="hidden" id="crange2s"/><input type="hidden" id="crange2e"/><button class="drp-btn" id="drp-btn-cr2" onclick="openDRP(event,'crange2s','crange2e','drp-btn-cr2')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-cr2">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
-          <button class="btn" style="padding:0 11px;" onclick="loadCustomPeriod(2)">Apply</button>
+          
         </div>
         <div class="chart-wrap h200"><canvas id="custom-chart-2"></canvas></div>
         <div id="custom-stats-2"></div>
@@ -1845,14 +1845,14 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
         <div class="period-heading p1c">Periode 1</div>
         <div class="row">
           <input type="hidden" id="fldt-c1s"/><input type="hidden" id="fldt-c1e"/><button class="drp-btn" id="drp-btn-fc1" onclick="openDRP(event,'fldt-c1s','fldt-c1e','drp-btn-fc1')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-fc1">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
-          <button class="btn" style="padding:0 11px;" onclick="loadFldtCustom(1)">Apply</button>
+          
         </div>
       </div>
       <div class="card reveal reveal-delay-1" style="padding:13px 15px;">
         <div class="period-heading p2c">Periode 2</div>
         <div class="row">
           <input type="hidden" id="fldt-c2s"/><input type="hidden" id="fldt-c2e"/><button class="drp-btn" id="drp-btn-fc2" onclick="openDRP(event,'fldt-c2s','fldt-c2e','drp-btn-fc2')" style="flex:1"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-fc2">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
-          <button class="btn" style="padding:0 11px;" onclick="loadFldtCustom(2)">Apply</button>
+          
         </div>
       </div>
     </div>
@@ -1890,7 +1890,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 <div class="page" id="page-d2d">
   <div class="filter-bar mb20">
     <input type="hidden" id="d2d-start"/><input type="hidden" id="d2d-end"/><button class="drp-btn" id="drp-btn-d2d" onclick="openDRP(event,'d2d-start','d2d-end','drp-btn-d2d')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-d2d">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
-    <button class="btn" onclick="loadD2D()">▶ Load</button>
+    
   </div>
   <div id="d2d-table-wrap"><div class="empty">Pilih tanggal dan klik Load</div></div>
 </div>
@@ -1922,7 +1922,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
         <button class="toggle-btn" id="rspeed-200" onclick="setRaceSpeed(200)">⚡</button>
       </div>
     </div>
-    <button class="btn-ghost" onclick="initRacePage()" style="background:var(--surface);border-color:var(--border-md);">⬤ Load</button>
+    
     <button class="btn" id="race-play-btn" onclick="toggleRace()">▶ Play</button>
     <button class="btn-ghost" onclick="resetRace()">↺ Reset</button>
     <div class="race-day-display" id="race-day-display">—</div>
@@ -3739,6 +3739,24 @@ function drpSelect(dateStr){
     drpRender();
     // Close after short delay so user sees the selection
     setTimeout(closeDRP, 280);
+    // Auto-trigger calculation based on which picker was used
+    const DRP_TRIGGER = {
+      'kpi-start':      ()=>calcKpi(),
+      'ch-start':       ()=>applyChannelFilter(),
+      'range1s':        ()=>loadPeriod(1),
+      'range2s':        ()=>loadPeriod(2),
+      'range3s':        ()=>loadPeriod(3),
+      'crange1s':       ()=>loadCustomPeriod(1),
+      'crange2s':       ()=>loadCustomPeriod(2),
+      'fldt-c1s':       ()=>loadFldtCustom(1),
+      'fldt-c2s':       ()=>loadFldtCustom(2),
+      'summ-p1s':       ()=>loadAllSumm(),
+      'summ-p2s':       ()=>loadAllSumm(),
+      'd2d-start':      ()=>loadD2D(),
+      'race-start':     ()=>initRacePage(),
+      'race-cmp-start': ()=>{ if(_raceCompareEnabled&&_raceRows.length){ _raceCompareRows=filterData(DRP.startVal,DRP.endVal).slice(0,_raceRows.length); destroyChart('raceTrail'); renderRaceFrame(_raceFrame); } else initRacePage(); }
+    };
+    setTimeout(()=>{ const fn=DRP_TRIGGER[DRP.startId]; if(fn) fn(); }, 320);
     // If this is the race compare date picker, reload comparison data
     if(DRP.startId === 'race-cmp-start' && _raceCompareEnabled && _raceRows.length){
       _raceCompareRows = filterData(DRP.startVal, DRP.endVal).slice(0,_raceRows.length);
