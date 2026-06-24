@@ -2185,15 +2185,6 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   <div class="header-divider"></div>
   <div class="header-store">Kemang Raya</div>
   <div class="header-right">
-    <div class="header-clock" id="clock"></div>
-    <div class="live-badge">
-      <div class="live-dot"></div>
-      <span id="last-updated">LIVE</span>
-    </div>
-    <button class="hdr-btn" onclick="loadData()" aria-label="Refresh data">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
-      Refresh
-    </button>
     <button class="theme-switch" id="theme-btn" onclick="toggleTheme()" title="Toggle Theme" role="switch" aria-label="Toggle light/dark theme">
       <span class="theme-switch-track">
         <span class="theme-switch-stars"></span>
@@ -2919,8 +2910,8 @@ function grad(ctx, color, a1=0.22, a2=0){
    DATA LOAD & PARSE
 ═══════════════════════════════════════════════════ */
 async function loadData(){
-  const el=document.getElementById('last-updated');
-  el.textContent='loading…';
+  const el=document.getElementById('last-updated'); // may be absent (badge removed)
+  if(el) el.textContent='loading…';
   try{
     const ctrl=new AbortController();
     const tid=setTimeout(()=>ctrl.abort(),15000);
@@ -2928,10 +2919,10 @@ async function loadData(){
     clearTimeout(tid);
     const text=await res.text();
     allData=parseCSV(text);
-    el.textContent=new Date().toLocaleTimeString('id-ID');
+    if(el) el.textContent=new Date().toLocaleTimeString('id-ID');
     initDefaults(); renderCurrentPage();
   }catch(e){
-    el.textContent=e.name==='AbortError'?'TIMEOUT':'ERROR';
+    if(el) el.textContent=e.name==='AbortError'?'TIMEOUT':'ERROR';
     console.error('loadData:',e);
   }
 }
@@ -3061,7 +3052,7 @@ function renderPage(p){
 /* ═══════════════════════════════════════════════════
    CLOCK
 ═══════════════════════════════════════════════════ */
-function updateClock(){ document.getElementById('clock').textContent=new Date().toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'}); }
+function updateClock(){ const c=document.getElementById('clock'); if(c) c.textContent=new Date().toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'}); }
 updateClock(); setInterval(updateClock, 30000);
 
 /* ═══════════════════════════════════════════════════
