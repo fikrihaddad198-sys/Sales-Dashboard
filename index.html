@@ -1292,8 +1292,12 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 .drp-clear:hover{color:#fff;}
 [data-theme="light"] .drp-clear{color:rgba(0,0,0,0.45);}
 [data-theme="light"] .drp-clear:hover{color:#0f172a;}
+/* Single Range Picker — native iOS date inputs behind one button */
+.srp-wrap { position:relative; display:inline-flex; align-items:center; }
+.srp-s,.srp-e { position:absolute; opacity:0; pointer-events:none; width:1px; height:1px; top:50%; left:50%; }
+.drp-btn.srp-filled { border-color:var(--border-hi); }
+.drp-btn.srp-active  { border-color:var(--cyan); box-shadow:0 0 0 2px var(--cyan-10); }
 .drp-btn{
-  display:inline-flex;align-items:center;gap:9px;
   /* Liquid glass */
   background:rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.1);
@@ -1588,7 +1592,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   <div class="kpi-filter-bar">
     <div class="filter-group">
       <span class="filter-label">Periode</span>
-      <div class="ndp-wrap"><input type="date" id="kpi-start" class="ndp-input" onchange="onNDP('kpi-start','kpi-end')"><span class="ndp-sep">→</span><input type="date" id="kpi-end" class="ndp-input" onchange="onNDP('kpi-start','kpi-end')"></div>
+      <div class="srp-wrap"><input type="date" id="kpi-start" class="srp-s" onchange="srpChange('drp-btn-kpi','kpi-start','kpi-end','calcKpi()')"><input type="date" id="kpi-end" class="srp-e" onchange="srpChange('drp-btn-kpi','kpi-start','kpi-end','calcKpi()')"><button class="drp-btn" id="drp-btn-kpi" onclick="srpOpen('drp-btn-kpi')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-kpi">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
     </div>
     <div class="filter-group">
       <span class="filter-label">Target GMV</span>
@@ -1669,7 +1673,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 <!-- ════════════════════ CHANNEL ════════════════════ -->
 <div class="page" id="page-channel">
   <div class="filter-bar">
-    <div class="ndp-wrap"><input type="date" id="ch-start" class="ndp-input" onchange="onNDP('ch-start','ch-end')"><span class="ndp-sep">→</span><input type="date" id="ch-end" class="ndp-input" onchange="onNDP('ch-start','ch-end')"></div>
+    <div class="srp-wrap"><input type="date" id="ch-start" class="srp-s" onchange="srpChange('drp-btn-ch','ch-start','ch-end','applyChannelFilter()')"><input type="date" id="ch-end" class="srp-e" onchange="srpChange('drp-btn-ch','ch-start','ch-end','applyChannelFilter()')"><button class="drp-btn" id="drp-btn-ch" onclick="srpOpen('drp-btn-ch')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-ch">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
     <button class="btn" onclick="applyChannelFilter()">▶ Terapkan</button>
     <button class="btn-ghost" onclick="resetChannelFilter()">Reset</button>
   </div>
@@ -1711,7 +1715,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="card reveal">
         <div class="period-heading p1c">2 Minggu Lalu</div>
         <div class="row mb12">
-          <div class="ndp-wrap"><input type="date" id="range1s" class="ndp-input" onchange="onNDP('range1s','range1e')"><span class="ndp-sep">→</span><input type="date" id="range1e" class="ndp-input" onchange="onNDP('range1s','range1e')"></div>
+          <div class="srp-wrap" style="flex:1"><input type="date" id="range1s" class="srp-s" onchange="srpChange('drp-btn-r1','range1s','range1e','loadPeriod(1)')"><input type="date" id="range1e" class="srp-e" onchange="srpChange('drp-btn-r1','range1s','range1e','loadPeriod(1)')"><button class="drp-btn" id="drp-btn-r1" onclick="srpOpen('drp-btn-r1')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-r1">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
           <button class="btn" style="padding:0 11px;" onclick="loadPeriod(1)">Apply</button>
         </div>
         <div class="chart-wrap h180"><canvas id="period-chart-1"></canvas></div>
@@ -1720,7 +1724,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="card reveal reveal-delay-1">
         <div class="period-heading p2c">1 Minggu Lalu</div>
         <div class="row mb12">
-          <div class="ndp-wrap"><input type="date" id="range2s" class="ndp-input" onchange="onNDP('range2s','range2e')"><span class="ndp-sep">→</span><input type="date" id="range2e" class="ndp-input" onchange="onNDP('range2s','range2e')"></div>
+          <div class="srp-wrap" style="flex:1"><input type="date" id="range2s" class="srp-s" onchange="srpChange('drp-btn-r2','range2s','range2e','loadPeriod(2)')"><input type="date" id="range2e" class="srp-e" onchange="srpChange('drp-btn-r2','range2s','range2e','loadPeriod(2)')"><button class="drp-btn" id="drp-btn-r2" onclick="srpOpen('drp-btn-r2')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-r2">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
           <button class="btn" style="padding:0 11px;" onclick="loadPeriod(2)">Apply</button>
         </div>
         <div class="chart-wrap h180"><canvas id="period-chart-2"></canvas></div>
@@ -1729,7 +1733,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="card reveal reveal-delay-2">
         <div class="period-heading p3c">Minggu Ini</div>
         <div class="row mb12">
-          <div class="ndp-wrap"><input type="date" id="range3s" class="ndp-input" onchange="onNDP('range3s','range3e')"><span class="ndp-sep">→</span><input type="date" id="range3e" class="ndp-input" onchange="onNDP('range3s','range3e')"></div>
+          <div class="srp-wrap" style="flex:1"><input type="date" id="range3s" class="srp-s" onchange="srpChange('drp-btn-r3','range3s','range3e','loadPeriod(3)')"><input type="date" id="range3e" class="srp-e" onchange="srpChange('drp-btn-r3','range3s','range3e','loadPeriod(3)')"><button class="drp-btn" id="drp-btn-r3" onclick="srpOpen('drp-btn-r3')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-r3">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
           <button class="btn" style="padding:0 11px;" onclick="loadPeriod(3)">Apply</button>
         </div>
         <div class="chart-wrap h180"><canvas id="period-chart-3"></canvas></div>
@@ -1765,7 +1769,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="card reveal">
         <div class="period-heading p1c">Periode 1</div>
         <div class="row mb12">
-          <div class="ndp-wrap"><input type="date" id="crange1s" class="ndp-input" onchange="onNDP('crange1s','crange1e')"><span class="ndp-sep">→</span><input type="date" id="crange1e" class="ndp-input" onchange="onNDP('crange1s','crange1e')"></div>
+          <div class="srp-wrap" style="flex:1"><input type="date" id="crange1s" class="srp-s" onchange="srpChange('drp-btn-cr1','crange1s','crange1e','loadCustomPeriod(1)')"><input type="date" id="crange1e" class="srp-e" onchange="srpChange('drp-btn-cr1','crange1s','crange1e','loadCustomPeriod(1)')"><button class="drp-btn" id="drp-btn-cr1" onclick="srpOpen('drp-btn-cr1')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-cr1">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
           <button class="btn" style="padding:0 11px;" onclick="loadCustomPeriod(1)">Apply</button>
         </div>
         <div class="chart-wrap h200"><canvas id="custom-chart-1"></canvas></div>
@@ -1774,7 +1778,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="card reveal reveal-delay-1">
         <div class="period-heading p2c">Periode 2</div>
         <div class="row mb12">
-          <div class="ndp-wrap"><input type="date" id="crange2s" class="ndp-input" onchange="onNDP('crange2s','crange2e')"><span class="ndp-sep">→</span><input type="date" id="crange2e" class="ndp-input" onchange="onNDP('crange2s','crange2e')"></div>
+          <div class="srp-wrap" style="flex:1"><input type="date" id="crange2s" class="srp-s" onchange="srpChange('drp-btn-cr2','crange2s','crange2e','loadCustomPeriod(2)')"><input type="date" id="crange2e" class="srp-e" onchange="srpChange('drp-btn-cr2','crange2s','crange2e','loadCustomPeriod(2)')"><button class="drp-btn" id="drp-btn-cr2" onclick="srpOpen('drp-btn-cr2')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-cr2">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
           <button class="btn" style="padding:0 11px;" onclick="loadCustomPeriod(2)">Apply</button>
         </div>
         <div class="chart-wrap h200"><canvas id="custom-chart-2"></canvas></div>
@@ -1844,14 +1848,14 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <div class="card reveal" style="padding:13px 15px;">
         <div class="period-heading p1c">Periode 1</div>
         <div class="row">
-          <div class="ndp-wrap"><input type="date" id="fldt-c1s" class="ndp-input" onchange="onNDP('fldt-c1s','fldt-c1e')"><span class="ndp-sep">→</span><input type="date" id="fldt-c1e" class="ndp-input" onchange="onNDP('fldt-c1s','fldt-c1e')"></div>
+          <div class="srp-wrap" style="flex:1"><input type="date" id="fldt-c1s" class="srp-s" onchange="srpChange('drp-btn-fc1','fldt-c1s','fldt-c1e','loadFldtCustom(1)')"><input type="date" id="fldt-c1e" class="srp-e" onchange="srpChange('drp-btn-fc1','fldt-c1s','fldt-c1e','loadFldtCustom(1)')"><button class="drp-btn" id="drp-btn-fc1" onclick="srpOpen('drp-btn-fc1')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-fc1">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
           <button class="btn" style="padding:0 11px;" onclick="loadFldtCustom(1)">Apply</button>
         </div>
       </div>
       <div class="card reveal reveal-delay-1" style="padding:13px 15px;">
         <div class="period-heading p2c">Periode 2</div>
         <div class="row">
-          <div class="ndp-wrap"><input type="date" id="fldt-c2s" class="ndp-input" onchange="onNDP('fldt-c2s','fldt-c2e')"><span class="ndp-sep">→</span><input type="date" id="fldt-c2e" class="ndp-input" onchange="onNDP('fldt-c2s','fldt-c2e')"></div>
+          <div class="srp-wrap" style="flex:1"><input type="date" id="fldt-c2s" class="srp-s" onchange="srpChange('drp-btn-fc2','fldt-c2s','fldt-c2e','loadFldtCustom(2)')"><input type="date" id="fldt-c2e" class="srp-e" onchange="srpChange('drp-btn-fc2','fldt-c2s','fldt-c2e','loadFldtCustom(2)')"><button class="drp-btn" id="drp-btn-fc2" onclick="srpOpen('drp-btn-fc2')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-fc2">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
           <button class="btn" style="padding:0 11px;" onclick="loadFldtCustom(2)">Apply</button>
         </div>
       </div>
@@ -1871,9 +1875,9 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 <div class="page" id="page-allsumm">
   <div class="filter-bar mb20">
     <span class="filter-label">Periode 1</span>
-    <div class="ndp-wrap"><input type="date" id="summ-p1s" class="ndp-input" onchange="onNDP('summ-p1s','summ-p1e')"><span class="ndp-sep">→</span><input type="date" id="summ-p1e" class="ndp-input" onchange="onNDP('summ-p1s','summ-p1e')"></div>
+    <div class="srp-wrap"><input type="date" id="summ-p1s" class="srp-s" onchange="srpChange('drp-btn-sp1','summ-p1s','summ-p1e','loadAllSumm()')"><input type="date" id="summ-p1e" class="srp-e" onchange="srpChange('drp-btn-sp1','summ-p1s','summ-p1e','loadAllSumm()')"><button class="drp-btn" id="drp-btn-sp1" onclick="srpOpen('drp-btn-sp1')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-sp1">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
     <span class="filter-label">Periode 2 (opt.)</span>
-    <div class="ndp-wrap"><input type="date" id="summ-p2s" class="ndp-input" onchange="onNDP('summ-p2s','summ-p2e')"><span class="ndp-sep">→</span><input type="date" id="summ-p2e" class="ndp-input" onchange="onNDP('summ-p2s','summ-p2e')"></div>
+    <div class="srp-wrap"><input type="date" id="summ-p2s" class="srp-s" onchange="srpChange('drp-btn-sp2','summ-p2s','summ-p2e','loadAllSumm()')"><input type="date" id="summ-p2e" class="srp-e" onchange="srpChange('drp-btn-sp2','summ-p2s','summ-p2e','loadAllSumm()')"><button class="drp-btn" id="drp-btn-sp2" onclick="srpOpen('drp-btn-sp2')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-sp2">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
     <button class="btn" onclick="loadAllSumm()">▶ Tampilkan</button>
   </div>
   <div id="summ-content" style="display:none">
@@ -1889,7 +1893,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 <!-- ════════════════════ DAY TO DAY ════════════════════ -->
 <div class="page" id="page-d2d">
   <div class="filter-bar mb20">
-    <div class="ndp-wrap"><input type="date" id="d2d-start" class="ndp-input" onchange="onNDP('d2d-start','d2d-end')"><span class="ndp-sep">→</span><input type="date" id="d2d-end" class="ndp-input" onchange="onNDP('d2d-start','d2d-end')"></div>
+    <div class="srp-wrap"><input type="date" id="d2d-start" class="srp-s" onchange="srpChange('drp-btn-d2d','d2d-start','d2d-end','loadD2D()')"><input type="date" id="d2d-end" class="srp-e" onchange="srpChange('drp-btn-d2d','d2d-start','d2d-end','loadD2D()')"><button class="drp-btn" id="drp-btn-d2d" onclick="srpOpen('drp-btn-d2d')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-d2d">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
     <button class="btn" onclick="loadD2D()">▶ Load</button>
   </div>
   <div id="d2d-table-wrap"><div class="empty">Pilih tanggal dan klik Load</div></div>
@@ -1902,7 +1906,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   <div class="race-controls">
     <div class="filter-group">
       <span class="filter-label">Periode</span>
-      <div class="ndp-wrap"><input type="date" id="race-start" class="ndp-input" onchange="onNDP('race-start','race-end')"><span class="ndp-sep">→</span><input type="date" id="race-end" class="ndp-input" onchange="onNDP('race-start','race-end')"></div>
+      <div class="srp-wrap"><input type="date" id="race-start" class="srp-s" onchange="srpChange('drp-btn-race','race-start','race-end','initRacePage()')"><input type="date" id="race-end" class="srp-e" onchange="srpChange('drp-btn-race','race-start','race-end','initRacePage()')"><button class="drp-btn" id="drp-btn-race" onclick="srpOpen('drp-btn-race')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-race">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
     </div>
     <div class="filter-group">
       <span class="filter-label">Target GMV</span>
@@ -1937,7 +1941,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
     </div>
     <div class="filter-group" id="race-compare-date-group" style="display:none;">
       <span class="filter-label">Periode 2</span>
-      <div class="ndp-wrap"><input type="date" id="race-cmp-start" class="ndp-input" onchange="onNDP('race-cmp-start','race-cmp-end')"><span class="ndp-sep">→</span><input type="date" id="race-cmp-end" class="ndp-input" onchange="onNDP('race-cmp-start','race-cmp-end')"></div>
+      <div class="srp-wrap"><input type="date" id="race-cmp-start" class="srp-s" onchange="srpChange('drp-btn-racecmp','race-cmp-start','race-cmp-end','initRacePage()')"><input type="date" id="race-cmp-end" class="srp-e" onchange="srpChange('drp-btn-racecmp','race-cmp-start','race-cmp-end','initRacePage()')"><button class="drp-btn" id="drp-btn-racecmp" onclick="srpOpen('drp-btn-racecmp')"><span class="drp-btn-icon">📅</span><span class="drp-btn-text" id="drp-lbl-racecmp">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button></div>
     </div>
   </div>
 
@@ -2270,30 +2274,65 @@ function grad(ctx, color, a1=0.22, a2=0){
 /* ═══════════════════════════════════════════════════
    DATA LOAD & PARSE
 ═══════════════════════════════════════════════════ */
-async /* ── Native Date Picker auto-trigger ── */
-const _ndpT={};
-const NDP_CB={
-  'kpi-start':   ()=>calcKpi(),
-  'ch-start':    ()=>applyChannelFilter(),
-  'range1s':     ()=>loadPeriod(1),
-  'range2s':     ()=>loadPeriod(2),
-  'range3s':     ()=>loadPeriod(3),
-  'crange1s':    ()=>loadCustomPeriod(1),
-  'crange2s':    ()=>loadCustomPeriod(2),
-  'fldt-c1s':    ()=>loadFldtCustom(1),
-  'fldt-c2s':    ()=>loadFldtCustom(2),
-  'summ-p1s':    ()=>loadAllSumm(),
-  'summ-p2s':    ()=>loadAllSumm(),
-  'd2d-start':   ()=>loadD2D(),
-  'race-start':  ()=>initRacePage(),
-  'race-cmp-start':()=>initRacePage(),
-};
-function onNDP(startId,endId){
-  const s=document.getElementById(startId)?.value;
-  const e=document.getElementById(endId)?.value;
-  if(!s||!e||!allData.length) return;
-  clearTimeout(_ndpT[startId]);
-  _ndpT[startId]=setTimeout(()=>{ const fn=NDP_CB[startId]; if(fn) fn(); },300);
+/* ── Single Range Picker ── */
+const _srpT={};
+function srpOpen(bid){
+  /* Focus start input — native iOS picker opens */
+  const wrap=document.getElementById(bid)?.closest('.srp-wrap');
+  if(!wrap) return;
+  const startEl=wrap.querySelector('.srp-s');
+  if(!startEl) return;
+  document.getElementById(bid)?.classList.add('srp-active');
+  startEl.style.pointerEvents='auto';
+  startEl.focus();
+  startEl.click();
+  setTimeout(()=>{ startEl.style.pointerEvents='none'; },200);
+}
+function srpChange(bid,sid,eid,trigger){
+  const sEl=document.getElementById(sid), eEl=document.getElementById(eid);
+  const sVal=sEl?.value, eVal=eEl?.value;
+  const btn=document.getElementById(bid);
+
+  /* After start selected, open end picker */
+  if(sVal && !eVal){
+    const wrap=btn?.closest('.srp-wrap');
+    const endEl=wrap?.querySelector('.srp-e');
+    if(endEl){
+      endEl.min=sVal; /* end cannot be before start */
+      setTimeout(()=>{
+        endEl.style.pointerEvents='auto';
+        endEl.focus(); endEl.click();
+        setTimeout(()=>{ endEl.style.pointerEvents='none'; },200);
+      },120);
+    }
+    return;
+  }
+
+  /* Both set — update label + auto-trigger */
+  if(sVal && eVal){
+    /* Swap if end before start */
+    if(eVal < sVal){ sEl.value=eVal; eEl.value=sVal; }
+    srpLabel(bid, document.getElementById(sid)?.value, document.getElementById(eid)?.value);
+    btn?.classList.remove('srp-active');
+    btn?.classList.add('srp-filled');
+    clearTimeout(_srpT[bid]);
+    _srpT[bid]=setTimeout(()=>{ try{ eval(trigger); }catch(e){} },280);
+  }
+}
+function srpLabel(bid, s, e){
+  const lbl=document.querySelector('#'+bid+' .drp-btn-text');
+  if(!lbl||!s||!e) return;
+  const fmt=d=>new Date(d+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short'});
+  lbl.textContent=fmt(s)+' — '+fmt(e);
+}
+/* Patch setIfEmpty to also update SRP label */
+function setIfEmpty(id,val){
+  const el=document.getElementById(id); if(!el||el.value) return;
+  el.value=val;
+  const wrap=el.closest?.('.srp-wrap'); if(!wrap) return;
+  const bid=wrap.querySelector('.drp-btn')?.id;
+  const sEl=wrap.querySelector('.srp-s'), eEl=wrap.querySelector('.srp-e');
+  if(bid&&sEl?.value&&eEl?.value) srpLabel(bid,sEl.value,eEl.value);
 }
 
 async function loadData(){
@@ -3864,19 +3903,6 @@ function setIfEmpty(id, val){
   from { opacity:0; transform:translate(-50%,-50%) scale(0.94); }
   to   { opacity:1; transform:translate(-50%,-50%) scale(1); }
 }
-/* Native Date Picker inputs */
-.ndp-wrap { display:flex; align-items:center; gap:6px; }
-.ndp-input {
-  background:var(--bg3); border:1px solid var(--border); border-radius:9px;
-  padding:7px 10px; color:var(--t1); font-size:12px; font-weight:500;
-  outline:none; cursor:pointer; flex:1;
-  transition:border-color .18s;
-}
-.ndp-input:focus, .ndp-input:active { border-color:var(--green); }
-.ndp-sep { color:var(--t3); font-size:11px; font-weight:600; flex-shrink:0; }
-[data-theme="light"] .ndp-input { background:var(--bg1); color:var(--t1); }
-
-/* Native Date Picker inputs */
 /* Dual-panel width transition handled via .is-expanding / .is-collapsing class */
 #ch-popup.is-expanding { transition: width 0.44s cubic-bezier(0.16,1,0.3,1), left 0.44s cubic-bezier(0.16,1,0.3,1) !important; }
 #ch-popup.is-collapsing { transition: width 0.44s cubic-bezier(0.16,1,0.3,1), left 0.44s cubic-bezier(0.16,1,0.3,1) !important; }
