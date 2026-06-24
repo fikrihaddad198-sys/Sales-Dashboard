@@ -1294,7 +1294,17 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 [data-theme="light"] .drp-clear:hover{color:#0f172a;}
 /* Single Range Picker — native iOS date inputs behind one button */
 .srp-wrap { position:relative; display:inline-flex; align-items:center; }
-.srp-s,.srp-e { position:absolute; opacity:0; pointer-events:none; width:1px; height:1px; top:50%; left:50%; }
+.srp-s {
+  position:absolute; inset:0; width:100%; height:100%;
+  opacity:0; z-index:5; pointer-events:auto; /* always on — direct user tap → picker opens */
+  cursor:pointer;
+}
+.srp-e {
+  position:absolute; inset:0; width:100%; height:100%;
+  opacity:0; z-index:6; pointer-events:none; /* activated only after start selected */
+  cursor:pointer;
+}
+.srp-e.srp-on { pointer-events:auto; }
 .drp-btn.srp-filled { border-color:var(--border-hi); }
 .drp-btn.srp-active  { border-color:var(--cyan); box-shadow:0 0 0 2px var(--cyan-10); }
 .drp-btn{
@@ -2276,59 +2286,61 @@ function grad(ctx, color, a1=0.22, a2=0){
 ═══════════════════════════════════════════════════ */
 /* ── Single Range Picker ── */
 const _srpT={};
+
+/* srpOpen: fallback if button itself is tapped (e.g. while waiting for end) */
 function srpOpen(bid){
   const wrap=document.getElementById(bid)?.closest('.srp-wrap');
   if(!wrap) return;
-  const startEl=wrap.querySelector('.srp-s');
-  const endEl=wrap.querySelector('.srp-e');
-  if(!startEl) return;
-  /* Clear both for a fresh selection every time */
-  startEl.value=''; if(endEl) endEl.value='';
-  const lbl=document.querySelector('#'+bid+' .drp-btn-text');
-  if(lbl) lbl.textContent='Pilih tanggal';
-  document.getElementById(bid)?.classList.remove('srp-filled');
-  document.getElementById(bid)?.classList.add('srp-active');
-  startEl.style.pointerEvents='auto';
-  /* showPicker() is modern API; fallback to click() */
-  try{ startEl.showPicker(); } catch(e){ startEl.click(); }
-  setTimeout(()=>{ startEl.style.pointerEvents='none'; },200);
-}
-function srpChange(bid,sid,eid,trigger,changedId){
-  const sEl=document.getElementById(sid), eEl=document.getElementById(eid);
-  /* If start changed, clear end to force re-selection */
-  if(changedId===sid && eEl) eEl.value='';
-  const sVal=sEl?.value, eVal=eEl?.value;
-  const btn=document.getElementById(bid);
-  /* Handle Reset (native input clear) */
-  if(!sVal&&!eVal){
+  const sEl=wrap.querySelector('.srp-s'), eEl=wrap.querySelector('.srp-e');
+  /* If stuck in end-selection state, reset to allow fresh start */
+  if(eEl?.classList.contains('srp-on')){
+    eEl.classList.remove('srp-on'); eEl.value=''; sEl.value='';
     const lbl=document.querySelector('#'+bid+' .drp-btn-text');
     if(lbl) lbl.textContent='Pilih tanggal';
-    btn?.classList.remove('srp-filled','srp-active');
-    return;
-  }
-  /* Start selected, end empty — auto-open end picker */
-  if(sVal&&!eVal){
-    const wrap=btn?.closest('.srp-wrap');
-    const endEl2=wrap?.querySelector('.srp-e');
-    if(endEl2){
-      endEl2.min=sVal;
-      setTimeout(()=>{
-        endEl2.style.pointerEvents='auto';
-        try{ endEl2.showPicker(); } catch(e){ endEl2.click(); }
-        setTimeout(()=>{ endEl2.style.pointerEvents='none'; },200);
-      },120);
-    }
-    return;
-  }
-  /* Both set — update label + auto-trigger */
-  if(sVal&&eVal){
-    if(eVal<sVal){ sEl.value=eVal; eEl.value=sVal; }
-    srpLabel(bid,document.getElementById(sid)?.value,document.getElementById(eid)?.value);
-    btn?.classList.remove('srp-active'); btn?.classList.add('srp-filled');
-    clearTimeout(_srpT[bid]);
-    _srpT[bid]=setTimeout(()=>{ try{ eval(trigger); }catch(e){} },280);
+    document.getElementById(bid)?.classList.remove('srp-filled');
   }
 }
+
+function srpChange(bid,sid,eid,trigger,changedId){
+  const sEl=document.getElementById(sid), eEl=document.getElementById(eid);
+  const wrap=document.getElementById(bid)?.closest('.srp-wrap');
+  const endOverlay=wrap?.querySelector('.srp-e');
+  const btn=document.getElementById(bid);
+  const lbl=document.querySelector('#'+bid+' .drp-btn-text');
+  const fmt=d=>new Date(d+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short'});
+
+  /* If start changed, clear end for fresh selection */
+  if(changedId===sid && eEl) eEl.value='';
+
+  const sVal=sEl?.value, eVal=eEl?.value;
+
+  /* Handle Reset */
+  if(!sVal&&!eVal){
+    if(lbl) lbl.textContent='Pilih tanggal';
+    btn?.classList.remove('srp-filled');
+    endOverlay?.classList.remove('srp-on');
+    return;
+  }
+
+  /* Start selected — show hint, activate end overlay so next tap opens end picker */
+  if(sVal&&!eVal){
+    if(lbl) lbl.textContent=fmt(sVal)+' →';
+    if(endOverlay){ endOverlay.min=sVal; endOverlay.classList.add('srp-on'); }
+    btn?.classList.remove('srp-filled');
+    return;
+  }
+
+  /* Both selected — done */
+  if(sVal&&eVal){
+    endOverlay?.classList.remove('srp-on'); /* end done, start overlay resumes */
+    if(eVal<sVal){ sEl.value=eVal; eEl.value=sVal; }
+    srpLabel(bid, document.getElementById(sid)?.value, document.getElementById(eid)?.value);
+    btn?.classList.add('srp-filled');
+    clearTimeout(_srpT[bid]);
+    _srpT[bid]=setTimeout(()=>{ try{eval(trigger);}catch(e){} },280);
+  }
+}
+
 function srpLabel(bid,s,e){
   const lbl=document.querySelector('#'+bid+' .drp-btn-text');
   if(!lbl||!s||!e) return;
