@@ -566,40 +566,75 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .hdr-icon-btn:hover { background: var(--surface-hover); transform: rotate(15deg) scale(1.05); }
 
-/* ── Animated theme toggle: sun ↔ moon morph ──────────── */
-#theme-btn { position: relative; overflow: hidden; }
-#theme-btn svg {
-  position: absolute; top: 50%; left: 50%;
-  transition: transform 0.5s cubic-bezier(0.5,1.5,0.4,1), opacity 0.32s ease;
+/* ── Theme toggle: iOS-style day/night pill switch ─────── */
+.theme-switch {
+  background: none; border: none; padding: 0; margin: 0;
+  cursor: pointer; display: flex; align-items: center; flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
 }
-[data-theme="dark"]  #theme-icon-dark  { transform: translate(-50%,-50%) rotate(0)      scale(1);  opacity: 1; }
-[data-theme="dark"]  #theme-icon-light { transform: translate(-50%,-50%) rotate(-90deg) scale(0.3); opacity: 0; }
-[data-theme="light"] #theme-icon-dark  { transform: translate(-50%,-50%) rotate(90deg)  scale(0.3); opacity: 0; }
-[data-theme="light"] #theme-icon-light { transform: translate(-50%,-50%) rotate(0)      scale(1);  opacity: 1; }
+.theme-switch-track {
+  position: relative; display: block; width: 54px; height: 28px;
+  border-radius: 999px; overflow: hidden;
+  background: linear-gradient(160deg, #0c1226 0%, #1b2138 100%); /* night (dark mode) */
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.55), 0 0 0 1px rgba(201,168,76,0.18);
+  transition: background 0.6s ease, box-shadow 0.6s ease;
+}
+.theme-switch-knob {
+  position: absolute; top: 3px; left: 3px; width: 22px; height: 22px;
+  border-radius: 50%; z-index: 2;
+  background: radial-gradient(circle at 65% 35%, #fdf7e6 0%, #d9cfa6 100%); /* moon */
+  box-shadow: 0 2px 5px rgba(0,0,0,0.45);
+  transition: transform 0.55s cubic-bezier(0.5,1.6,0.45,1),
+              background 0.5s ease, box-shadow 0.5s ease;
+}
+/* carved crescent (night) */
+.theme-switch-knob::after {
+  content: ''; position: absolute; top: -2px; right: -3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #141a2e; opacity: 1;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+/* twinkling stars (night) */
+.theme-switch-stars { position: absolute; inset: 0; z-index: 1; opacity: 1; transition: opacity 0.5s ease; }
+.theme-switch-stars::before,
+.theme-switch-stars::after {
+  content: ''; position: absolute; border-radius: 50%;
+  background: rgba(255,250,235,0.9);
+}
+.theme-switch-stars::before { width: 2px; height: 2px; top: 7px;  left: 10px;
+  box-shadow: 6px 8px 0 -0.5px rgba(255,250,235,0.7), 2px 14px 0 -0.5px rgba(255,250,235,0.55); }
+.theme-switch-stars::after  { width: 2.5px; height: 2.5px; top: 5px; left: 17px;
+  box-shadow: 8px 9px 0 -0.5px rgba(255,250,235,0.6); }
 
-/* ── Theme change: circular reveal via View Transitions API ─
-   The new theme inks outward in a circle from the toggle button.
-   JS animates ::view-transition-new(root)'s clip-path. */
+/* ── DAY state (light mode) ── */
+[data-theme="light"] .theme-switch-track {
+  background: linear-gradient(160deg, #bfe3d4 0%, #eef0df 100%); /* soft cream-green day sky */
+  box-shadow: inset 0 1px 4px rgba(46,107,69,0.15), 0 0 0 1px rgba(46,107,69,0.20);
+}
+[data-theme="light"] .theme-switch-knob {
+  transform: translateX(26px);
+  background: radial-gradient(circle at 38% 35%, #ffe9a3 0%, #f0b53d 60%, #e0992f 100%); /* sun */
+  box-shadow: 0 0 8px 1px rgba(240,181,61,0.75), 0 2px 5px rgba(0,0,0,0.25);
+}
+[data-theme="light"] .theme-switch-knob::after { opacity: 0; transform: translateX(4px); } /* hide crescent */
+[data-theme="light"] .theme-switch-stars { opacity: 0; }
+
+.theme-switch:hover .theme-switch-track { box-shadow: inset 0 1px 4px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,168,76,0.45); }
+[data-theme="light"] .theme-switch:hover .theme-switch-track { box-shadow: inset 0 1px 4px rgba(46,107,69,0.15), 0 0 0 1px rgba(46,107,69,0.42); }
+.theme-switch:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 999px; }
+
+/* ── Theme change: blur dissolve via View Transitions API ──
+   Old theme blurs + fades out, new theme focuses + fades in. */
 @supports (view-transition-name: root) {
-  ::view-transition-old(root),
-  ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
-  ::view-transition-old(root) { z-index: 1; }
-  ::view-transition-new(root) { z-index: 9999; }
+  ::view-transition-old(root) { animation: vt-blur-out 700ms both cubic-bezier(0.4,0,0.2,1); z-index: 1; }
+  ::view-transition-new(root) { animation: vt-blur-in  700ms both cubic-bezier(0.4,0,0.2,1); z-index: 2; }
 }
-/* Iris glow ring that travels with the reveal edge (signature accent). */
-.theme-ripple {
-  position: fixed; z-index: 9998; pointer-events: none;
-  border-radius: 50%;
-  transform: translate(-50%,-50%);
-  border: 2px solid var(--ring, rgba(201,168,76,0.6));
-  box-shadow: 0 0 40px 8px var(--glow, rgba(201,168,76,0.4)),
-              inset 0 0 28px 3px var(--glow, rgba(201,168,76,0.4));
-}
+@keyframes vt-blur-out { from { filter: blur(0)    ; opacity: 1; } to { filter: blur(12px); opacity: 0; } }
+@keyframes vt-blur-in  { from { filter: blur(12px) ; opacity: 0; } to { filter: blur(0)   ; opacity: 1; } }
+
 @media (prefers-reduced-motion: reduce) {
-  #theme-btn svg { transition: none; }
-  ::view-transition-old(root),
-  ::view-transition-new(root) { animation: none !important; }
-  .theme-ripple { display: none; }
+  .theme-switch-knob, .theme-switch-track, .theme-switch-knob::after, .theme-switch-stars { transition: none; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
 }
 
 /* ─────────────────────────────────────────────────────
@@ -2159,9 +2194,11 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
       Refresh
     </button>
-    <button class="hdr-icon-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle Theme" aria-label="Toggle light/dark theme">
-      <svg id="theme-icon-dark" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-      <svg id="theme-icon-light" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <button class="theme-switch" id="theme-btn" onclick="toggleTheme()" title="Toggle Theme" role="switch" aria-label="Toggle light/dark theme">
+      <span class="theme-switch-track">
+        <span class="theme-switch-stars"></span>
+        <span class="theme-switch-knob"></span>
+      </span>
     </button>
   </div>
 </header>
@@ -3053,54 +3090,12 @@ function toggleTheme(){
   const html=document.documentElement;
   const isDark=html.getAttribute('data-theme')==='dark';
   const swap=()=>applyThemeSwap(isDark);
+
+  // Blur dissolve is driven entirely by CSS (@keyframes on the
+  // ::view-transition pseudo-elements). Fallback / reduced-motion → instant.
   const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // Reduced motion → instant swap, no animation.
-  if(reduce){ swap(); return; }
-
-  // Circular reveal originating from the toggle button.
-  const btn=document.getElementById('theme-btn');
-  const r=btn.getBoundingClientRect();
-  const x=r.left+r.width/2, y=r.top+r.height/2;
-  const endR=Math.hypot(Math.max(x,innerWidth-x), Math.max(y,innerHeight-y));
-
-  const DUR=900;
-  const EASE='cubic-bezier(0.16,1,0.3,1)'; // expo-out: fast start, long premium glide to rest
-  // Target theme color drives the glow: revealing light → forest green, dark → gold.
-  const toLight=isDark;
-  const ring=toLight?'rgba(46,107,69,0.60)':'rgba(201,168,76,0.60)';
-  const glow=toLight?'rgba(46,107,69,0.38)':'rgba(201,168,76,0.40)';
-
-  // Iris glow ring always plays (works on every browser via WAAPI).
-  spawnIrisRing(x,y,endR*2,ring,glow,DUR,EASE);
-
-  // Best path: View Transitions API circular reveal. If unsupported, the
-  // swap still happens immediately while the glow ring carries the motion.
-  if(!document.startViewTransition){ swap(); return; }
-  const vt=document.startViewTransition(swap);
-  vt.ready.then(()=>{
-    document.documentElement.animate(
-      { clipPath:[`circle(0px at ${x}px ${y}px)`, `circle(${endR}px at ${x}px ${y}px)`] },
-      { duration:DUR, easing:EASE, pseudoElement:'::view-transition-new(root)' }
-    );
-  });
-}
-
-/* Expanding glow ring that rides the reveal edge. */
-function spawnIrisRing(x,y,diameter,ring,glow,dur,ease){
-  const el=document.createElement('div');
-  el.className='theme-ripple';
-  el.style.left=x+'px'; el.style.top=y+'px';
-  el.style.setProperty('--ring',ring);
-  el.style.setProperty('--glow',glow);
-  document.body.appendChild(el);
-  const anim=el.animate(
-    [ {width:'0px',  height:'0px',  opacity:0},
-      {opacity:0.95, offset:0.12},
-      {width:diameter+'px', height:diameter+'px', opacity:0} ],
-    {duration:dur, easing:ease, fill:'forwards'}
-  );
-  anim.onfinish=anim.oncancel=()=>el.remove();
+  if(reduce || !document.startViewTransition){ swap(); return; }
+  document.startViewTransition(swap);
 }
 
 /* ═══════════════════════════════════════════════════
