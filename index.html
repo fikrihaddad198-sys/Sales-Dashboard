@@ -12,22 +12,28 @@
    DESIGN TOKENS
 ───────────────────────────────────────────────────── */
 :root {
-  /* Background layers — deeper OLED dark (UI/UX Pro Max: deep black for OLED) */
-  --bg:   #060908;
-  --bg1:  #0b0f0c;
-  --bg2:  #101510;
-  --bg3:  #161e16;
-  --bg4:  #1c2620;
+  /* Background — pure OLED deep, Liquid Glass system */
+  --bg:   #030504;
+  --bg1:  #070c09;
+  --bg2:  #0c1210;
+  --bg3:  #111a14;
+  --bg4:  #182118;
 
   /* Surfaces */
-  --surface:       rgba(255,255,255,0.030);
-  --surface-hover: rgba(255,255,255,0.055);
+  --surface:       rgba(255,255,255,0.028);
+  --surface-hover: rgba(255,255,255,0.052);
   --surface-active:rgba(255,255,255,0.08);
 
-  /* Borders — hairline, consistent hierarchy */
-  --border:      rgba(255,255,255,0.06);
-  --border-md:   rgba(255,255,255,0.10);
-  --border-hi:   rgba(255,255,255,0.16);
+  /* Borders */
+  --border:      rgba(255,255,255,0.055);
+  --border-md:   rgba(255,255,255,0.09);
+  --border-hi:   rgba(255,255,255,0.15);
+
+  /* Gold accent — premium secondary (skill: gold CTA #CA8A04) */
+  --gold:        #c9a84c;
+  --gold-20:     rgba(201,168,76,0.20);
+  --gold-10:     rgba(201,168,76,0.10);
+  --gold-05:     rgba(201,168,76,0.05);
 
   /* ── SINGLE ACCENT SYSTEM ──
      UI chrome is monochrome forest green. "cyan" is kept as a name only so
@@ -156,16 +162,18 @@ body::before, body::after {
   z-index: 0;
 }
 body::before {
-  width: 700px; height: 700px;
-  top: -250px; right: -150px;
-  background: radial-gradient(circle, rgba(47,158,106,0.05) 0%, transparent 60%);
+  width: 900px; height: 900px;
+  top: -320px; right: -200px;
+  background: radial-gradient(circle, rgba(47,158,106,0.08) 0%, rgba(47,158,106,0.02) 45%, transparent 65%);
+  animation: float-orb 12s ease-in-out infinite;
 }
 body::after {
-  width: 600px; height: 600px;
-  bottom: -200px; left: -150px;
-  background: radial-gradient(circle, rgba(47,158,106,0.03) 0%, transparent 60%);
+  width: 700px; height: 700px;
+  bottom: -250px; left: -180px;
+  background: radial-gradient(circle, rgba(47,158,106,0.05) 0%, rgba(201,168,76,0.02) 40%, transparent 65%);
+  animation: float-orb 15s ease-in-out infinite 3s;
 }
-[data-theme="light"] body::before { background:radial-gradient(circle, rgba(47,158,106,0.06) 0%, transparent 60%); }
+[data-theme="light"] body::before { background:radial-gradient(circle, rgba(47,158,106,0.07) 0%, transparent 60%); }
 [data-theme="light"] body::after  { background:radial-gradient(circle, rgba(47,158,106,0.04) 0%, transparent 60%); }
 
 /* Scrollbar */
@@ -221,6 +229,18 @@ body::after {
   from { opacity:0; transform:translateY(16px); }
   to   { opacity:1; transform:none; }
 }
+@keyframes liquid-border {
+  0%,100% { border-color: rgba(47,158,106,0.12); }
+  50%      { border-color: rgba(47,158,106,0.28); }
+}
+@keyframes float-orb {
+  0%,100% { transform: translateY(0px) scale(1); }
+  50%      { transform: translateY(-18px) scale(1.04); }
+}
+@keyframes gold-shimmer {
+  0%   { background-position: -300px 0; }
+  100% { background-position:  300px 0; }
+}
 
 /* ─────────────────────────────────────────────────────
    ACCESSIBILITY — prefers-reduced-motion (UI/UX Pro Max)
@@ -235,24 +255,85 @@ body::after {
 }
 
 /* ─────────────────────────────────────────────────────
-   GLASSMORPHISM SYSTEM (UI/UX Pro Max)
+   LIQUID GLASS SYSTEM (UI/UX Pro Max — Premium SaaS)
 ───────────────────────────────────────────────────── */
 .glass {
-  background: rgba(15, 20, 17, 0.55);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: linear-gradient(135deg, rgba(20,30,22,0.65) 0%, rgba(10,16,12,0.50) 100%);
+  backdrop-filter: blur(24px) saturate(180%) brightness(1.06);
+  -webkit-backdrop-filter: blur(24px) saturate(180%) brightness(1.06);
+  border: 1px solid rgba(47,158,106,0.10);
   box-shadow:
-    0 1px 0 rgba(255,255,255,0.06) inset,
-    0 -1px 0 rgba(0,0,0,0.15) inset,
-    0 8px 32px rgba(0,0,0,0.45);
+    0 1px 0 rgba(255,255,255,0.07) inset,
+    0 -1px 0 rgba(0,0,0,0.2) inset,
+    0 1px 40px rgba(0,0,0,0.5),
+    0 0 0 0.5px rgba(47,158,106,0.06);
 }
 [data-theme="light"] .glass {
-  background: rgba(255,255,255,0.60);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255,255,255,0.85);
-  box-shadow: 0 2px 0 rgba(255,255,255,0.9) inset, 0 8px 32px rgba(0,0,0,0.07);
+  box-shadow: 0 2px 0 rgba(255,255,255,0.9) inset, 0 8px 40px rgba(0,0,0,0.07);
+}
+
+/* Liquid glass card — premium tier */
+.card-liquid {
+  background: linear-gradient(145deg, rgba(18,26,20,0.70) 0%, rgba(8,13,10,0.55) 100%);
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  border: 1px solid rgba(47,158,106,0.10);
+  border-radius: var(--r6);
+  position: relative; overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.06) inset,
+    0 -1px 0 rgba(0,0,0,0.18) inset,
+    0 4px 32px rgba(0,0,0,0.45),
+    0 1px 8px rgba(0,0,0,0.3);
+  transition: border-color 0.4s cubic-bezier(0.22,1,0.36,1),
+              box-shadow   0.4s cubic-bezier(0.22,1,0.36,1),
+              transform    0.4s cubic-bezier(0.22,1,0.36,1);
+  animation: liquid-border 6s ease-in-out infinite;
+}
+.card-liquid::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(135deg, rgba(47,158,106,0.05) 0%, transparent 50%, rgba(201,168,76,0.02) 100%);
+  border-radius: inherit;
+}
+.card-liquid::after {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(47,158,106,0.35) 30%, rgba(201,168,76,0.2) 70%, transparent 100%);
+}
+.card-liquid:hover {
+  border-color: rgba(47,158,106,0.22);
+  transform: translateY(-4px) scale(1.008);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.08) inset,
+    0 -1px 0 rgba(0,0,0,0.2) inset,
+    0 12px 48px rgba(0,0,0,0.55),
+    0 0 40px rgba(47,158,106,0.08),
+    0 0 0 1px rgba(47,158,106,0.08);
+  cursor: pointer;
+}
+
+/* Gold accent line for premium sections */
+.gold-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, rgba(201,168,76,0.4) 70%, transparent 100%);
+  background-size: 300px 100%;
+  animation: gold-shimmer 3s linear infinite;
+  margin: 16px 0;
+  opacity: 0.5;
+}
+
+/* Premium badge */
+.badge-premium {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.15) 0%, rgba(201,168,76,0.08) 100%);
+  border: 1px solid rgba(201,168,76,0.25);
+  font-size: 9px; font-weight: 700; font-family: var(--mono);
+  color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase;
 }
 
 /* ─────────────────────────────────────────────────────
@@ -367,11 +448,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .header-logo-mark {
   width: 30px; height: 30px; border-radius: 9px;
-  background: linear-gradient(145deg, #3bb47d 0%, #248757 100%);
+  background: linear-gradient(145deg, #3ec882 0%, #1e7a4d 100%);
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 900; color: #000;
   flex-shrink: 0;
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.15) inset, 0 0 20px rgba(47,158,106,0.4);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.18) inset,
+    0 0 0 1px rgba(47,158,106,0.4),
+    0 0 24px rgba(47,158,106,0.5),
+    0 2px 8px rgba(0,0,0,0.4);
   letter-spacing: -0.5px;
 }
 .header-logo-text {
@@ -399,11 +484,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .live-badge {
   display: flex; align-items: center; gap: 6px;
-  background: rgba(47,158,106,0.08);
-  border: 1px solid rgba(47,158,106,0.20);
+  background: linear-gradient(135deg, rgba(47,158,106,0.12) 0%, rgba(47,158,106,0.06) 100%);
+  border: 1px solid rgba(47,158,106,0.25);
   padding: 4px 11px; border-radius: 20px;
   font-size: 10px; font-weight: 700; font-family: var(--mono);
   color: var(--green); letter-spacing: 1px;
+  box-shadow: 0 0 16px rgba(47,158,106,0.12), 0 0 0 1px rgba(47,158,106,0.06) inset;
+  backdrop-filter: blur(8px);
 }
 .live-dot {
   width: 6px; height: 6px; border-radius: 50%;
@@ -549,18 +636,27 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
    CARD SYSTEM — Tier 1: Base Card
 ───────────────────────────────────────────────────── */
 .card {
-  background: var(--bg1);
-  border: 1px solid var(--border);
+  background: linear-gradient(145deg, rgba(14,20,16,0.85) 0%, rgba(7,11,9,0.75) 100%);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255,255,255,0.055);
   border-radius: var(--r5);
   padding: 20px 24px;
   position: relative; overflow: hidden;
-  box-shadow: var(--e1);
-  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, var(--e2);
+  transition: border-color 0.35s cubic-bezier(0.22,1,0.36,1),
+              box-shadow   0.35s cubic-bezier(0.22,1,0.36,1),
+              transform    0.35s cubic-bezier(0.22,1,0.36,1);
 }
 .card::before {
   content: ''; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(150deg, rgba(255,255,255,0.025) 0%, transparent 55%);
+  background: linear-gradient(135deg, rgba(47,158,106,0.04) 0%, transparent 50%);
   border-radius: inherit;
+}
+.card::after {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(47,158,106,0.2) 50%, transparent 100%);
 }
 .card:hover {
   border-color: rgba(47,158,106,0.18);
@@ -635,8 +731,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 .hero-grid { display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: start; margin-bottom: 28px; }
 .hero-eyebrow {
-  font-size: 9px; font-weight: 700; color: var(--acc, var(--cyan));
-  letter-spacing: 4px; text-transform: uppercase; margin-bottom: 12px; opacity: 1;
+  font-size: 9px; font-weight: 700;
+  background: linear-gradient(90deg, var(--gold) 0%, var(--cyan) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 4px; text-transform: uppercase; margin-bottom: 12px;
+  display: inline-block;
 }
 .hero-num {
   font-size: clamp(42px, 5vw, 66px); font-weight: 900;
@@ -671,8 +771,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 [data-theme="light"] .progress-track { background: rgba(0,0,0,0.07); }
 .progress-fill {
   height: 100%; border-radius: 4px;
-  transition: width 1.4s cubic-bezier(0.23,1,0.32,1);
+  background: linear-gradient(90deg, #2f9e6a 0%, #3ec882 60%, #c9a84c 100%) !important;
+  transition: width 1.4s cubic-bezier(0.22,1,0.36,1);
   position: relative; min-width: 0;
+  box-shadow: 0 0 12px rgba(47,158,106,0.5);
 }
 .progress-fill::after {
   content: ''; position: absolute; right: -6px; top: 50%;
@@ -694,12 +796,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   gap: 12px; margin-bottom: 18px;
 }
 .metric-card {
-  background: var(--bg1);
-  border: 1px solid var(--border);
+  background: linear-gradient(145deg, rgba(14,20,16,0.80) 0%, rgba(7,11,9,0.65) 100%);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(255,255,255,0.055);
   border-radius: var(--r4);
   padding: 18px 20px 16px;
   position: relative; overflow: hidden;
-  transition: all 0.25s cubic-bezier(0.23,1,0.32,1);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, var(--e1);
+  transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
   cursor: default;
 }
 .metric-card::before {
