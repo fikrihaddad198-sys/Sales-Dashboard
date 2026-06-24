@@ -910,6 +910,37 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .metric-card:hover::before { opacity: 0.95; }
 .metric-card:hover::after  { opacity: 1; }
+
+/* Period page stat cards — ghost reveal */
+.ps-card {
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  border: 1px solid transparent;
+  border-radius: 8px; padding: 8px 10px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.45s cubic-bezier(0.22,1,0.36,1),
+              box-shadow   0.45s cubic-bezier(0.22,1,0.36,1),
+              transform    0.45s cubic-bezier(0.22,1,0.36,1);
+  cursor: default;
+}
+.ps-card::before {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(100px circle at var(--gx, 50%) var(--gy, 50%), rgba(47,158,106,0.12) 0%, transparent 70%),
+    linear-gradient(145deg, rgba(16,24,18,0.84) 0%, rgba(8,12,10,0.70) 100%);
+  border-radius: inherit; opacity: 0;
+  transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1);
+}
+[data-theme="light"] .ps-card::before {
+  background:
+    radial-gradient(100px circle at var(--gx, 50%) var(--gy, 50%), rgba(47,158,106,0.12) 0%, transparent 70%),
+    linear-gradient(145deg, rgba(255,255,255,0.90) 0%, rgba(240,248,244,0.85) 100%);
+}
+.ps-card:hover { border-color: rgba(47,158,106,0.18); transform: translateY(-2px); box-shadow: var(--e1); }
+.ps-card:hover::before { opacity: 1; }
+.ps-label { font-size: 9px; font-weight: 600; color: var(--t3); text-transform: uppercase; letter-spacing: 1.1px; margin-bottom: 2px; position: relative; z-index: 2; }
+.ps-val   { font-size: 12px; font-weight: 700; font-family: var(--mono); position: relative; z-index: 2; }
+
 .mc-label {
   font-size: 9px; font-weight: 700; color: var(--t3);
   letter-spacing: 1.6px; text-transform: uppercase; margin-bottom: 10px;
@@ -3148,7 +3179,8 @@ function loadPeriod(n){
   // Use CSS custom property so color adapts when theme changes
   const statEl = document.getElementById('period-stats-'+n);
   statEl.style.setProperty('--ps-color', color);
-  statEl.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;">${[{l:'Total GMV',v:fmtRp(d.gmv)},{l:'Avg Daily',v:fmtRp(d.gmv/rows.length)},{l:'ADT Store',v:fmtNum(d.adt_store)},{l:'AT Store',v:fmtRp(d.at_store)},{l:'Food Sold Qty',v:fmtNum(d.food_qty_all)},{l:'Food Offline',v:fmtNum(d.food_off)+(_foodKont!==null?' · '+_foodKont.toFixed(1)+'%':'')},{l:'Large Offline',v:fmtNum(d.large_off)+(_largeKont!==null?' · '+_largeKont.toFixed(1)+'%':'')},{l:'Diary Offline',v:fmtNum(d.diary_off)+(_diaryKont!==null?' · '+_diaryKont.toFixed(1)+'%':'')},{l:'Topping Offline',v:fmtNum(d.topping_off)+(_toppingKont!==null?' · '+_toppingKont.toFixed(1)+'%':'')}].map(x=>`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;"><div style="font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:2px;">${x.l}</div><div class="ps-val" style="font-size:12px;font-weight:700;color:var(--ps-color);font-family:var(--mono);">${x.v}</div></div>`).join('')}</div>`;
+  statEl.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;">${[{l:'Total GMV',v:fmtRp(d.gmv)},{l:'Avg Daily',v:fmtRp(d.gmv/rows.length)},{l:'ADT Store',v:fmtNum(d.adt_store)},{l:'AT Store',v:fmtRp(d.at_store)},{l:'Food Sold Qty',v:fmtNum(d.food_qty_all)},{l:'Food Offline',v:fmtNum(d.food_off)+(_foodKont!==null?' · '+_foodKont.toFixed(1)+'%':'')},{l:'Large Offline',v:fmtNum(d.large_off)+(_largeKont!==null?' · '+_largeKont.toFixed(1)+'%':'')},{l:'Diary Offline',v:fmtNum(d.diary_off)+(_diaryKont!==null?' · '+_diaryKont.toFixed(1)+'%':'')},{l:'Topping Offline',v:fmtNum(d.topping_off)+(_toppingKont!==null?' · '+_toppingKont.toFixed(1)+'%':'')}].map(x=>`<div class="ps-card"><div class="ps-label">${x.l}</div><div class="ps-val" style="color:var(--ps-color)">${x.v}</div></div>`).join('')}</div>`;
+  statEl.querySelectorAll('.ps-card').forEach(attachGhostGlow);
   if(periodData[1]&&periodData[2]&&periodData[3]) buildWeeklySummary();
 }
 function buildWeeklySummary(){
@@ -4880,7 +4912,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(
 /* ── Ghost Card: cursor-following glow ── */
 (function(){
   function attachGhostGlow(el){
-    if(el._ghostGlow) return; /* prevent duplicate listeners */
+    if(el._ghostGlow) return;
     el._ghostGlow = true;
     el.addEventListener('pointermove', function(e){
       const r = el.getBoundingClientRect();
@@ -4890,7 +4922,8 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(
       el.style.setProperty('--gy', y + 'px');
     });
   }
-  const GHOST_SELECTOR = '.card, .metric-card, .kpi-mini, .fldt-card, .contrib-ch-card, .summ-kpi-card';
+  window.attachGhostGlow = attachGhostGlow; /* expose for dynamic cards */
+  const GHOST_SELECTOR = '.card, .metric-card, .kpi-mini, .fldt-card, .contrib-ch-card, .summ-kpi-card, .ps-card';
   function initGhostCards(){
     document.querySelectorAll(GHOST_SELECTOR).forEach(attachGhostGlow);
   }
