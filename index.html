@@ -3832,19 +3832,19 @@ function setIfEmpty(id, val){
   from { opacity:0; transform:translate(-50%,-50%) scale(0.94); }
   to   { opacity:1; transform:translate(-50%,-50%) scale(1); }
 }
-/* Dual-panel width transition */
-#ch-popup { transition: width 0.44s cubic-bezier(0.16,1,0.3,1) !important; }
+/* Dual-panel width transition handled via .is-expanding / .is-collapsing class */
+#ch-popup.is-expanding { transition: width 0.44s cubic-bezier(0.16,1,0.3,1), left 0.44s cubic-bezier(0.16,1,0.3,1) !important; }
+#ch-popup.is-collapsing { transition: width 0.44s cubic-bezier(0.16,1,0.3,1), left 0.44s cubic-bezier(0.16,1,0.3,1) !important; }
 #ch-popup.is-dual { width: min(96vw, 1020px) !important; }
-/* Inner flex row */
-#ch-popup-inner { display:flex; flex-direction:row; min-height:0; }
+/* Inner flex row with gap */
+#ch-popup-inner { display:flex; flex-direction:row; min-height:0; gap:0; }
 #ch-panel-main  { flex:0 0 auto; width:min(92vw,660px); min-width:0; transition:width 0.44s cubic-bezier(0.16,1,0.3,1); overflow-y:auto; max-height:82vh; }
-#ch-popup.is-dual #ch-panel-main { width:520px; }
+#ch-popup.is-dual #ch-panel-main { width:508px; border-right:1px solid var(--border); }
 /* Detail panel */
 #ch-panel-detail {
   flex:1 1 0; min-width:0; display:none; overflow-y:auto; max-height:82vh;
-  border-left:1px solid var(--border);
-  opacity:0; transform:translateX(24px);
-  transition: opacity 0.34s ease 0.1s, transform 0.44s cubic-bezier(0.16,1,0.3,1) 0.05s;
+  opacity:0; transform:translateX(20px);
+  transition: opacity 0.32s ease 0.08s, transform 0.42s cubic-bezier(0.16,1,0.3,1) 0.04s;
 }
 #ch-popup.is-dual #ch-panel-detail { display:block; }
 #ch-panel-detail.is-visible { opacity:1; transform:translateX(0); }
@@ -4031,10 +4031,18 @@ function openDetailPanel(mode, dayLabel){
     }, 30);
   }
 
-  // Expand popup + show panel
-  popup.classList.add('is-dual');
+  // Expand popup + re-center + show panel
+  const vw = window.innerWidth;
+  const dualW = Math.min(Math.round(vw * 0.96), 1020);
+  const newLeft = Math.round(Math.max(8, (vw - dualW) / 2));
+  popup.classList.add('is-expanding');
+  requestAnimationFrame(()=>{
+    popup.classList.add('is-dual');
+    popup.style.left = newLeft + 'px';
+    setTimeout(()=>{ popup.classList.remove('is-expanding'); }, 460);
+  });
   moreBtn.classList.add('is-active');
-  moreBtn.textContent = '− Less Detail';
+  moreBtn.textContent = '− Less';
   setTimeout(()=>{ panel.classList.add('is-visible'); }, 60);
 }
 
@@ -4051,8 +4059,14 @@ function closeDetailPanel(){
     const el=document.getElementById(id); if(!el) return;
     const c=Chart.getChart(el); if(c) c.destroy();
   });
+  const vw2 = window.innerWidth;
+  const singleW = Math.min(Math.round(vw2 * 0.92), 680);
+  const singleLeft = Math.round(Math.max(8, (vw2 - singleW) / 2));
   setTimeout(()=>{
+    popup.classList.add('is-collapsing');
     popup.classList.remove('is-dual');
+    popup.style.left = singleLeft + 'px';
+    setTimeout(()=>{ popup.classList.remove('is-collapsing'); }, 460);
     document.getElementById('ch-detail-body').innerHTML='';
   }, 340);
 }
