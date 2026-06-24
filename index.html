@@ -2289,7 +2289,8 @@ function srpOpen(bid){
   document.getElementById(bid)?.classList.remove('srp-filled');
   document.getElementById(bid)?.classList.add('srp-active');
   startEl.style.pointerEvents='auto';
-  startEl.focus(); startEl.click();
+  /* showPicker() is modern API; fallback to click() */
+  try{ startEl.showPicker(); } catch(e){ startEl.click(); }
   setTimeout(()=>{ startEl.style.pointerEvents='none'; },200);
 }
 function srpChange(bid,sid,eid,trigger,changedId){
@@ -2313,7 +2314,7 @@ function srpChange(bid,sid,eid,trigger,changedId){
       endEl2.min=sVal;
       setTimeout(()=>{
         endEl2.style.pointerEvents='auto';
-        endEl2.focus(); endEl2.click();
+        try{ endEl2.showPicker(); } catch(e){ endEl2.click(); }
         setTimeout(()=>{ endEl2.style.pointerEvents='none'; },200);
       },120);
     }
