@@ -701,14 +701,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   opacity: 0;
   transition: opacity 0.50s cubic-bezier(0.22,1,0.36,1);
 }
-/* top shimmer line */
-.card::after {
-  content: ''; position: absolute;
-  top: 0; left: 0; right: 0; height: 1px; z-index: 2;
-  background: linear-gradient(90deg, transparent 0%, rgba(201,168,76,0.35) 40%, rgba(201,168,76,0.22) 70%, transparent 100%);
-  opacity: 0;
-  transition: opacity 0.50s cubic-bezier(0.22,1,0.36,1);
-}
 .card:hover {
   border-color: rgba(201,168,76,0.20);
   box-shadow:
@@ -725,7 +717,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     linear-gradient(145deg, rgba(24,21,16,0.84) 0%, rgba(14,12,10,0.70) 100%);
   opacity: 1;
 }
-.card:hover::after { opacity: 1; }
 
 /* Chart wrappers */
 .chart-wrap { position: relative; }
@@ -904,14 +895,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     transform    0.50s cubic-bezier(0.22,1,0.36,1);
   cursor: default;
 }
-/* top accent line — fades in on hover */
-.metric-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 1; /* above fill, visible */
-  background: linear-gradient(90deg, var(--mc, var(--acc, var(--cyan))) 0%, rgba(201,168,76,0.65) 100%);
-  opacity: 0;
-  box-shadow: 0 0 14px var(--mc, var(--acc, var(--cyan)));
-  transition: opacity 0.50s cubic-bezier(0.22,1,0.36,1);
-}
 /* glass fill — fades in on hover */
 .metric-card::after {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: -1;
@@ -931,7 +914,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     var(--e3),
     0 0 40px rgba(201,168,76,0.13);
 }
-.metric-card:hover::before { opacity: 0.95; }
 .metric-card:hover::after  { opacity: 1; }
 
 /* JS-driven hover state — reliable on iPad where CSS :hover can misbehave.
@@ -1268,13 +1250,6 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
               box-shadow   0.45s cubic-bezier(0.22,1,0.36,1),
               transform    0.45s cubic-bezier(0.22,1,0.36,1);
 }
-.fldt-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 1;
-  background: var(--fc-color, var(--cyan));
-  box-shadow: 0 0 16px var(--fc-color, var(--cyan));
-  opacity: 0;
-  transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1);
-}
 .fldt-card::after {
   content: ''; position: absolute; inset: 0; z-index: -1;
   background:
@@ -1289,7 +1264,6 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   transform: translateY(-5px) scale(1.01);
   box-shadow: var(--e3), 0 0 30px rgba(201,168,76,0.10);
 }
-.fldt-card:hover::before { opacity: 1; }
 .fldt-card:hover::after  { opacity: 1; }
 .fc-icon { font-size: 20px; margin-bottom: 10px; position: relative; z-index: 2; }
 .fc-name {
@@ -1337,17 +1311,8 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   opacity: 0;
   transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1);
 }
-.kpi-mini::after {
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; z-index: 1;
-  background: var(--kc, var(--cyan));
-  box-shadow: 2px 0 12px var(--kc, var(--cyan));
-  border-radius: 0 2px 2px 0;
-  opacity: 0;
-  transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1);
-}
 .kpi-mini:hover { border-color: rgba(201,168,76,0.18); transform: translateY(-3px); box-shadow: var(--e2); }
 .kpi-mini:hover::before { opacity: 1; }
-.kpi-mini:hover::after  { opacity: 1; }
 .kpi-mini-label { font-size: 9px; font-weight: 700; color: var(--t3); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 6px; position: relative; z-index: 2; }
 .kpi-mini-val   { font-size: 16px; font-weight: 800; color: var(--t1); position: relative; z-index: 2; }
 
@@ -1823,7 +1788,6 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 ═══════════════════════════════════════════════════════ */
 #page-kpi .card { border-radius: 14px; }
 #page-kpi .metric-card { border-radius: 12px; }
-#page-kpi .metric-card::before { box-shadow: none; }
 #page-kpi .card:hover,
 #page-kpi .metric-card:hover,
 #page-kpi .card-glow:hover {
