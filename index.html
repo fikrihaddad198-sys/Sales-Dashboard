@@ -3055,8 +3055,8 @@ function toggleTheme(){
   const swap=()=>applyThemeSwap(isDark);
   const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Fallback: no View Transitions support, or user prefers reduced motion → instant swap.
-  if(!document.startViewTransition || reduce){ swap(); return; }
+  // Reduced motion → instant swap, no animation.
+  if(reduce){ swap(); return; }
 
   // Circular reveal originating from the toggle button.
   const btn=document.getElementById('theme-btn');
@@ -3071,13 +3071,18 @@ function toggleTheme(){
   const ring=toLight?'rgba(46,107,69,0.60)':'rgba(201,168,76,0.60)';
   const glow=toLight?'rgba(46,107,69,0.38)':'rgba(201,168,76,0.40)';
 
+  // Iris glow ring always plays (works on every browser via WAAPI).
+  spawnIrisRing(x,y,endR*2,ring,glow,DUR,EASE);
+
+  // Best path: View Transitions API circular reveal. If unsupported, the
+  // swap still happens immediately while the glow ring carries the motion.
+  if(!document.startViewTransition){ swap(); return; }
   const vt=document.startViewTransition(swap);
   vt.ready.then(()=>{
     document.documentElement.animate(
       { clipPath:[`circle(0px at ${x}px ${y}px)`, `circle(${endR}px at ${x}px ${y}px)`] },
       { duration:DUR, easing:EASE, pseudoElement:'::view-transition-new(root)' }
     );
-    spawnIrisRing(x,y,endR*2,ring,glow,DUR,EASE);
   });
 }
 
