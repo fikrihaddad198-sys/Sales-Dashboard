@@ -4060,16 +4060,21 @@ function closeDetailPanel(){
 /* ── Action sheet (bar tap) ── */
 function showBarActionSheet(ch, lbl, color){
   const sheet = document.getElementById('ch-action-sheet');
+  if(!sheet) return;
   sheet.style.display='block';
+  const safe = lbl.replace(/'/g,"\\'");
   sheet.innerHTML =
-    '<div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">'+
-    '<span style="font-size:11px;font-weight:700;color:'+color+'">'+lbl+'</span>'+
-    '<button onclick="document.getElementById('ch-action-sheet').style.display='none'" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;">✕</button>'+
-    '</div>'+
-    '<div style="padding:10px 14px;display:flex;gap:8px;">'+
-    '<button onclick="document.getElementById('ch-action-sheet').style.display='none';openDetailPanel('detail',''+lbl+'')" style="flex:1;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📊 More Detail</button>'+
-    '<button onclick="document.getElementById('ch-action-sheet').style.display='none';openDetailPanel('note',''+lbl+'')" style="flex:1;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📝 Tambah Catatan</button>'+
-    '</div>';
+    `<div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+      <span style="font-size:11px;font-weight:700;color:${color}">${lbl}</span>
+      <button onclick="closeActionSheet()" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:2px 6px;">✕</button>
+    </div>
+    <div style="padding:10px 14px;display:flex;gap:8px;">
+      <button onclick="closeActionSheet();openDetailPanel('detail','${safe}')" style="flex:1;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📊 More Detail</button>
+      <button onclick="closeActionSheet();openDetailPanel('note','${safe}')" style="flex:1;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📝 Tambah Catatan</button>
+    </div>`;
+}
+function closeActionSheet(){
+  const el=document.getElementById('ch-action-sheet'); if(el) el.style.display='none';
 }
 
 /* ── Note storage ── */
