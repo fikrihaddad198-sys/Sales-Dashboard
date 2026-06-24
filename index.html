@@ -3868,12 +3868,7 @@ function setIfEmpty(id, val){
   background:rgba(47,158,106,.1); border-color:var(--green); color:var(--green);
   box-shadow:0 0 10px rgba(47,158,106,.18);
 }
-/* Action sheet (bar tap) */
-#ch-action-sheet {
-  display:none; margin-bottom:14px;
-  background:var(--bg3); border:1px solid var(--border-md);
-  border-radius:12px; overflow:hidden;
-}
+
 </style>
 <div id="ch-popup-backdrop" onclick="closeChannelPopup()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.80);z-index:900;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;"></div>
 <div id="ch-popup" style="display:none;position:fixed;top:0;left:0;z-index:901;width:min(92vw,680px);max-height:82vh;overflow:hidden;border-radius:22px;background:var(--bg2);border:1px solid var(--border-md);box-shadow:0 32px 80px rgba(0,0,0,0.5);opacity:0;will-change:transform,opacity;">
@@ -3896,10 +3891,9 @@ function setIfEmpty(id, val){
         </div>
       </div>
       <div style="padding:18px 22px;">
-        <div style="font-size:10px;font-weight:600;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">GMV Harian <span style="font-size:9px;font-weight:400;color:var(--t3);text-transform:none;letter-spacing:0;">· tap bar untuk opsi</span></div>
+        <div style="font-size:10px;font-weight:600;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">GMV Harian <span style="font-size:9px;font-weight:400;color:var(--t3);text-transform:none;letter-spacing:0;">· tap bar untuk catatan</span></div>
         <div style="height:180px;position:relative;margin-bottom:12px;"><canvas id="ch-popup-chart"></canvas></div>
-        <!-- Inline action sheet (bar tap) -->
-        <div id="ch-action-sheet"></div>
+
         <div style="font-size:10px;font-weight:600;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">Kontribusi Harian (%)</div>
         <div style="height:130px;position:relative;margin-bottom:18px;"><canvas id="ch-popup-contrib-chart"></canvas></div>
         <div id="ch-popup-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
@@ -4072,24 +4066,6 @@ function closeDetailPanel(){
 }
 
 /* ── Action sheet (bar tap) ── */
-function showBarActionSheet(ch, lbl, color){
-  const sheet = document.getElementById('ch-action-sheet');
-  if(!sheet) return;
-  sheet.style.display='block';
-  const safe = lbl.replace(/'/g,"\\'");
-  sheet.innerHTML =
-    `<div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
-      <span style="font-size:11px;font-weight:700;color:${color}">${lbl}</span>
-      <button onclick="closeActionSheet()" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:2px 6px;">✕</button>
-    </div>
-    <div style="padding:10px 14px;display:flex;gap:8px;">
-      <button onclick="closeActionSheet();openDetailPanel('detail','${safe}')" style="flex:1;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📊 More Detail</button>
-      <button onclick="closeActionSheet();openDetailPanel('note','${safe}')" style="flex:1;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📝 Tambah Catatan</button>
-    </div>`;
-}
-function closeActionSheet(){
-  const el=document.getElementById('ch-action-sheet'); if(el) el.style.display='none';
-}
 
 /* ── Note storage ── */
 function _nKey(ch,lbl){ return 'fore_note_'+ch+'_'+lbl.replace(/\s/g,'_'); }
@@ -4164,13 +4140,17 @@ function _popupOpen(cardEl){
     backdrop.style.opacity    = '1';
   }));
 
-  /* restore scroll + fire onComplete after expand */
+  /* restore scroll + fire onComplete after expand — with fallback */
+  const _fireOnOpened=()=>{
+    popup.style.overflowY='auto';
+    if(typeof _onPopupOpened==='function'){ const fn=_onPopupOpened; _onPopupOpened=null; fn(); }
+  };
   popup.addEventListener('transitionend', function onDone(e){
-    if(e.propertyName !== 'transform') return;
-    popup.removeEventListener('transitionend', onDone);
-    popup.style.overflowY = 'auto';
-    if(typeof _onPopupOpened === 'function') _onPopupOpened();
+    if(e.propertyName!=='transform') return;
+    popup.removeEventListener('transitionend',onDone);
+    _fireOnOpened();
   });
+  setTimeout(_fireOnOpened, 680); /* fallback if transitionend doesn't fire */
 
   document.body.style.overflow = 'hidden';
 }
@@ -4214,7 +4194,6 @@ function _popupClose(){
     backdrop.style.opacity  = '0';
     backdrop.style.transition = '';
     document.body.style.overflow = '';
-    const as=document.getElementById('ch-action-sheet'); if(as) as.style.display='none';
     _chPopupCharts.forEach(c=>{try{c.destroy();}catch(e){}});
     _chPopupCharts=[];
   }
@@ -4262,7 +4241,7 @@ function _buildCharts(key, color, labels, gmvs, contribs){
       borderColor:color,borderWidth:1.5,borderRadius:4,borderSkipped:false,_baseColor:color,_realData:gmvs.slice()}]},
     plugins:[noteDotPlugin],
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      onClick:(evt,elements)=>{ if(elements.length>0){ const sheet=document.getElementById('ch-action-sheet'); if(sheet.style.display==='block') sheet.style.display='none'; else showBarActionSheet(key,labels[elements[0].index],color); } },
+      onClick:(evt,elements)=>{ if(elements.length>0) openDetailPanel('note',labels[elements[0].index]); },
       animation:{duration:0}, /* no chart animation — popup animation is the focus */
       plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{
         title:i=>i[0].label+(getNote(key,i[0].label)?' 📝':''),
