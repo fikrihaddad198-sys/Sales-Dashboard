@@ -566,6 +566,32 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .hdr-icon-btn:hover { background: var(--surface-hover); transform: rotate(15deg) scale(1.05); }
 
+/* ── Animated theme toggle: sun ↔ moon morph ──────────── */
+#theme-btn { position: relative; overflow: hidden; }
+#theme-btn svg {
+  position: absolute; top: 50%; left: 50%;
+  transition: transform 0.5s cubic-bezier(0.5,1.5,0.4,1), opacity 0.32s ease;
+}
+[data-theme="dark"]  #theme-icon-dark  { transform: translate(-50%,-50%) rotate(0)      scale(1);  opacity: 1; }
+[data-theme="dark"]  #theme-icon-light { transform: translate(-50%,-50%) rotate(-90deg) scale(0.3); opacity: 0; }
+[data-theme="light"] #theme-icon-dark  { transform: translate(-50%,-50%) rotate(90deg)  scale(0.3); opacity: 0; }
+[data-theme="light"] #theme-icon-light { transform: translate(-50%,-50%) rotate(0)      scale(1);  opacity: 1; }
+
+/* ── Theme change: circular reveal via View Transitions API ─
+   The new theme inks outward in a circle from the toggle button.
+   JS animates ::view-transition-new(root)'s clip-path. */
+@supports (view-transition-name: root) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+  ::view-transition-old(root) { z-index: 1; }
+  ::view-transition-new(root) { z-index: 9999; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #theme-btn svg { transition: none; }
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none !important; }
+}
+
 /* ─────────────────────────────────────────────────────
    NAV
 ───────────────────────────────────────────────────── */
@@ -2125,7 +2151,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
     </button>
     <button class="hdr-icon-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle Theme" aria-label="Toggle light/dark theme">
       <svg id="theme-icon-dark" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-      <svg id="theme-icon-light" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg id="theme-icon-light" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
   </div>
 </header>
@@ -2994,12 +3020,11 @@ updateClock(); setInterval(updateClock, 30000);
 /* ═══════════════════════════════════════════════════
    THEME
 ═══════════════════════════════════════════════════ */
-function toggleTheme(){
+/* The actual DOM/theme mutation — runs inside a View Transition snapshot. */
+function applyThemeSwap(isDark){
   const html=document.documentElement;
-  const isDark=html.getAttribute('data-theme')==='dark';
   html.setAttribute('data-theme',isDark?'light':'dark');
-  document.getElementById('theme-icon-dark').style.display = isDark ? 'none' : '';
-  document.getElementById('theme-icon-light').style.display = isDark ? '' : 'none';
+  // icon morph is CSS-driven via [data-theme] now
   TC.text2=isDark?'#4e5a50':'#998f82';
   TC.text3=isDark?'#8d978c':'#5c554b';
   TC.bg=isDark?'#f3f1ea':'#0f0d0b';
@@ -3012,6 +3037,30 @@ function toggleTheme(){
   if(currentPage!=='period'&&(periodData[1]||periodData[2]||periodData[3])){
     [1,2,3].forEach(n=>{ if(periodData[n]&&getVal('range'+n+'s')&&getVal('range'+n+'e')) destroyChart('period'+n); });
   }
+}
+
+function toggleTheme(){
+  const html=document.documentElement;
+  const isDark=html.getAttribute('data-theme')==='dark';
+  const swap=()=>applyThemeSwap(isDark);
+  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Fallback: no View Transitions support, or user prefers reduced motion → instant swap.
+  if(!document.startViewTransition || reduce){ swap(); return; }
+
+  // Circular reveal originating from the toggle button.
+  const btn=document.getElementById('theme-btn');
+  const r=btn.getBoundingClientRect();
+  const x=r.left+r.width/2, y=r.top+r.height/2;
+  const endR=Math.hypot(Math.max(x,innerWidth-x), Math.max(y,innerHeight-y));
+
+  const vt=document.startViewTransition(swap);
+  vt.ready.then(()=>{
+    document.documentElement.animate(
+      { clipPath:[`circle(0px at ${x}px ${y}px)`, `circle(${endR}px at ${x}px ${y}px)`] },
+      { duration:520, easing:'cubic-bezier(0.4,0,0.2,1)', pseudoElement:'::view-transition-new(root)' }
+    );
+  });
 }
 
 /* ═══════════════════════════════════════════════════
