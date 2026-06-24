@@ -4918,37 +4918,28 @@ function closeChannelPopup(){
 }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(); });
 
-/* ── Ghost Card: cursor-following glow ── */
+/* ── Ghost Card: cursor-following glow ──
+   Single delegated pointermove listener. Walks up from the event target
+   and updates --gx/--gy on EVERY ghost-card ancestor. This works for
+   cards that are created or rebuilt dynamically (KPI metric strip, Week
+   to Week ps-cards, etc.) without needing to re-attach per-card listeners. */
 (function(){
-  function attachGhostGlow(el){
-    if(el._ghostGlow) return;
-    el._ghostGlow = true;
-    el.addEventListener('pointermove', function(e){
-      const r = el.getBoundingClientRect();
-      const x = e.clientX - r.left;
-      const y = e.clientY - r.top;
-      el.style.setProperty('--gx', x + 'px');
-      el.style.setProperty('--gy', y + 'px');
-    });
-  }
-  window.attachGhostGlow = attachGhostGlow; /* expose for dynamic cards */
   const GHOST_SELECTOR = '.card, .metric-card, .kpi-mini, .fldt-card, .contrib-ch-card, .summ-kpi-card, .ps-card';
-  function initGhostCards(){
-    document.querySelectorAll(GHOST_SELECTOR).forEach(attachGhostGlow);
+  function onMove(e){
+    let node = e.target;
+    while(node && node.nodeType === 1){
+      if(node.matches && node.matches(GHOST_SELECTOR)){
+        const r = node.getBoundingClientRect();
+        node.style.setProperty('--gx', (e.clientX - r.left) + 'px');
+        node.style.setProperty('--gy', (e.clientY - r.top) + 'px');
+      }
+      node = node.parentElement;
+    }
   }
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', initGhostCards);
-  } else {
-    initGhostCards();
-  }
-  /* re-init when pages switch */
-  const origShowPage = window.showPage;
-  if(typeof origShowPage === 'function'){
-    window.showPage = function(){
-      origShowPage.apply(this, arguments);
-      setTimeout(initGhostCards, 80);
-    };
-  }
+  document.addEventListener('pointermove', onMove, { passive: true });
+  /* kept for backward compatibility with existing call sites — now a no-op
+     since the delegated listener above covers every ghost card */
+  window.attachGhostGlow = function(){};
 })();
 </script>
 </body>
