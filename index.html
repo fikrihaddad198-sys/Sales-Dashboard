@@ -789,7 +789,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .hero-banner:hover {
   border-color: rgba(47,158,106,0.22);
-  box-shadow: var(--e3), 0 0 60px rgba(47,158,106,0.08);
+  box-shadow: var(--e3), 0 0 60px rgba(47,158,106,0.10);
+  transform: translateY(-5px) scale(1.004);
 }
 .hero-banner:hover::after { opacity: 1; }
 [data-theme="light"] .hero-banner::after {
@@ -933,10 +934,26 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .metric-card:hover::before { opacity: 0.95; }
 .metric-card:hover::after  { opacity: 1; }
 
-/* Force-reset for cards the pointer has left. iPadOS Safari keeps :hover
-   "stuck" on nested elements, leaving the glow behind; JS adds .ghost-off
-   the moment the pointer exits a card, and !important overrides the stuck
-   :hover so the fill + lift cleanly fade out. */
+/* JS-driven hover state — reliable on iPad where CSS :hover can misbehave.
+   .ghost-on is added by pointermove when pointer is inside a card,
+   .ghost-off is added when pointer leaves — overrides stuck :hover. */
+.ghost-on {
+  border-color: rgba(47,158,106,0.20) !important;
+  transform: translateY(-4px) scale(1.006) !important;
+  box-shadow: var(--e3), 0 0 40px rgba(47,158,106,0.08) !important;
+}
+.ghost-on::before,
+.ghost-on::after { opacity: 1 !important; }
+
+/* metric-card lift is stronger */
+.metric-card.ghost-on { transform: translateY(-6px) scale(1.013) !important; }
+
+/* hero-banner lift */
+.hero-banner.ghost-on {
+  transform: translateY(-5px) scale(1.004) !important;
+  box-shadow: var(--e3), 0 0 60px rgba(47,158,106,0.10) !important;
+}
+
 .ghost-off {
   transform: none !important;
   border-color: transparent !important;
@@ -4971,16 +4988,25 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(
         node.style.setProperty('--gx', (e.clientX - r.left) + 'px');
         node.style.setProperty('--gy', (e.clientY - r.top) + 'px');
         node.classList.remove('ghost-off');
+        node.classList.add('ghost-on');    /* JS-driven hover — reliable on iPad */
         next.push(node);
       }
       node = node.parentElement;
     }
     /* cards the pointer just left → force them off */
-    for(const el of active){ if(next.indexOf(el) === -1) el.classList.add('ghost-off'); }
+    for(const el of active){
+      if(next.indexOf(el) === -1){
+        el.classList.remove('ghost-on');
+        el.classList.add('ghost-off');
+      }
+    }
     active = next;
   }
   function clearAll(){
-    for(const el of active) el.classList.add('ghost-off');
+    for(const el of active){
+      el.classList.remove('ghost-on');
+      el.classList.add('ghost-off');
+    }
     active = [];
   }
   document.addEventListener('pointermove', onMove, { passive: true });
