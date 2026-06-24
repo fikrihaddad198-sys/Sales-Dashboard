@@ -3866,35 +3866,6 @@ function setIfEmpty(id, val){
 .ch-popup-close:hover { background:rgba(248,113,113,.12); border-color:rgba(248,113,113,.35); color:#f87171; box-shadow:0 0 12px rgba(248,113,113,.25); }
 .ch-popup-close:active { transform:scale(.92); }
 
-/* Custom date dropdown — open/close animates in reverse */
-.cdd-wrap { position:relative; }
-.cdd-trigger {
-  width:100%; background:var(--bg3); border:1px solid var(--border);
-  border-radius:9px; padding:10px 14px; color:var(--t2); font-size:13px;
-  display:flex; justify-content:space-between; align-items:center;
-  cursor:pointer; user-select:none;
-  transition:border-color .18s, background .18s, color .18s;
-}
-.cdd-trigger:hover { background:var(--bg4); border-color:var(--border-md); }
-.cdd-trigger.is-selected { color:var(--t1); border-color:var(--border-md); }
-.cdd-list {
-  position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:50;
-  background:var(--bg2); border:1px solid var(--border-md);
-  border-radius:12px; overflow:hidden; max-height:256px; overflow-y:auto;
-  opacity:0; transform:scaleY(.88) translateY(-8px); transform-origin:top center;
-  transition:opacity .22s ease, transform .28s cubic-bezier(0.16,1,0.3,1);
-  box-shadow:0 20px 48px rgba(0,0,0,0.42); pointer-events:none;
-}
-.cdd-list.is-open { opacity:1; transform:scaleY(1) translateY(0); pointer-events:all; }
-.cdd-inner { padding:5px; }
-.cdd-item {
-  padding:10px 13px; border-radius:8px; cursor:pointer; font-size:13px;
-  color:var(--t1); display:flex; justify-content:space-between; align-items:center;
-  transition:background .1s;
-}
-.cdd-item:hover { background:var(--bg3); }
-.cdd-item.cdd-noted { color:var(--green); }
-.cdd-check { font-size:10px; font-weight:700; color:var(--green); }
 .ch-more-btn {
   background:var(--bg3); border:1px solid var(--border); border-radius:8px;
   padding:6px 13px; font-size:11px; font-weight:600; color:var(--t2);
@@ -4041,27 +4012,21 @@ function _renderDetailContent(mode, dayLabel, heading, body){
     heading.textContent='📝 Notes';
     heading.style.color=_currentColor;
     _activeNoteCtx={ch:_currentChKey,lbl:''};
-    const dateItems=_currentLabels.map(lbl=>{
+        const dateOpts=_currentLabels.map(lbl=>{
       const has=!!getNote(_currentChKey,lbl);
-      return (has?'<div class="cdd-item cdd-noted"':'<div class="cdd-item"')
-        +' onclick="selectCDD(this.dataset.v)" data-v="'+lbl+'"><span>'+lbl+'</span>'
-        +(has?'<span class="cdd-check">✓</span>':'')+'</div>';
+      return '<option value="'+lbl+'">'+(has?'\u2713 ':'')+lbl+'</option>';
     }).join('');
     body.innerHTML=
       '<div style="margin-bottom:14px;">'+
       '<div style="font-size:10px;color:var(--t3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Pilih Tanggal</div>'+
-      '<div class="cdd-wrap">'+
-      '<div class="cdd-trigger" id="cdd-trigger" onclick="toggleCDD()">'+
-      '<span id="cdd-label">— Pilih tanggal —</span>'+
-      '<span id="cdd-arrow" style="font-size:11px;transition:transform .22s">▾</span>'+
-      '</div>'+
-      '<div class="cdd-list" id="cdd-list"><div class="cdd-inner">'+dateItems+'</div></div>'+
-      '</div></div>'+
+      '<select id="ch-note-date-sel" onchange="onNoteDateChange()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--t2);font-size:13px;outline:none;cursor:pointer;">'+
+      '<option value="">— Pilih tanggal —</option>'+dateOpts+
+      '</select></div>'+
       '<div style="margin-bottom:14px;">'+
       '<div style="font-size:10px;color:var(--t3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Catatan</div>'+
       '<textarea id="ch-note-text" rows="5" placeholder="Pilih tanggal terlebih dahulu..." disabled style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;line-height:1.5;box-sizing:border-box;opacity:.5;"></textarea>'+
       '</div>'+
-      '<div style="display:flex;gap:8px;justify-content:flex-end;">'+
+      '<div id="ch-note-btn-row" style="display:flex;gap:8px;justify-content:flex-end;opacity:0;transition:none;">'+
       '<button id="ch-note-del-btn" onclick="deleteCurrentNote()" style="display:none;align-items:center;gap:5px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);border-radius:8px;padding:7px 13px;color:#f87171;font-size:12px;font-weight:600;cursor:pointer;">Hapus</button>'+
       '<button id="ch-note-save-btn" onclick="saveCurrentNote()" style="background:var(--green);border:none;border-radius:8px;padding:7px 16px;color:#06140d;font-size:12px;font-weight:700;cursor:pointer;">Simpan</button>'+
       '</div>';
@@ -4202,60 +4167,35 @@ function saveCurrentNote(){
   const btn=document.getElementById('ch-note-save-btn');
   if(btn){ btn.textContent='✓ Tersimpan'; btn.style.background='var(--cyan)'; setTimeout(()=>{ btn.textContent='Simpan'; btn.style.background='var(--green)'; },1400); }
 }
-/* ── Custom Date Dropdown (CDD) ── */
-let _cddIsOpen=false;
-function toggleCDD(){
-  _cddIsOpen ? closeCDD() : openCDD();
-}
-function openCDD(){
-  const list=document.getElementById('cdd-list'); if(!list) return;
-  _cddIsOpen=true;
-  requestAnimationFrame(()=>{ list.classList.add('is-open'); });
-  const arrow=document.getElementById('cdd-arrow');
-  if(arrow) arrow.style.transform='rotate(180deg)';
-}
-function closeCDD(callback){
-  const list=document.getElementById('cdd-list'); if(!list) return;
-  _cddIsOpen=false;
-  list.classList.remove('is-open'); /* reverse animation fires automatically */
-  const arrow=document.getElementById('cdd-arrow');
-  if(arrow) arrow.style.transform='rotate(0deg)';
-  let done=false;
-  const finish=()=>{ if(done) return; done=true; if(callback) callback(); };
-  list.addEventListener('transitionend',function h(e){
-    if(e.propertyName!=='opacity') return;
-    list.removeEventListener('transitionend',h);
-    finish();
-  });
-  setTimeout(finish, 320); /* fallback */
-}
-function selectCDD(elOrVal){
-  const lbl=typeof elOrVal==='string'?elOrVal:elOrVal.dataset.v;
-  if(!lbl) return;
-  if(_cddIsOpen){
-    closeCDD(()=>_applyCDDSelection(lbl));
-  } else {
-    _applyCDDSelection(lbl);
-  }
-}
-function _applyCDDSelection(lbl){
+function onNoteDateChange(){
+  const sel=document.getElementById('ch-note-date-sel');
+  if(!sel||!sel.value) return;
+  const lbl=sel.value;
   _activeNoteCtx={ch:_currentChKey,lbl};
   const existing=getNote(_currentChKey,lbl);
-  /* Update trigger label */
-  const trigger=document.getElementById('cdd-trigger');
-  const label=document.getElementById('cdd-label');
-  if(trigger) trigger.classList.add('is-selected');
-  if(label) label.textContent=lbl;
-  /* Update highlighted item */
-  document.querySelectorAll('.cdd-item').forEach(el=>el.style.background='');
-  /* Fill textarea */
+  sel.style.color='var(--t1)';
+  /* Animate textarea + buttons appearing */
   const ta=document.getElementById('ch-note-text');
-  if(ta){ ta.value=existing; ta.disabled=false; ta.style.opacity='1'; ta.placeholder='Catatan untuk '+lbl+'...'; setTimeout(()=>ta.focus(),60); }
-  /* Show delete button if note exists */
+  const btnRow=document.getElementById('ch-note-btn-row');
+  if(ta){
+    ta.style.transition='none'; ta.style.opacity='0'; ta.style.transform='translateY(10px)';
+    ta.disabled=false; ta.value=existing; ta.placeholder='Catatan untuk '+lbl+'...';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      ta.style.transition='opacity .25s ease, transform .32s cubic-bezier(0.16,1,0.3,1)';
+      ta.style.opacity='1'; ta.style.transform='translateY(0)';
+    }));
+  }
+  if(btnRow){
+    btnRow.style.transition='none'; btnRow.style.opacity='0'; btnRow.style.transform='translateY(10px)';
+    setTimeout(()=>{
+      btnRow.style.transition='opacity .22s ease .06s, transform .28s cubic-bezier(0.16,1,0.3,1) .06s';
+      btnRow.style.opacity='1'; btnRow.style.transform='translateY(0)';
+    },40);
+  }
   const del=document.getElementById('ch-note-del-btn');
   if(del) del.style.display=existing?'inline-flex':'none';
+  setTimeout(()=>{ if(ta) ta.focus(); },120);
 }
-function onNoteDateChange(){} /* legacy stub */
 function deleteCurrentNote(){
   if(!_activeNoteCtx.lbl) return;
   setNote(_activeNoteCtx.ch,_activeNoteCtx.lbl,'');
