@@ -3894,7 +3894,7 @@ function setIfEmpty(id, val){
             <div style="font-size:9px;color:var(--t3);font-weight:600;letter-spacing:.1em;text-transform:uppercase;">Total</div>
             <div id="ch-popup-total-val" style="font-size:16px;font-weight:800;letter-spacing:-.02em;"></div>
           </div>
-          <button onclick="toggleDetailPanel()" id="ch-more-btn" class="ch-more-btn">＋ More Detail</button>
+          <button onclick="toggleDetailPanel()" id="ch-more-btn" class="ch-more-btn">📝 Notes</button>
           <button onclick="closeChannelPopup()" class="ch-popup-close">✕</button>
         </div>
       </div>
@@ -3946,7 +3946,7 @@ function _animateChartsIn(){
 /* ── Detail panel ── */
 function toggleDetailPanel(){
   if(_detailOpen) closeDetailPanel();
-  else openDetailPanel('overview', null);
+  else openDetailPanel('notes-picker', null);
 }
 
 function openDetailPanel(mode, dayLabel){
@@ -4007,16 +4007,39 @@ function _renderDetailContent(mode, dayLabel, heading, body){
     const c=Chart.getChart(el); if(c) c.destroy();
   });
 
-  if(mode==='note'){
-    heading.textContent='📝 Catatan — '+( dayLabel||'');
+  if(mode==='notes-picker'){
+    heading.textContent='📝 Notes';
+    heading.style.color=_currentColor;
+    _activeNoteCtx={ch:_currentChKey,lbl:''};
+    const dateOpts=_currentLabels.map(lbl=>{
+      const has=!!getNote(_currentChKey,lbl);
+      return '<option value="'+lbl+'">'+(has?'✓ ':'')+lbl+'</option>';
+    }).join('');
+    body.innerHTML=
+      '<div style="margin-bottom:14px;">'+
+      '<div style="font-size:10px;color:var(--t3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Pilih Tanggal</div>'+
+      '<select id="ch-note-date-sel" onchange="onNoteDateChange()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--t2);font-size:13px;outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;">'+
+      '<option value="">— Pilih tanggal —</option>'+dateOpts+
+      '</select></div>'+
+      '<div style="margin-bottom:14px;">'+
+      '<div style="font-size:10px;color:var(--t3);font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Catatan</div>'+
+      '<textarea id="ch-note-text" rows="5" placeholder="Pilih tanggal terlebih dahulu..." disabled style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;line-height:1.5;box-sizing:border-box;opacity:.5;"></textarea>'+
+      '</div>'+
+      '<div style="display:flex;gap:8px;justify-content:flex-end;">'+
+      '<button id="ch-note-del-btn" onclick="deleteCurrentNote()" style="display:none;align-items:center;gap:5px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);border-radius:8px;padding:7px 13px;color:#f87171;font-size:12px;font-weight:600;cursor:pointer;">Hapus</button>'+
+      '<button id="ch-note-save-btn" onclick="saveCurrentNote()" style="background:var(--green);border:none;border-radius:8px;padding:7px 16px;color:#06140d;font-size:12px;font-weight:700;cursor:pointer;">Simpan</button>'+
+      '</div>';
+  } else if(mode==='note'){
+    /* legacy: open note directly for a specific day */
+    heading.textContent='📝 '+( dayLabel||'');
     heading.style.color=_currentColor;
     const existing=dayLabel?getNote(_currentChKey,dayLabel):'';
-    _activeNoteCtx={ch:_currentChKey,lbl:dayLabel};
+    _activeNoteCtx={ch:_currentChKey,lbl:dayLabel||''};
     body.innerHTML=
-      '<textarea id="ch-note-text" rows="5" placeholder="Tulis catatan... (contoh: promo aktif, event, cuaca buruk)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;line-height:1.5;margin-bottom:10px;box-sizing:border-box;"></textarea>'+
+      '<textarea id="ch-note-text" rows="5" placeholder="Tulis catatan..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;line-height:1.5;margin-bottom:10px;box-sizing:border-box;"></textarea>'+
       '<div style="display:flex;gap:8px;justify-content:flex-end;">'+
-      '<button id="ch-note-del-btn" onclick="deleteCurrentNote()" style="display:'+(existing?'inline-flex':'none')+';align-items:center;gap:5px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);border-radius:8px;padding:7px 13px;color:#f87171;font-size:12px;font-weight:600;cursor:pointer;">Hapus</button>'+
-      '<button onclick="saveCurrentNote()" style="background:var(--green);border:none;border-radius:8px;padding:7px 16px;color:#06140d;font-size:12px;font-weight:700;cursor:pointer;">Simpan</button>'+
+      '<button id="ch-note-del-btn" onclick="deleteCurrentNote()" style="display:'+(existing?'inline-flex':'none')+';align-items:center;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);border-radius:8px;padding:7px 13px;color:#f87171;font-size:12px;font-weight:600;cursor:pointer;">Hapus</button>'+
+      '<button id="ch-note-save-btn" onclick="saveCurrentNote()" style="background:var(--green);border:none;border-radius:8px;padding:7px 16px;color:#06140d;font-size:12px;font-weight:700;cursor:pointer;">Simpan</button>'+
       '</div>';
     document.getElementById('ch-note-text').value=existing;
     setTimeout(()=>{ const t=document.getElementById('ch-note-text'); if(t) t.focus(); },80);
@@ -4085,7 +4108,7 @@ function closeDetailPanel(){
   _detailOpen  = false;
   panel.classList.remove('is-visible');
   moreBtn.classList.remove('is-active');
-  moreBtn.textContent = '＋ More Detail';
+  moreBtn.textContent = '📝 Notes';
   moreBtn.onclick = toggleDetailPanel;
   // Destroy detail charts
   ['ch-detail-chart','ch-detail-ipt-chart'].forEach(id=>{
@@ -4121,13 +4144,49 @@ function setNote(ch,lbl,txt){ try{
 function openNotePanel(ch,lbl){ openDetailPanel('note',lbl); }
 function closeNotePanel(){ closeDetailPanel(); }
 function saveCurrentNote(){
+  const sel=document.getElementById('ch-note-date-sel');
+  if(sel&&sel.value) _activeNoteCtx={ch:_currentChKey,lbl:sel.value};
+  if(!_activeNoteCtx.lbl){ alert('Pilih tanggal terlebih dahulu.'); return; }
   const t=document.getElementById('ch-note-text'); if(!t) return;
   setNote(_activeNoteCtx.ch,_activeNoteCtx.lbl,t.value);
-  closeDetailPanel(); refreshBarColors();
+  refreshBarColors();
+  /* Update select option indicator */
+  if(sel&&sel.value){
+    const opt=sel.querySelector('option[value="'+sel.value+'"]');
+    if(opt) opt.textContent=(t.value.trim()?'✓ ':'')+sel.value;
+    document.getElementById('ch-note-date-sel').style.color='var(--t1)';
+  }
+  /* Success flash */
+  const btn=document.getElementById('ch-note-save-btn');
+  if(btn){ btn.textContent='✓ Tersimpan'; btn.style.background='var(--cyan)'; setTimeout(()=>{ btn.textContent='Simpan'; btn.style.background='var(--green)'; },1400); }
+}
+function onNoteDateChange(){
+  const sel=document.getElementById('ch-note-date-sel'); if(!sel||!sel.value) return;
+  const lbl=sel.value;
+  _activeNoteCtx={ch:_currentChKey,lbl};
+  const existing=getNote(_currentChKey,lbl);
+  const ta=document.getElementById('ch-note-text');
+  if(!ta) return;
+  ta.value=existing;
+  ta.disabled=false; ta.style.opacity='1'; ta.placeholder='Tulis catatan untuk '+lbl+'...';
+  const del=document.getElementById('ch-note-del-btn');
+  if(del) del.style.display=existing?'inline-flex':'none';
+  sel.style.color='var(--t1)';
+  setTimeout(()=>ta.focus(),50);
 }
 function deleteCurrentNote(){
+  if(!_activeNoteCtx.lbl) return;
   setNote(_activeNoteCtx.ch,_activeNoteCtx.lbl,'');
-  closeDetailPanel(); refreshBarColors();
+  refreshBarColors();
+  const sel=document.getElementById('ch-note-date-sel');
+  if(sel&&sel.value){
+    const opt=sel.querySelector('option[value="'+sel.value+'"]');
+    if(opt) opt.textContent=sel.value;
+  }
+  const del=document.getElementById('ch-note-del-btn');
+  if(del) del.style.display='none';
+  const ta=document.getElementById('ch-note-text');
+  if(ta) ta.value='';
 }
 function refreshBarColors(){
   const chart=_chPopupCharts[0]; if(!chart) return;
@@ -4145,7 +4204,7 @@ function _popupOpen(cardEl){
      just need to position and animate */
   popup.classList.remove('is-dual'); _detailOpen=false;
   document.getElementById('ch-panel-detail').classList.remove('is-visible');
-  const moreBtn=document.getElementById('ch-more-btn'); if(moreBtn){ moreBtn.classList.remove('is-active'); moreBtn.textContent='＋ More Detail'; }
+  const moreBtn=document.getElementById('ch-more-btn'); if(moreBtn){ moreBtn.classList.remove('is-active'); moreBtn.textContent='📝 Notes'; }
   popup.style.transition = 'none';
   popup.style.transform  = 'none';
 
@@ -4283,7 +4342,7 @@ function _buildCharts(key, color, labels, gmvs, contribs){
       borderColor:color,borderWidth:1.5,borderRadius:4,borderSkipped:false,_baseColor:color,_realData:gmvs.slice()}]},
     plugins:[noteDotPlugin],
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      onClick:(evt,elements)=>{ if(elements.length>0){ const lbl=labels[elements[0].index]; requestAnimationFrame(()=>openDetailPanel('note',lbl)); } },
+      onClick:(evt,elements)=>{ if(elements.length>0){ const lbl=labels[elements[0].index]; requestAnimationFrame(()=>openDetailPanel('detail',lbl)); } },
       animation:{duration:0}, /* no chart animation — popup animation is the focus */
       plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{
         title:i=>i[0].label+(getNote(key,i[0].label)?' 📝':''),
@@ -4341,7 +4400,7 @@ function openChannelPopup(key, name, color, cardEl){
   const _dp = document.getElementById('ch-panel-detail');
   if(_dp){ _dp.classList.remove('is-visible'); _dp.style.display='none'; }
   const _mb = document.getElementById('ch-more-btn');
-  if(_mb){ _mb.classList.remove('is-active'); _mb.textContent='＋ More Detail'; _mb.onclick=toggleDetailPanel; }
+  if(_mb){ _mb.classList.remove('is-active'); _mb.textContent='📝 Notes'; _mb.onclick=toggleDetailPanel; }
   const _dBody = document.getElementById('ch-detail-body');
   if(_dBody) _dBody.innerHTML='';
   ['ch-detail-chart','ch-detail-ipt-chart'].forEach(id=>{
