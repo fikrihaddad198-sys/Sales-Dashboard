@@ -1237,8 +1237,21 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
 /* Summary KPI row */
 .summ-kpi-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 18px; }
-.summ-kpi-card { background: var(--bg1); border: 1px solid var(--border); border-radius: var(--r5); padding: 18px 20px; transition: all 0.22s; }
-.summ-kpi-card:hover { border-color: var(--border-md); transform: translateY(-2px); box-shadow: var(--e2); }
+.summ-kpi-card {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--r5); padding: 18px 20px;
+  transition: background 0.5s cubic-bezier(0.22,1,0.36,1),
+              border-color 0.5s cubic-bezier(0.22,1,0.36,1),
+              box-shadow 0.5s cubic-bezier(0.22,1,0.36,1),
+              transform 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+.summ-kpi-card:hover {
+  background: linear-gradient(145deg, rgba(16,24,18,0.82) 0%, rgba(8,12,10,0.68) 100%);
+  border-color: rgba(47,158,106,0.18);
+  transform: translateY(-3px);
+  box-shadow: var(--e2), 0 0 32px rgba(47,158,106,0.07);
+}
 .summ-kpi-label { font-size: 9px; font-weight: 700; color: var(--t3); letter-spacing: 1.4px; text-transform: uppercase; margin-bottom: 8px; }
 .summ-kpi-val   { font-size: 22px; font-weight: 800; line-height: 1; letter-spacing: -0.6px; margin-bottom: 5px; }
 
@@ -1656,34 +1669,23 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
    KPI page matches the flat, restrained demo aesthetic.
    No other page is affected.
 ═══════════════════════════════════════════════════════ */
-#page-kpi .card,
-#page-kpi .metric-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  box-shadow: none;
-}
 #page-kpi .card { border-radius: 14px; }
 #page-kpi .metric-card { border-radius: 12px; }
-#page-kpi .card::before { display: none; }          /* kill diagonal sheen */
-#page-kpi .metric-card::after { display: none; }     /* kill sheen */
-#page-kpi .metric-card::before { box-shadow: none; height: 2px; } /* flat top accent */
+#page-kpi .card::before { display: none; }
+#page-kpi .metric-card::before { box-shadow: none; height: 2px; }
 #page-kpi .card:hover,
 #page-kpi .metric-card:hover,
 #page-kpi .card-glow:hover {
-  box-shadow: none;
-  transform: none;
-  border-color: var(--border-md);
+  box-shadow: var(--e3), 0 0 40px rgba(47,158,106,0.08);
+  border-color: rgba(47,158,106,0.20);
 }
 /* flat status dots — no glow */
 #page-kpi .card-hdr-dot,
 #page-kpi .sdot { box-shadow: none; }
 
-/* hero banner → flat panel + single left-accent signature */
+/* hero banner — liquid glass, always visible */
 #page-kpi .hero-banner {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: none;
+  border-radius: 18px;
 }
 [data-theme="light"] #page-kpi .hero-banner { background: var(--bg1); }
 #page-kpi .hero-banner .orb1,
