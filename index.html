@@ -2095,7 +2095,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
    low opacity. Sits above the opaque page backgrounds so it's always visible;
    only the logo-shaped region is faintly tinted — a true watermark. */
 #brand-mark{
-  position:fixed; top:50%; left:50%;
+  position:fixed; top:calc(50% + 51px); left:50%; /* +51px clears the 58px header + 44px nav so the logo centers in the content area, not the viewport */
   width:min(58vh,520px); aspect-ratio:363/464;
   transform:translate(-50%,-50%);
   z-index:50; pointer-events:none; will-change:opacity;
