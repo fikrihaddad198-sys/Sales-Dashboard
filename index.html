@@ -677,12 +677,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 ───────────────────────────────────────────────────── */
 .card {
   background: transparent;
-  backdrop-filter: blur(20px) saturate(170%);   /* always on — no transition */
+  backdrop-filter: blur(20px) saturate(170%);
   -webkit-backdrop-filter: blur(20px) saturate(170%);
   border: 1px solid transparent;
   border-radius: var(--r5);
   padding: 20px 24px;
   position: relative; overflow: hidden;
+  isolation: isolate;   /* own stacking context — keeps ::before below content */
   box-shadow: none;
   transition:
     border-color 0.50s cubic-bezier(0.22,1,0.36,1),
@@ -691,7 +692,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 /* glass fill lives here — fade in/out on hover */
 .card::before {
-  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: -1;
   background:
     radial-gradient(180px circle at var(--gx, 50%) var(--gy, 50%), rgba(47,158,106,0.10) 0%, transparent 70%),
     linear-gradient(145deg, rgba(16,24,18,0.84) 0%, rgba(8,12,10,0.70) 100%);
@@ -702,7 +703,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 /* top shimmer line */
 .card::after {
   content: ''; position: absolute;
-  top: 0; left: 0; right: 0; height: 1px; z-index: 1;
+  top: 0; left: 0; right: 0; height: 1px; z-index: 2;
   background: linear-gradient(90deg, transparent 0%, rgba(47,158,106,0.35) 40%, rgba(201,168,76,0.22) 70%, transparent 100%);
   opacity: 0;
   transition: opacity 0.50s cubic-bezier(0.22,1,0.36,1);
@@ -868,12 +869,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .metric-card {
   background: transparent;
-  backdrop-filter: blur(20px) saturate(170%);   /* always on — no transition */
+  backdrop-filter: blur(20px) saturate(170%);
   -webkit-backdrop-filter: blur(20px) saturate(170%);
   border: 1px solid transparent;
   border-radius: var(--r4);
   padding: 18px 20px 16px;
   position: relative; overflow: hidden;
+  isolation: isolate;
   box-shadow: none;
   transition:
     border-color 0.50s cubic-bezier(0.22,1,0.36,1),
@@ -883,7 +885,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 /* top accent line — fades in on hover */
 .metric-card::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 1;
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 1; /* above fill, visible */
   background: linear-gradient(90deg, var(--mc, var(--acc, var(--cyan))) 0%, rgba(201,168,76,0.65) 100%);
   opacity: 0;
   box-shadow: 0 0 14px var(--mc, var(--acc, var(--cyan)));
@@ -891,7 +893,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 /* glass fill — fades in on hover */
 .metric-card::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: -1;
   background:
     radial-gradient(140px circle at var(--gx, 50%) var(--gy, 50%), rgba(47,158,106,0.09) 0%, transparent 70%),
     linear-gradient(145deg, rgba(16,23,18,0.88) 0%, rgba(8,12,9,0.72) 100%);
@@ -918,13 +920,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   border: 1px solid transparent;
   border-radius: 8px; padding: 8px 10px;
   position: relative; overflow: hidden;
+  isolation: isolate;
   transition: border-color 0.45s cubic-bezier(0.22,1,0.36,1),
               box-shadow   0.45s cubic-bezier(0.22,1,0.36,1),
               transform    0.45s cubic-bezier(0.22,1,0.36,1);
   cursor: default;
 }
 .ps-card::before {
-  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background:
     radial-gradient(100px circle at var(--gx, 50%) var(--gy, 50%), rgba(47,158,106,0.12) 0%, transparent 70%),
     linear-gradient(145deg, rgba(16,24,18,0.84) 0%, rgba(8,12,10,0.70) 100%);
@@ -1209,6 +1212,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   border-radius: var(--r5);
   padding: 18px 20px;
   position: relative; overflow: hidden;
+  isolation: isolate;
   box-shadow: none;
   transition: border-color 0.45s cubic-bezier(0.22,1,0.36,1),
               box-shadow   0.45s cubic-bezier(0.22,1,0.36,1),
@@ -1222,7 +1226,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   transition: opacity 0.45s cubic-bezier(0.22,1,0.36,1);
 }
 .fldt-card::after {
-  content: ''; position: absolute; inset: 0; z-index: 0;
+  content: ''; position: absolute; inset: 0; z-index: -1;
   background:
     radial-gradient(150px circle at var(--gx, 50%) var(--gy, 50%), rgba(47,158,106,0.10) 0%, transparent 70%),
     linear-gradient(145deg, rgba(16,24,18,0.84) 0%, rgba(8,12,10,0.70) 100%);
@@ -1269,12 +1273,13 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   border: 1px solid transparent;
   border-radius: var(--r4); padding: 14px 16px;
   position: relative; overflow: hidden;
+  isolation: isolate;
   transition: border-color 0.45s cubic-bezier(0.22,1,0.36,1),
               box-shadow   0.45s cubic-bezier(0.22,1,0.36,1),
               transform    0.45s cubic-bezier(0.22,1,0.36,1);
 }
 .kpi-mini::before {
-  content: ''; position: absolute; inset: 0; z-index: 0;
+  content: ''; position: absolute; inset: 0; z-index: -1;
   background:
     radial-gradient(120px circle at var(--gx, 50%) var(--gy, 50%), rgba(47,158,106,0.10) 0%, transparent 70%),
     var(--bg1);
@@ -1323,13 +1328,14 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--r5); padding: 18px 20px;
-  position: relative; overflow: hidden;   /* required for ::before positioning */
+  position: relative; overflow: hidden;
+  isolation: isolate;
   transition: border-color 0.5s cubic-bezier(0.22,1,0.36,1),
               box-shadow   0.5s cubic-bezier(0.22,1,0.36,1),
               transform    0.5s cubic-bezier(0.22,1,0.36,1);
 }
 .summ-kpi-card::before {
-  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background:
     radial-gradient(150px circle at var(--gx, 50%) var(--gy, 50%), rgba(47,158,106,0.10) 0%, transparent 70%),
     linear-gradient(145deg, rgba(16,24,18,0.84) 0%, rgba(8,12,10,0.70) 100%);
@@ -1880,7 +1886,8 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   flex-direction: column;
   gap: 6px;
   cursor: pointer;
-  position: relative; overflow: hidden;   /* required for ::before positioning */
+  position: relative; overflow: hidden;
+  isolation: isolate;
   transition: border-color 0.50s cubic-bezier(0.22,1,0.36,1),
               box-shadow   0.50s cubic-bezier(0.22,1,0.36,1),
               transform    0.45s cubic-bezier(0.22,1,0.36,1);
@@ -1888,7 +1895,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
               box-shadow 0.50s cubic-bezier(0.22,1,0.36,1);
 }
 .contrib-ch-card::before {
-  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background:
     radial-gradient(130px circle at var(--gx, 50%) var(--gy, 50%), rgba(47,158,106,0.10) 0%, transparent 70%),
     linear-gradient(145deg, rgba(16,24,18,0.82) 0%, rgba(8,12,10,0.68) 100%);
@@ -2958,6 +2965,8 @@ function calcKpi(){
         <div class="mc-val" style="color:${k.c}">${k.v}</div>
         <div class="mc-sub">${k.s}</div>
       </div>`).join('');
+    /* attach spotlight listener to newly created cards */
+    if(window.attachGhostGlow) stripEl.querySelectorAll('.metric-card').forEach(window.attachGhostGlow);
   }
 
   /* Micro-stats inside hero */
