@@ -3977,6 +3977,7 @@ function openDetailPanel(mode, dayLabel){
   });
   moreBtn.classList.add('is-active');
   moreBtn.textContent='− Less';
+  moreBtn.onclick=closeDetailPanel; /* always close when panel is open */
   setTimeout(()=>{ panel.classList.add('is-visible'); },60);
 }
 
@@ -3992,8 +3993,6 @@ function _renderDetailContent(mode, dayLabel, heading, body){
   if(mode==='note'){
     heading.textContent='📝 Catatan — '+( dayLabel||'');
     heading.style.color=_currentColor;
-    moreBtn.textContent='＋ More Detail';
-    moreBtn.onclick=()=>openDetailPanel('overview',null);
     const existing=dayLabel?getNote(_currentChKey,dayLabel):'';
     _activeNoteCtx={ch:_currentChKey,lbl:dayLabel};
     body.innerHTML=
@@ -4019,8 +4018,6 @@ function _renderDetailContent(mode, dayLabel, heading, body){
     const chanName=_currentChKey==='offline'?'Offline':'Online';
     heading.textContent=(focusIdx>=0?labels[focusIdx]+' — ':'')+chanName+' Transactions';
     heading.style.color=_currentColor;
-    moreBtn.textContent='📝 Tambah Catatan';
-    moreBtn.onclick=()=>openDetailPanel('note',dayLabel);
 
     const isDark=document.documentElement.getAttribute('data-theme')!=='light';
     const ttBg=isDark?'#1a221b':'#fffefb', ttTitle=isDark?'#eef2ee':'#16201a';
@@ -4072,6 +4069,7 @@ function closeDetailPanel(){
   panel.classList.remove('is-visible');
   moreBtn.classList.remove('is-active');
   moreBtn.textContent = '＋ More Detail';
+  moreBtn.onclick = toggleDetailPanel;
   // Destroy detail charts
   ['ch-detail-chart','ch-detail-ipt-chart'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
