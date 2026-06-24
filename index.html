@@ -381,10 +381,11 @@ body::after {
 /* ─────────────────────────────────────────────────────
    KPI NUMBER GLOW (premium analytics feel)
 ───────────────────────────────────────────────────── */
-.hero-num, .hero-kpi-val, .mc-val, .fc-big {
+.hero-num, .hero-kpi-val, .fc-big {
   animation: number-count 0.4s cubic-bezier(0.22,1,0.36,1) forwards,
              glow-number   0.8s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
 }
+/* mc-val gets glow only on first mount via .metric-card:hover */
 
 /* Focus states — keyboard navigation */
 :focus-visible {
@@ -1776,20 +1777,26 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   gap: 12px;
 }
 .contrib-ch-card {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-top: 2px solid var(--ch-color);
+  background: transparent;
+  border: 1px solid transparent;
+  border-top: 2px solid transparent;
   border-radius: 10px;
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   cursor: pointer;
-  transition: border-color 0.2s, transform 0.15s;
+  transition: background 0.50s cubic-bezier(0.22,1,0.36,1),
+              border-color 0.50s cubic-bezier(0.22,1,0.36,1),
+              transform 0.35s cubic-bezier(0.22,1,0.36,1),
+              box-shadow 0.50s cubic-bezier(0.22,1,0.36,1);
 }
 .contrib-ch-card:hover {
+  background: linear-gradient(145deg, rgba(16,24,18,0.82) 0%, rgba(8,12,10,0.68) 100%);
   border-color: var(--ch-color);
-  transform: translateY(-2px);
+  border-top-color: var(--ch-color);
+  transform: translateY(-3px);
+  box-shadow: var(--e2), 0 0 20px rgba(47,158,106,0.06);
 }
 .contrib-rank {
   font-size: 10px;
@@ -2841,13 +2848,25 @@ function calcKpi(){
     {l:'Daily Target',  v:fmtRp(dailyTarget),  s:'per hari',        c:'var(--amber)'},
     {l:'Forecast EOM',  v:fmtRp(forecastEom),  s:forecastEom>=target?'✓ On track':'⚠ Risk', c:forecastEom>=target?'var(--green)':'var(--red)'},
   ];
-  document.getElementById('kpi-strip-grid').innerHTML=stripItems.map((k,i)=>`
-    <div class="metric-card reveal reveal-delay-${(i%4)+1}" style="--mc:${k.c}">
-      <div class="mc-label">${k.l}</div>
-      <div class="mc-val" style="color:${k.c}">${k.v}</div>
-      <div class="mc-sub">${k.s}</div>
-    </div>`).join('');
-  setTimeout(()=>window.attachReveal&&window.attachReveal(), 50);
+  const stripEl = document.getElementById('kpi-strip-grid');
+  const existingCards = stripEl.querySelectorAll('.metric-card');
+  if(existingCards.length === stripItems.length){
+    /* update in-place — no DOM teardown, no blink */
+    stripItems.forEach((k,i)=>{
+      const card = existingCards[i];
+      card.style.setProperty('--mc', k.c);
+      card.querySelector('.mc-val').textContent = k.v;
+      card.querySelector('.mc-val').style.color = k.c;
+      card.querySelector('.mc-sub').textContent = k.s;
+    });
+  } else {
+    stripEl.innerHTML = stripItems.map((k,i)=>`
+      <div class="metric-card" style="--mc:${k.c}">
+        <div class="mc-label">${k.l}</div>
+        <div class="mc-val" style="color:${k.c}">${k.v}</div>
+        <div class="mc-sub">${k.s}</div>
+      </div>`).join('');
+  }
 
   /* Micro-stats inside hero */
   const trxEl=document.getElementById('h-total-trx');
