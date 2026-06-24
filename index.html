@@ -966,6 +966,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   box-shadow: var(--e3), 0 0 50px rgba(46,107,69,0.12) !important;
 }
 
+/* .reveal.visible has specificity (0,2,0) with transform:none !important which blocks ghost lift.
+   These overrides match that specificity and appear later, so they win. */
+.reveal.ghost-on { transform: translateY(-4px) scale(1.006) !important; }
+.reveal.metric-card.ghost-on { transform: translateY(-6px) scale(1.013) !important; }
+.reveal.hero-banner.ghost-on { transform: translateY(-5px) scale(1.004) !important; }
+
 .ghost-off {
   transform: none !important;
   border-color: transparent !important;
@@ -973,6 +979,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .ghost-off::before,
 .ghost-off::after { opacity: 0 !important; }
+.reveal.ghost-off { transform: none !important; }
 
 /* Period page stat cards — ghost reveal */
 .ps-card {
