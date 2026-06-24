@@ -616,8 +616,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .nav-btn.active::after { transform: scaleX(1); }
 
-[data-theme="light"] .nav-btn:hover { background: rgba(0,0,0,0.035); }
-[data-theme="light"] .nav-btn.active { background: rgba(47,158,106,0.06); }
+[data-theme="light"] .nav-btn { color: var(--t2); }
+[data-theme="light"] .nav-btn:hover { color: var(--t1); background: rgba(0,0,0,0.035); }
+[data-theme="light"] .nav-btn.active { color: var(--t1); background: rgba(47,158,106,0.06); }
 .nav-btn[data-page="race"]:hover { background: var(--amber-10); color: var(--amber); }
 .nav-btn[data-page="race"].active {
   color: var(--amber);
