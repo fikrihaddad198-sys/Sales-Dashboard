@@ -1460,15 +1460,39 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
 /* Hero race */
 .race-hero {
-  background:linear-gradient(135deg,#231a12 0%,#1a140d 55%,#16110b 100%);
-  border:1px solid rgba(201,168,76,0.22);
+  background:transparent;
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  border:1px solid transparent;
   border-radius:var(--r7); padding:26px 30px;
-  box-shadow:var(--e4), 0 0 60px rgba(201,168,76,0.06);
+  position:relative; isolation:isolate;
+  box-shadow:none;
+  transition: border-color 0.50s cubic-bezier(0.22,1,0.36,1),
+              box-shadow   0.50s cubic-bezier(0.22,1,0.36,1),
+              transform    0.50s cubic-bezier(0.22,1,0.36,1);
 }
-[data-theme="light"] .race-hero {
-  background:linear-gradient(135deg,#e9f2ec 0%,#f1f6ee 100%);
-  border:1px solid rgba(201,168,76,0.22);
-  box-shadow:var(--e3);
+.race-hero::after {
+  content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(300px circle at var(--gx,50%) var(--gy,50%), rgba(201,168,76,0.10) 0%, transparent 70%),
+    linear-gradient(135deg, rgba(35,26,18,0.84) 0%, rgba(26,20,13,0.72) 55%, rgba(22,17,11,0.70) 100%);
+  border-radius:inherit; opacity:0;
+  transition:opacity 0.50s cubic-bezier(0.22,1,0.36,1);
+}
+.race-hero:hover {
+  border-color:rgba(201,168,76,0.22);
+  transform:translateY(-5px) scale(1.004);
+  box-shadow:var(--e3), 0 0 60px rgba(201,168,76,0.10);
+}
+.race-hero:hover::after { opacity:1; }
+[data-theme="light"] .race-hero::after {
+  background:
+    radial-gradient(300px circle at var(--gx,50%) var(--gy,50%), rgba(201,168,76,0.12) 0%, transparent 70%),
+    linear-gradient(135deg, rgba(255,255,255,0.90) 0%, rgba(237,246,239,0.88) 100%);
+}
+[data-theme="light"] .race-hero:hover {
+  border-color:rgba(201,168,76,0.22);
+  box-shadow:var(--e2);
 }
 .race-hero-inner { display:grid; grid-template-columns:1fr auto; gap:24px; align-items:start; margin-bottom:20px; }
 .race-hero-label { font-size:9px; font-weight:700; color:var(--cyan); letter-spacing:3px; text-transform:uppercase; margin-bottom:6px; opacity:.85; }
@@ -1510,8 +1534,35 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
 /* Channel bar race */
 .race-chart-section {
-  background:var(--bg1); border:1px solid var(--border);
+  background:transparent;
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  border:1px solid transparent;
   border-radius:var(--r5); padding:18px 20px;
+  position:relative; overflow:hidden; isolation:isolate;
+  box-shadow:none;
+  transition: border-color 0.50s cubic-bezier(0.22,1,0.36,1),
+              box-shadow   0.50s cubic-bezier(0.22,1,0.36,1),
+              transform    0.50s cubic-bezier(0.22,1,0.36,1);
+}
+.race-chart-section::before {
+  content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(180px circle at var(--gx,50%) var(--gy,50%), rgba(201,168,76,0.10) 0%, transparent 70%),
+    linear-gradient(145deg, rgba(24,21,16,0.84) 0%, rgba(14,12,10,0.70) 100%);
+  border-radius:inherit; opacity:0;
+  transition:opacity 0.50s cubic-bezier(0.22,1,0.36,1);
+}
+.race-chart-section:hover {
+  border-color:rgba(201,168,76,0.20);
+  transform:translateY(-4px) scale(1.006);
+  box-shadow:var(--e3), 0 0 52px rgba(201,168,76,0.09);
+}
+.race-chart-section:hover::before { opacity:1; }
+[data-theme="light"] .race-chart-section::before {
+  background:
+    radial-gradient(180px circle at var(--gx,50%) var(--gy,50%), rgba(201,168,76,0.12) 0%, transparent 70%),
+    linear-gradient(145deg, rgba(255,255,255,0.90) 0%, rgba(240,248,244,0.85) 100%);
 }
 .race-chart-title { font-size:11px; font-weight:700; color:var(--t2); margin-bottom:16px; }
 .race-bars { display:flex; flex-direction:column; gap:14px; }
@@ -1537,12 +1588,35 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 /* Race detail card */
 .race-insight-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:14px; }
 .race-insight-item {
-  background:var(--bg2); border:1px solid var(--border);
-  border-radius:var(--r4); padding:11px 13px; position:relative;
+  background:transparent;
+  backdrop-filter: blur(20px) saturate(170%);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  border:1px solid transparent;
+  border-radius:var(--r4); padding:11px 13px;
+  position:relative; overflow:hidden; isolation:isolate;
+  box-shadow:none;
+  transition: border-color 0.45s cubic-bezier(0.22,1,0.36,1),
+              box-shadow   0.45s cubic-bezier(0.22,1,0.36,1),
+              transform    0.45s cubic-bezier(0.22,1,0.36,1);
 }
 .race-insight-item::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:2px;
-  background:var(--ri-color,var(--cyan)); border-radius:2px 2px 0 0;
+  content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(120px circle at var(--gx,50%) var(--gy,50%), rgba(201,168,76,0.10) 0%, transparent 70%),
+    linear-gradient(145deg, rgba(24,21,16,0.84) 0%, rgba(14,12,10,0.70) 100%);
+  border-radius:inherit; opacity:0;
+  transition:opacity 0.45s cubic-bezier(0.22,1,0.36,1);
+}
+.race-insight-item:hover {
+  border-color:rgba(201,168,76,0.18);
+  transform:translateY(-3px);
+  box-shadow:var(--e2);
+}
+.race-insight-item:hover::before { opacity:1; }
+[data-theme="light"] .race-insight-item::before {
+  background:
+    radial-gradient(120px circle at var(--gx,50%) var(--gy,50%), rgba(201,168,76,0.12) 0%, transparent 70%),
+    linear-gradient(145deg, rgba(255,255,255,0.90) 0%, rgba(240,248,244,0.85) 100%);
 }
 .ri-label { font-size:9px; font-weight:700; color:var(--t3); letter-spacing:1.1px; text-transform:uppercase; margin-bottom:4px; }
 .ri-val   { font-size:15px; font-weight:800; color:var(--t1); margin-bottom:2px; letter-spacing:-.3px; }
@@ -4942,7 +5016,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(
    fill + lift. This is needed because iPadOS Safari keeps :hover stuck on
    nested cards, leaving the glow behind when the cursor exits a small card. */
 (function(){
-  const GHOST_SELECTOR = '.card, .metric-card, .kpi-mini, .fldt-card, .contrib-ch-card, .summ-kpi-card, .ps-card, .hero-banner';
+  const GHOST_SELECTOR = '.card, .metric-card, .kpi-mini, .fldt-card, .contrib-ch-card, .summ-kpi-card, .ps-card, .hero-banner, .race-hero, .race-chart-section, .race-insight-item';
   let active = [];
   function onMove(e){
     const next = [];
