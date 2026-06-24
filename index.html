@@ -586,10 +586,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   ::view-transition-old(root) { z-index: 1; }
   ::view-transition-new(root) { z-index: 9999; }
 }
+/* Iris glow ring that travels with the reveal edge (signature accent). */
+.theme-ripple {
+  position: fixed; z-index: 9998; pointer-events: none;
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  border: 2px solid var(--ring, rgba(201,168,76,0.6));
+  box-shadow: 0 0 40px 8px var(--glow, rgba(201,168,76,0.4)),
+              inset 0 0 28px 3px var(--glow, rgba(201,168,76,0.4));
+}
 @media (prefers-reduced-motion: reduce) {
   #theme-btn svg { transition: none; }
   ::view-transition-old(root),
   ::view-transition-new(root) { animation: none !important; }
+  .theme-ripple { display: none; }
 }
 
 /* ─────────────────────────────────────────────────────
@@ -3054,13 +3064,38 @@ function toggleTheme(){
   const x=r.left+r.width/2, y=r.top+r.height/2;
   const endR=Math.hypot(Math.max(x,innerWidth-x), Math.max(y,innerHeight-y));
 
+  const DUR=900;
+  const EASE='cubic-bezier(0.16,1,0.3,1)'; // expo-out: fast start, long premium glide to rest
+  // Target theme color drives the glow: revealing light → forest green, dark → gold.
+  const toLight=isDark;
+  const ring=toLight?'rgba(46,107,69,0.60)':'rgba(201,168,76,0.60)';
+  const glow=toLight?'rgba(46,107,69,0.38)':'rgba(201,168,76,0.40)';
+
   const vt=document.startViewTransition(swap);
   vt.ready.then(()=>{
     document.documentElement.animate(
       { clipPath:[`circle(0px at ${x}px ${y}px)`, `circle(${endR}px at ${x}px ${y}px)`] },
-      { duration:520, easing:'cubic-bezier(0.4,0,0.2,1)', pseudoElement:'::view-transition-new(root)' }
+      { duration:DUR, easing:EASE, pseudoElement:'::view-transition-new(root)' }
     );
+    spawnIrisRing(x,y,endR*2,ring,glow,DUR,EASE);
   });
+}
+
+/* Expanding glow ring that rides the reveal edge. */
+function spawnIrisRing(x,y,diameter,ring,glow,dur,ease){
+  const el=document.createElement('div');
+  el.className='theme-ripple';
+  el.style.left=x+'px'; el.style.top=y+'px';
+  el.style.setProperty('--ring',ring);
+  el.style.setProperty('--glow',glow);
+  document.body.appendChild(el);
+  const anim=el.animate(
+    [ {width:'0px',  height:'0px',  opacity:0},
+      {opacity:0.95, offset:0.12},
+      {width:diameter+'px', height:diameter+'px', opacity:0} ],
+    {duration:dur, easing:ease, fill:'forwards'}
+  );
+  anim.onfinish=anim.oncancel=()=>el.remove();
 }
 
 /* ═══════════════════════════════════════════════════
