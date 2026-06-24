@@ -4277,7 +4277,7 @@ function _buildCharts(key, color, labels, gmvs, contribs){
       borderColor:color,borderWidth:1.5,borderRadius:4,borderSkipped:false,_baseColor:color,_realData:gmvs.slice()}]},
     plugins:[noteDotPlugin],
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      onClick:(evt,elements)=>{ if(elements.length>0) openDetailPanel('note',labels[elements[0].index]); },
+      onClick:(evt,elements)=>{ if(elements.length>0){ const lbl=labels[elements[0].index]; requestAnimationFrame(()=>openDetailPanel('note',lbl)); } },
       animation:{duration:0}, /* no chart animation — popup animation is the focus */
       plugins:{legend:{display:false},tooltip:{...sharedTT,callbacks:{
         title:i=>i[0].label+(getNote(key,i[0].label)?' 📝':''),
