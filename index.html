@@ -4330,7 +4330,18 @@ function openChannelPopup(key, name, color, cardEl){
     {l:'Avg kontribusi',v:avgCtrib+'%'},
     {l:'Hari terbaik',v:maxDay.date},
   ].map(s=>'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;"><div style="font-size:10px;color:var(--t3);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px;">'+s.l+'</div><div style="font-size:16px;font-weight:700;color:'+color+'">'+s.v+'</div></div>').join('');
-  closeNotePanel();
+  /* Reset detail panel state cleanly — NO setTimeout, NO animation side effects */
+  _detailOpen = false;
+  const _dp = document.getElementById('ch-panel-detail');
+  if(_dp){ _dp.classList.remove('is-visible'); _dp.style.display='none'; }
+  const _mb = document.getElementById('ch-more-btn');
+  if(_mb){ _mb.classList.remove('is-active'); _mb.textContent='＋ More Detail'; _mb.onclick=toggleDetailPanel; }
+  const _dBody = document.getElementById('ch-detail-body');
+  if(_dBody) _dBody.innerHTML='';
+  ['ch-detail-chart','ch-detail-ipt-chart'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    const c=Chart.getChart(el); if(c) c.destroy();
+  });
 
   /* Show popup invisible so canvases have dimensions for Chart.js */
   const popup = document.getElementById('ch-popup');
