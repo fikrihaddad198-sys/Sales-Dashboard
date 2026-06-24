@@ -3848,7 +3848,7 @@ function setIfEmpty(id, val){
   opacity:0; transform:translateX(20px);
   transition: opacity 0.32s ease 0.06s, transform 0.4s cubic-bezier(0.16,1,0.3,1);
 }
-#ch-popup.is-dual #ch-panel-detail { display:block; }
+/* panel-detail display handled by JS */
 #ch-panel-detail.is-visible { opacity:1; transform:translateX(0); }
 /* Close & More Detail buttons */
 .ch-popup-close {
@@ -3952,13 +3952,19 @@ function openDetailPanel(mode, dayLabel){
 
   /* If already open — cross-fade content without closing panel */
   if(_detailOpen){
-    heading.style.transition='opacity 0.15s ease';
-    body.style.transition='opacity 0.15s ease';
-    heading.style.opacity='0'; body.style.opacity='0';
+    const FADE=140;
+    body.style.transition='opacity '+FADE+'ms ease';
+    heading.style.transition='opacity '+FADE+'ms ease';
+    body.style.opacity='0'; heading.style.opacity='0';
     setTimeout(()=>{
       _renderDetailContent(mode, dayLabel, heading, body);
-      heading.style.opacity='1'; body.style.opacity='1';
-    }, 165);
+      /* Double-rAF: ensures browser paints new content at opacity:0 before fade-in */
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        body.style.transition='opacity 0.18s ease';
+        heading.style.transition='opacity 0.18s ease';
+        body.style.opacity='1'; heading.style.opacity='1';
+      }));
+    }, FADE+10);
     return;
   }
 
@@ -3969,6 +3975,11 @@ function openDetailPanel(mode, dayLabel){
   const vw=window.innerWidth;
   const dualW=Math.min(Math.round(vw*0.96),1040);
   const newLeft=Math.round(Math.max(8,(vw-dualW)/2));
+
+  /* Set display:block BEFORE expansion so reflow is separate from transition */
+  panel.style.display='block';
+  panel.offsetHeight; /* commit display change */
+
   popup.classList.add('is-expanding');
   requestAnimationFrame(()=>{
     popup.classList.add('is-dual');
@@ -3977,8 +3988,8 @@ function openDetailPanel(mode, dayLabel){
   });
   moreBtn.classList.add('is-active');
   moreBtn.textContent='− Less';
-  moreBtn.onclick=closeDetailPanel; /* always close when panel is open */
-  setTimeout(()=>{ panel.classList.add('is-visible'); },60);
+  moreBtn.onclick=closeDetailPanel;
+  setTimeout(()=>{ panel.classList.add('is-visible'); },50);
 }
 
 function _renderDetailContent(mode, dayLabel, heading, body){
@@ -4082,8 +4093,11 @@ function closeDetailPanel(){
     popup.classList.add('is-collapsing');
     popup.classList.remove('is-dual');
     popup.style.left = singleLeft + 'px';
-    setTimeout(()=>{ popup.classList.remove('is-collapsing'); }, 460);
-    document.getElementById('ch-detail-body').innerHTML='';
+    setTimeout(()=>{
+      popup.classList.remove('is-collapsing');
+      panel.style.display='none'; /* explicitly hide after animation */
+      document.getElementById('ch-detail-body').innerHTML='';
+    }, 460);
   }, 340);
 }
 
