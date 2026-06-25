@@ -2415,38 +2415,57 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   will-change: clip-path;
 }
 
-/* EXIT: iris wipes entire screen (including content) shut together.
-   Slightly slower (1.05s) + gentler easing so the hand-off into the
-   dashboard reveal feels seamless — the "mix" should be imperceptible. */
+/* EXIT: splash background fades out (iris stays open) so the logo is free to
+   GROW to the watermark size without being clipped. The dashboard is revealed
+   behind as the background dissolves. */
 #splash-screen.splash-exit {
-  animation: splash-iris-close 1.05s cubic-bezier(0.83,0,0.17,1) forwards;
+  clip-path: circle(150% at 50% 42%);
+  animation: splash-bg-fade 0.95s ease forwards;
 }
-@keyframes splash-iris-close {
-  0%   { clip-path: circle(150% at 50% 42%); }
-  100% { clip-path: circle(0%   at 50% 42%); }
+@keyframes splash-bg-fade {
+  0%   { background: #050404; }
+  100% { background: rgba(5,4,4,0); }
 }
-
-/* EXIT: logo shrinks INTO the background, becoming the brand-mark watermark.
-   Scale collapses to near-zero so it appears to fly backwards into the bg. */
-#splash-screen.splash-exit #splash-inner {
-  animation: splash-into-bg 0.80s cubic-bezier(0.55,0,0.45,1) forwards;
+[data-theme="light"] #splash-screen.splash-exit {
+  animation-name: splash-bg-fade-light;
 }
-@keyframes splash-into-bg {
-  0%   { opacity: 1; transform: scale(1);    filter: blur(0px); }
-  60%  { opacity: 0.6; filter: blur(0px); }
-  100% { opacity: 0; transform: scale(0.08); filter: blur(2px); }
+@keyframes splash-bg-fade-light {
+  0%   { background: #f4f1e8; }
+  100% { background: rgba(244,241,232,0); }
 }
 
-/* HERO-IN: brand-mark starts large (matching splash logo's apparent size)
-   and settles to its resting size — completing the illusion that the splash
-   logo "flew back" and became the background watermark. */
+/* EXIT: only the LOGO MARK grows (scale ~7x) toward the watermark size and
+   fades; the brand text + sub + line fade out quickly so they don't balloon. */
+#splash-screen.splash-exit #splash-logo-mark {
+  animation: splash-grow-into-bg 0.95s cubic-bezier(0.33,0,0.30,1) forwards;
+  transform-origin: center center;
+}
+@keyframes splash-grow-into-bg {
+  0%   { opacity: 1;   transform: scale(1);   filter: blur(0px); }
+  55%  { opacity: 0.5; transform: scale(4.2); filter: blur(0px); }
+  100% { opacity: 0;   transform: scale(7.2); filter: blur(3px); }
+}
+#splash-screen.splash-exit #splash-brand,
+#splash-screen.splash-exit #splash-sub,
+#splash-screen.splash-exit #splash-line {
+  animation: splash-text-out 0.32s ease forwards;
+}
+@keyframes splash-text-out {
+  0%   { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(6px); }
+}
+
+/* HERO-IN: brand-mark fades in AT its resting size (the size the splash logo
+   grows to), with a bright glow that settles — completing the illusion that
+   the enlarging splash logo became the background watermark. */
 #brand-mark.hero-in {
   animation: brand-mark-hero-in 1.10s cubic-bezier(0.22,1,0.36,1) forwards !important;
 }
 @keyframes brand-mark-hero-in {
-  0%   { opacity: 0.30; transform: translate(-50%,-50%) scale(4.5);
-         filter: drop-shadow(0 0 24px rgba(201,168,76,0.80)); }
-  55%  { opacity: 0.14; filter: drop-shadow(0 0 12px rgba(201,168,76,0.40)); }
+  0%   { opacity: 0;    transform: translate(-50%,-50%) scale(1.18);
+         filter: drop-shadow(0 0 26px rgba(201,168,76,0.85)); }
+  45%  { opacity: 0.16; transform: translate(-50%,-50%) scale(1.05);
+         filter: drop-shadow(0 0 14px rgba(201,168,76,0.45)); }
   100% { opacity: 0.03; transform: translate(-50%,-50%) scale(1.00);
          filter: drop-shadow(0 0 3px rgba(201,168,76,0.20)); }
 }
@@ -2454,9 +2473,10 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   animation-name: brand-mark-hero-in-green;
 }
 @keyframes brand-mark-hero-in-green {
-  0%   { opacity: 0.28; transform: translate(-50%,-50%) scale(4.5);
-         filter: drop-shadow(0 0 24px rgba(46,107,69,0.75)); }
-  55%  { opacity: 0.12; filter: drop-shadow(0 0 12px rgba(46,107,69,0.38)); }
+  0%   { opacity: 0;    transform: translate(-50%,-50%) scale(1.18);
+         filter: drop-shadow(0 0 26px rgba(46,107,69,0.80)); }
+  45%  { opacity: 0.14; transform: translate(-50%,-50%) scale(1.05);
+         filter: drop-shadow(0 0 14px rgba(46,107,69,0.42)); }
   100% { opacity: 0.04; transform: translate(-50%,-50%) scale(1.00);
          filter: drop-shadow(0 0 3px rgba(46,107,69,0.20)); }
 }
