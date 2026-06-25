@@ -2750,6 +2750,23 @@ body.dashboard-ready .kpi-card:nth-child(n+6) { animation: dr-card-in 0.5s cubic
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* Promote animating elements to their own GPU layer DURING the reveal only.
+   Without this, scaling cards that contain Chart.js <canvas> forces the
+   canvas to re-rasterize every frame → jitter (very visible on re-lock when
+   charts are already fully painted). will-change makes the card a single
+   texture so the transform is pure GPU. Cleared via JS after animation. */
+body.dr-animating .header,
+body.dr-animating .nav,
+body.dr-animating .kpi-filter-bar,
+body.dr-animating .kpi-scroll,
+body.dr-animating .page,
+body.dr-animating .card,
+body.dr-animating .hero-banner,
+body.dr-animating .kpi-card {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
 /* Reduced motion: skip entry animations */
 @media (prefers-reduced-motion: reduce) {
   body.dashboard-ready .header,
@@ -6649,6 +6666,16 @@ function standbyToPin(){
   }));
 }
 
+/* Reveal dashboard with entry animation. Adds .dr-animating so cards get
+   promoted to GPU layers during the reveal (prevents canvas re-raster jitter,
+   especially on re-lock when charts are already painted), then clears it once
+   the longest staggered animation has finished (~1.25s). */
+function revealDashboard(){
+  document.body.classList.add('dr-animating');
+  document.body.classList.add('dashboard-ready');
+  setTimeout(() => { document.body.classList.remove('dr-animating'); }, 1300);
+}
+
 /* ── Correct PIN → splash → dashboard ── */
 function pinUnlock(){
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -6707,7 +6734,7 @@ function pinUnlock(){
     setTimeout(() => { splash.style.display = 'none'; }, 900);
     // Reveal dashboard AFTER splash is fully gone, then re-fire number animations
     setTimeout(() => {
-      document.body.classList.add('dashboard-ready');
+      revealDashboard();
     }, 920);
   }, 2050);
 }
