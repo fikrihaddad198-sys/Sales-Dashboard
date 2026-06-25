@@ -3028,15 +3028,33 @@ body.dashboard-locking .card {
   animation-name: brand-mark-breathe-green;
 }
 @keyframes brand-mark-breathe {
-  0%,100% { opacity: .03; transform: translate(-50%,-50%) scale(1.00); }
-  50%      { opacity: .18; transform: translate(-50%,-50%) scale(1.05); }
+  0%,100% {
+    opacity: .06;
+    transform: translate(-50%,-50%) scale(1.00);
+    filter: drop-shadow(0 0 2px rgba(201,168,76,0.0));
+  }
+  50% {
+    opacity: .10;
+    transform: translate(-50%,-50%) scale(1.03);
+    filter: drop-shadow(0 0 10px rgba(201,168,76,0.70))
+            drop-shadow(0 0 22px rgba(201,168,76,0.30));
+  }
 }
 @keyframes brand-mark-breathe-green {
-  0%,100% { opacity: .04; transform: translate(-50%,-50%) scale(1.00); }
-  50%      { opacity: .18; transform: translate(-50%,-50%) scale(1.05); }
+  0%,100% {
+    opacity: .07;
+    transform: translate(-50%,-50%) scale(1.00);
+    filter: drop-shadow(0 0 2px rgba(46,107,69,0.0));
+  }
+  50% {
+    opacity: .11;
+    transform: translate(-50%,-50%) scale(1.03);
+    filter: drop-shadow(0 0 10px rgba(46,107,69,0.65))
+            drop-shadow(0 0 22px rgba(46,107,69,0.28));
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  #brand-mark { animation: none; opacity: .07; }
+  #brand-mark { animation: none; opacity: .07; filter: none; }
 }
 </style>
 </head>
