@@ -2341,44 +2341,34 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 }
 
 /* ── SPLASH SCREEN ─────────────────────────────────────── */
+/* ── Splash screen: clip-path applied HERE so ALL children are clipped together.
+   Content (logo, text) can never "escape" outside the iris. ── */
 #splash-screen {
   position: fixed; inset: 0; z-index: 10000;
   display: flex; align-items: center; justify-content: center;
-  /* transparent — #splash-curtain handles background */
-  background: transparent;
-  pointer-events: none;
-}
-
-/* ── Curtain: the solid background behind content ── */
-/* clip-path circle defines what's VISIBLE of the curtain.
-   Large circle = curtain covers screen. Circle → 0 = curtain vanishes → dashboard revealed. */
-#splash-curtain {
-  position: absolute; inset: 0;
   background: var(--bg, #0f0d0b);
-  /* clip origin 50% 42% = roughly where the logo sits vertically */
+  pointer-events: none;
+  /* Base clip: full screen covered */
   clip-path: circle(150% at 50% 42%);
   will-change: clip-path;
-  transform: translateZ(0);
-  z-index: 0;
 }
 
-/* EXIT phase 1: content blasts forward — scale + blur fly-past feel */
-#splash-screen.splash-exit #splash-inner {
-  animation: splash-blast-fwd 0.30s cubic-bezier(0.55,0,1,0.45) forwards;
-}
-@keyframes splash-blast-fwd {
-  0%   { opacity: 1; transform: scale(1)    translateY(0);    filter: blur(0px); }
-  100% { opacity: 0; transform: scale(1.40) translateY(-10px); filter: blur(14px); }
-}
-
-/* EXIT phase 2: iris wipe — curtain shrinks from logo center outward */
-/* Starts 60ms after content begins fading, so dive feels simultaneous */
-#splash-screen.splash-exit #splash-curtain {
-  animation: splash-iris-close 0.78s cubic-bezier(0.87,0,0.13,1) 0.06s forwards;
+/* EXIT: iris wipes entire screen (including content) shut together */
+#splash-screen.splash-exit {
+  animation: splash-iris-close 0.82s cubic-bezier(0.87,0,0.13,1) forwards;
 }
 @keyframes splash-iris-close {
   0%   { clip-path: circle(150% at 50% 42%); }
   100% { clip-path: circle(0%   at 50% 42%); }
+}
+
+/* EXIT: content blasts forward while iris closes — pure aesthetic layer */
+#splash-screen.splash-exit #splash-inner {
+  animation: splash-blast-fwd 0.38s cubic-bezier(0.55,0,1,0.45) forwards;
+}
+@keyframes splash-blast-fwd {
+  0%   { opacity: 1; transform: scale(1)    translateY(0);   filter: blur(0px); }
+  100% { opacity: 0; transform: scale(1.30) translateY(-8px); filter: blur(10px); }
 }
 
 #splash-inner {
@@ -2521,7 +2511,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
     opacity: 1; transform: none; width: 200px;
   }
   #splash-flicker::before, #splash-screen::before { animation: none !important; }
-  #splash-curtain { clip-path: circle(0% at 50% 42%) !important; }
+  #splash-screen { clip-path: circle(0% at 50% 42%) !important; animation: none !important; }
   #splash-screen.splash-exit { animation: none !important; opacity: 0; }
 }
 /* ── END SPLASH ─────────────────────────────────────────── */
@@ -2932,7 +2922,6 @@ body.dashboard-locking .card {
 
 <!-- ═══ SPLASH SCREEN ═══ -->
 <div id="splash-screen" style="display:none;" aria-hidden="true">
-  <div id="splash-curtain"></div>
   <div id="splash-inner" style="position:relative;z-index:1;">
     <div id="splash-logo-mark">
       <span class="splash-icon header-logo-icon" style="width:42px;height:54px;display:block;"></span>
@@ -6563,10 +6552,20 @@ function pinUnlock(){
   splash.classList.remove('splash-exit');
 
   // Restart child @keyframes: none → reflow → restore
-  const ids = ['splash-curtain','splash-logo-mark','splash-sub','splash-line'];
-  ids.forEach(id => { const el=document.getElementById(id); if(el) el.style.animation='none'; });
-  void splash.offsetHeight;
-  ids.forEach(id => { const el=document.getElementById(id); if(el) el.style.animation=''; });
+  // Reset splash-screen iris + child animations so they replay fresh
+  splash.style.animation = 'none';
+  splash.style.clipPath  = 'circle(150% at 50% 42%)';
+  ['splash-logo-mark','splash-sub','splash-line'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.animation = 'none';
+  });
+  void splash.offsetHeight; // single reflow commits all resets above
+  splash.style.animation = '';
+  splash.style.clipPath  = '';
+  ['splash-logo-mark','splash-sub','splash-line'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.animation = '';
+  });
 
   // Fresh stagger letters
   const brand = document.getElementById('splash-brand');
