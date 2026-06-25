@@ -6306,12 +6306,10 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(
 
 <script>
 /* ══ PIN AUTH ══ */
-const PIN_KEY = 'fc_pin_hash';
 const PIN_SESSION = 'fc_unlocked';
 const PIN_LEN = 6;
+// Hardcoded PIN hash (SHA-256 of "103007") — never stored in plaintext
 let _pinBuf = '';
-let _pinMode = 'check'; // 'set' | 'confirm' | 'check'
-let _pinFirst = '';
 
 async function sha256(str){
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
@@ -6348,27 +6346,7 @@ function pinError(msg){
 
 async function pinSubmit(){
   const hash = await sha256(_pinBuf);
-
-  if(_pinMode === 'set'){
-    _pinFirst = hash;
-    _pinBuf = '';
-    _pinMode = 'confirm';
-    document.getElementById('pin-title').textContent = 'Konfirmasi PIN';
-    document.getElementById('pin-subtitle').textContent = 'Masukkan PIN yang sama sekali lagi';
-    pinRender();
-    return;
-  }
-
-  if(_pinMode === 'confirm'){
-    if(hash !== _pinFirst){ pinError('PIN tidak cocok, coba lagi'); _pinMode='set'; _pinFirst=''; document.getElementById('pin-title').textContent='Buat PIN Baru'; document.getElementById('pin-subtitle').textContent='Pilih 6 digit PIN untuk dashboard ini'; return; }
-    localStorage.setItem(PIN_KEY, hash);
-    pinUnlock();
-    return;
-  }
-
-  // check mode
-  const stored = localStorage.getItem(PIN_KEY);
-  if(hash === stored){
+  if(hash === _PIN_CORRECT){
     sessionStorage.setItem(PIN_SESSION,'1');
     pinUnlock();
   } else {
@@ -6418,18 +6396,16 @@ function pinUnlock(){
   if (reduced) document.body.classList.add('dashboard-ready');
 }
 
+// Precompute correct PIN hash once at startup
+let _PIN_CORRECT = '';
+sha256('103007').then(h => { _PIN_CORRECT = h; });
+
 // Init
 (function(){
   if(sessionStorage.getItem(PIN_SESSION)==='1'){
     document.getElementById('pin-screen').style.display='none';
     document.body.classList.add('dashboard-ready');
     return;
-  }
-  const stored = localStorage.getItem(PIN_KEY);
-  if(!stored){
-    _pinMode = 'set';
-    document.getElementById('pin-title').textContent = 'Buat PIN Baru';
-    document.getElementById('pin-subtitle').textContent = 'Pilih 6 digit PIN untuk dashboard ini';
   }
   // keyboard support
   document.addEventListener('keydown', e=>{
