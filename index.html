@@ -493,7 +493,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   width: 30px; height: 30px; border-radius: 9px;
   background: linear-gradient(145deg, #e0c576 0%, #b08d2f 100%);
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 900; color: #000;
+  font-size: 14px; font-weight: 900; color: #1a1200;
   flex-shrink: 0;
   box-shadow:
     0 0 0 1px rgba(255,255,255,0.20) inset,
@@ -503,11 +503,28 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     0 2px 8px rgba(0,0,0,0.45);
   letter-spacing: -0.5px;
   animation: logo-pulse 4s ease-in-out infinite;
+  transition: background 0.6s ease, box-shadow 0.6s ease;
+}
+[data-theme="light"] .header-logo-mark {
+  background: linear-gradient(145deg, #3d8f5f 0%, #2e6b45 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.30) inset,
+    0 0 0 1px rgba(46,107,69,0.55),
+    0 0 0 3px rgba(46,107,69,0.15),
+    0 0 20px rgba(46,107,69,0.35),
+    0 2px 8px rgba(0,0,0,0.18);
+  color: #fff;
 }
 .header-logo-text {
   font-size: 13px; font-weight: 800; letter-spacing: 2.5px;
   text-transform: uppercase;
   background: linear-gradient(130deg, #e0c98a 0%, #c9a84c 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: background 0.6s ease;
+}
+[data-theme="light"] .header-logo-text {
+  background: linear-gradient(130deg, #3d8f5f 0%, #2e6b45 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
 }
