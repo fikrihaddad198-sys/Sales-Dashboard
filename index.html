@@ -2441,9 +2441,12 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   transform-origin: center center;
 }
 @keyframes splash-grow-into-bg {
-  0%   { opacity: 1;   transform: scale(1);   filter: blur(0px); }
-  55%  { opacity: 0.5; transform: scale(4.2); filter: blur(0px); }
-  100% { opacity: 0;   transform: scale(7.2); filter: blur(3px); }
+  /* translateY shifts the growing logo DOWN so its center lands on the
+     brand-mark watermark center (which sits at 50% + 51px, below the
+     splash logo's resting position). Keeps the two visually aligned. */
+  0%   { opacity: 1;   transform: translateY(0)    scale(1);   filter: blur(0px); }
+  55%  { opacity: 0.55; transform: translateY(55px) scale(4.6); filter: blur(0px); }
+  100% { opacity: 0;   transform: translateY(100px) scale(8.0); filter: blur(3px); }
 }
 #splash-screen.splash-exit #splash-brand,
 #splash-screen.splash-exit #splash-sub,
@@ -2458,14 +2461,17 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 /* HERO-IN: brand-mark fades in AT its resting size (the size the splash logo
    grows to), with a bright glow that settles — completing the illusion that
    the enlarging splash logo became the background watermark. */
+/* Brand-mark receives the growing logo at an inflated size, then slowly
+   DEFLATES ("kempes") to its resting size with a strong ease-out so the
+   user can savour the settle before the dashboard appears. 1.5s. */
 #brand-mark.hero-in {
-  animation: brand-mark-hero-in 1.10s cubic-bezier(0.22,1,0.36,1) forwards !important;
+  animation: brand-mark-hero-in 1.5s cubic-bezier(0.16,1,0.3,1) forwards !important;
 }
 @keyframes brand-mark-hero-in {
-  0%   { opacity: 0;    transform: translate(-50%,-50%) scale(1.18);
-         filter: drop-shadow(0 0 26px rgba(201,168,76,0.85)); }
-  45%  { opacity: 0.16; transform: translate(-50%,-50%) scale(1.05);
-         filter: drop-shadow(0 0 14px rgba(201,168,76,0.45)); }
+  0%   { opacity: 0;    transform: translate(-50%,-50%) scale(1.32);
+         filter: drop-shadow(0 0 30px rgba(201,168,76,0.90)); }
+  22%  { opacity: 0.22; transform: translate(-50%,-50%) scale(1.22);
+         filter: drop-shadow(0 0 20px rgba(201,168,76,0.55)); }
   100% { opacity: 0.03; transform: translate(-50%,-50%) scale(1.00);
          filter: drop-shadow(0 0 3px rgba(201,168,76,0.20)); }
 }
@@ -2473,10 +2479,10 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   animation-name: brand-mark-hero-in-green;
 }
 @keyframes brand-mark-hero-in-green {
-  0%   { opacity: 0;    transform: translate(-50%,-50%) scale(1.18);
-         filter: drop-shadow(0 0 26px rgba(46,107,69,0.80)); }
-  45%  { opacity: 0.14; transform: translate(-50%,-50%) scale(1.05);
-         filter: drop-shadow(0 0 14px rgba(46,107,69,0.42)); }
+  0%   { opacity: 0;    transform: translate(-50%,-50%) scale(1.32);
+         filter: drop-shadow(0 0 30px rgba(46,107,69,0.85)); }
+  22%  { opacity: 0.20; transform: translate(-50%,-50%) scale(1.22);
+         filter: drop-shadow(0 0 20px rgba(46,107,69,0.52)); }
   100% { opacity: 0.04; transform: translate(-50%,-50%) scale(1.00);
          filter: drop-shadow(0 0 3px rgba(46,107,69,0.20)); }
 }
@@ -6924,21 +6930,21 @@ function pinUnlock(){
   setTimeout(() => {
     splash.classList.add('splash-exit');
 
-    // Hero transition: brand-mark zooms from large → resting size,
-    // appearing to "receive" the splash logo as it shrinks away.
+    // Hero transition: brand-mark receives the growing splash logo at an
+    // inflated size, then slowly deflates ("kempes") to its resting size.
     const bm = document.getElementById('brand-mark');
     if(bm){ bm.classList.add('hero-in'); }
-    // Remove hero-in after animation so breathing loop resumes.
-    setTimeout(() => { if(bm) bm.classList.remove('hero-in'); }, 1150);
+    // Remove hero-in after the 1.5s deflate so the breathing loop resumes.
+    setTimeout(() => { if(bm) bm.classList.remove('hero-in'); }, 1550);
 
-    // Hide splash after iris fully closes (1.05s).
-    setTimeout(() => { splash.style.display = 'none'; }, 1080);
-    // Reveal dashboard slightly before iris finishes — cards and progress bar
-    // begin fading in while logo is still in motion for a seamless blend.
+    // Hide splash after the logo finishes growing + bg fades out (~0.95s).
+    setTimeout(() => { splash.style.display = 'none'; }, 1000);
+    // Reveal dashboard AFTER the watermark deflate completes (~1.5s) so the
+    // user gets to savour the settle before the KPI cards animate in.
     setTimeout(() => {
       revealDashboard();
       replayProgressBar();
-    }, 840);
+    }, 1500);
   }, 2050);
 }
 
