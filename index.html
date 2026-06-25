@@ -4792,35 +4792,54 @@ function setIfEmpty(id, val){
 }
 
 
-/* ── KPI Detail Modal ── */
+/* ── KPI Detail Modal — iOS bottom sheet ── */
 #kpi-modal-overlay {
   position: fixed; inset: 0; z-index: 900;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  animation: kpi-overlay-in 0.25s ease forwards;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 0.32s ease;
 }
-@keyframes kpi-overlay-in { from { opacity:0 } to { opacity:1 } }
+#kpi-modal-overlay.is-open { opacity: 1; }
+
 #kpi-modal {
   position: fixed; z-index: 901;
-  left: 50%; top: 50%;
-  transform: translate(-50%, -50%) scale(0.94);
-  width: min(680px, calc(100vw - 32px));
-  max-height: calc(100dvh - 64px);
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%) translateY(100%);
+  width: min(700px, 100vw);
+  max-height: 88dvh;
   overflow-y: auto;
+  overflow-x: hidden;
   background: var(--bg1);
   border: 1px solid var(--border-md);
-  border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
-  animation: kpi-modal-in 0.28s cubic-bezier(0.22,1,0.36,1) forwards;
+  border-radius: 24px 24px 0 0;
+  padding: 0 24px 32px;
+  box-shadow: 0 -8px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05) inset;
+  /* iOS spring: open */
+  transition: transform 0.5s cubic-bezier(0.32,0.72,0,1);
+  will-change: transform;
+}
+#kpi-modal.is-open {
+  transform: translateX(-50%) translateY(0);
+}
+#kpi-modal.is-closing {
+  /* fast ease-in close — iOS dismiss */
+  transition: transform 0.32s cubic-bezier(0.4,0,1,0.6);
+  transform: translateX(-50%) translateY(110%);
 }
 [data-theme="light"] #kpi-modal {
-  box-shadow: 0 24px 80px rgba(27,42,31,0.18), 0 0 0 1px rgba(255,255,255,0.7) inset;
+  box-shadow: 0 -8px 60px rgba(27,42,31,0.15), 0 0 0 1px rgba(255,255,255,0.8) inset;
 }
-@keyframes kpi-modal-in {
-  from { opacity:0; transform: translate(-50%,-50%) scale(0.92) translateY(12px); }
-  to   { opacity:1; transform: translate(-50%,-50%) scale(1)    translateY(0); }
+/* Drag handle */
+#kpi-modal::before {
+  content: '';
+  display: block;
+  width: 36px; height: 4px;
+  background: var(--border-md);
+  border-radius: 2px;
+  margin: 14px auto 20px;
 }
 .kpi-modal-header {
   display: flex; align-items: center; gap: 14px;
@@ -5653,11 +5672,17 @@ function openKpiModal(type){
     ? `<table><thead><tr><th>Tanggal</th><th>Nilai</th>${tableRows[0].split('<td>').length>3?'<th>Status</th>':''}</tr></thead><tbody>${tableRows.join('')}</tbody></table>`
     : '';
 
-  // Show modal first (so canvas has dimensions)
+  // Show modal then trigger open class on next frame (iOS sheet slide-up)
   overlay.style.display='block';
   modal.style.display='block';
-  document.body.style.overflow='hidden';
   modal.scrollTop=0;
+  document.body.style.overflow='hidden';
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      overlay.classList.add('is-open');
+      modal.classList.add('is-open');
+    });
+  });
 
   // Build chart
   if(chartData && !modal.querySelector('#kpi-modal-chart')) return;
@@ -5682,14 +5707,16 @@ function openKpiModal(type){
 function closeKpiModal(){
   const overlay=document.getElementById('kpi-modal-overlay');
   const modal=document.getElementById('kpi-modal');
-  overlay.style.animation='kpi-overlay-in 0.18s ease reverse forwards';
-  modal.style.animation='kpi-modal-in 0.18s cubic-bezier(0.22,1,0.36,1) reverse forwards';
+  overlay.classList.remove('is-open');
+  modal.classList.remove('is-open');
+  modal.classList.add('is-closing');
   setTimeout(()=>{
-    overlay.style.display='none'; modal.style.display='none';
-    overlay.style.animation=''; modal.style.animation='';
+    overlay.style.display='none';
+    modal.style.display='none';
+    modal.classList.remove('is-closing');
     document.body.style.overflow='';
     if(_kpiModalChart){ _kpiModalChart.destroy(); _kpiModalChart=null; }
-  },180);
+  }, 320);
 }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeKpiModal(); } });
 
