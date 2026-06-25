@@ -2935,6 +2935,24 @@ body.dashboard-locking .card {
     0 1px 4px rgba(0,0,0,0.10);
   transform: translateY(2px) scale(0.95);
 }
+/* Light mode: PIN logo + dots use forest green instead of gold */
+[data-theme="light"] .pin-logo-mark {
+  background: rgba(46,107,69,0.10);
+  border: 1px solid rgba(46,107,69,0.28);
+  box-shadow: 0 0 14px rgba(46,107,69,0.16);
+}
+[data-theme="light"] .pin-logo-text {
+  background: linear-gradient(130deg, #3d8f5f 0%, #2e6b45 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .pin-dot {
+  border-color: rgba(46,107,69,0.35);
+}
+[data-theme="light"] .pin-dot.filled {
+  background: #2e6b45;
+  border-color: #2e6b45;
+}
 .pin-key-empty { background: transparent !important; border-color: transparent !important; box-shadow: none !important; cursor: default; }
 .pin-key-del { font-size: 14px; }
 .pin-key-del:active { box-shadow: 0 0 14px rgba(248,113,113,0.20) !important; }
@@ -6678,6 +6696,19 @@ function revealDashboard(){
   setTimeout(() => { document.body.classList.remove('dr-animating'); }, 1300);
 }
 
+/* Re-trigger the KPI progress bar fill (CSS width transition) without
+   rebuilding any DOM — keeps the reveal smooth instead of churning innerHTML. */
+function replayProgressBar(){
+  const pFill = document.getElementById('h-progress');
+  if(!pFill) return;
+  const target = pFill.style.width || '0%';
+  pFill.style.transition = 'none';
+  pFill.style.width = '0%';
+  void pFill.offsetWidth;            // commit the reset
+  pFill.style.transition = '';       // restore the 1.4s CSS transition
+  requestAnimationFrame(() => { pFill.style.width = target; });
+}
+
 /* ── Correct PIN → splash → dashboard ── */
 function pinUnlock(){
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -6743,12 +6774,10 @@ function pinUnlock(){
     // Reveal dashboard AFTER splash is fully gone
     setTimeout(() => {
       revealDashboard();
-      // Replay the progress bar + hero counter animations at reveal time
-      // WITHOUT rebuilding charts (they're already painted) — so re-lock looks
-      // identical to first load instead of showing a static, pre-filled bar.
-      if(currentPage === 'kpi' && allData && allData.length){
-        requestAnimationFrame(() => calcKpi(true));
-      }
+      // Re-animate ONLY the progress bar width (lightweight, no innerHTML
+      // rebuild) so the reveal doesn't "slam" content in mid-animation.
+      // Hero numbers re-animate via their CSS (paused until dashboard-ready).
+      replayProgressBar();
     }, 920);
   }, 2050);
 }
