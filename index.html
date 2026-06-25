@@ -2821,49 +2821,61 @@ body:not(.dashboard-ready) .fc-big {
   .skel::after { animation: none; }
 }
 
-/* ── Reveal system: pure fade, no movement, no slam ──
-   translateY and scale removed entirely — opacity transition only.
-   No motion = nothing can feel abrupt or "slammed". */
+/* ── Reveal system: gentle rise + fade with spring easing ──
+   Elements rise from 18px below their resting place while fading in.
+   Spring easing (0.22,1,0.36,1) feels natural — fast initial movement
+   then a soft overshoot settle. Canvas cards use translateY only so the
+   GPU layer composite avoids re-rasterizing the Chart.js canvas. */
 
+/* Header + nav slip in from top (very subtle, just 6px) */
 body.dashboard-ready .header {
-  animation: dr-fade-in 0.6s ease 0.00s both;
+  animation: dr-slide-down 0.5s cubic-bezier(0.22,1,0.36,1) 0.00s both;
 }
 body.dashboard-ready .nav {
-  animation: dr-fade-in 0.6s ease 0.07s both;
+  animation: dr-slide-down 0.5s cubic-bezier(0.22,1,0.36,1) 0.06s both;
 }
+/* Filter bar fades in quietly */
 body.dashboard-ready .kpi-filter-bar {
-  animation: dr-fade-in 0.6s ease 0.12s both;
+  animation: dr-fade-in 0.5s ease 0.10s both;
+}
+/* Whole page wrapper */
+body.dashboard-ready .page {
+  animation: dr-fade-in 0.4s ease 0.08s both;
 }
 body.dashboard-ready .kpi-scroll {
-  animation: dr-fade-in 0.6s ease 0.15s both;
-}
-body.dashboard-ready .page {
-  animation: dr-fade-in 0.6s ease 0.15s both;
+  animation: dr-fade-in 0.4s ease 0.08s both;
 }
 
-/* Cards: staggered fade, no movement */
-body.dashboard-ready .card {
-  animation: dr-fade-in 0.6s ease both;
-}
-body.dashboard-ready .card:nth-child(1) { animation-delay: 0.22s; }
-body.dashboard-ready .card:nth-child(2) { animation-delay: 0.28s; }
-body.dashboard-ready .card:nth-child(3) { animation-delay: 0.34s; }
-body.dashboard-ready .card:nth-child(4) { animation-delay: 0.40s; }
-body.dashboard-ready .card:nth-child(5) { animation-delay: 0.46s; }
-body.dashboard-ready .card:nth-child(n+6) { animation-delay: 0.50s; }
-
+/* Hero banner: rises first, sets the stage */
 body.dashboard-ready .hero-banner {
-  animation: dr-fade-in 0.65s ease 0.24s both;
+  animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.12s both;
 }
-body.dashboard-ready .kpi-card:nth-child(1) { animation: dr-fade-in 0.6s ease 0.28s both; }
-body.dashboard-ready .kpi-card:nth-child(2) { animation: dr-fade-in 0.6s ease 0.33s both; }
-body.dashboard-ready .kpi-card:nth-child(3) { animation: dr-fade-in 0.6s ease 0.38s both; }
-body.dashboard-ready .kpi-card:nth-child(4) { animation: dr-fade-in 0.6s ease 0.43s both; }
-body.dashboard-ready .kpi-card:nth-child(5) { animation: dr-fade-in 0.6s ease 0.48s both; }
-body.dashboard-ready .kpi-card:nth-child(n+6) { animation: dr-fade-in 0.6s ease 0.52s both; }
+
+/* KPI summary cards: staggered rise, each 70ms apart */
+body.dashboard-ready .kpi-card:nth-child(1) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.18s both; }
+body.dashboard-ready .kpi-card:nth-child(2) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.25s both; }
+body.dashboard-ready .kpi-card:nth-child(3) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.32s both; }
+body.dashboard-ready .kpi-card:nth-child(4) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.39s both; }
+body.dashboard-ready .kpi-card:nth-child(5) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.46s both; }
+body.dashboard-ready .kpi-card:nth-child(n+6) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.50s both; }
+
+/* Content cards (charts, tables): staggered rise after KPI cards */
+body.dashboard-ready .card {
+  animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) both;
+}
+body.dashboard-ready .card:nth-child(1) { animation-delay: 0.20s; }
+body.dashboard-ready .card:nth-child(2) { animation-delay: 0.28s; }
+body.dashboard-ready .card:nth-child(3) { animation-delay: 0.36s; }
+body.dashboard-ready .card:nth-child(4) { animation-delay: 0.44s; }
+body.dashboard-ready .card:nth-child(5) { animation-delay: 0.50s; }
+body.dashboard-ready .card:nth-child(n+6) { animation-delay: 0.54s; }
 
 @keyframes dr-slide-down {
-  from { opacity: 0; transform: translateY(-10px); }
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes dr-rise-in {
+  from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes dr-fade-in {
@@ -6875,7 +6887,8 @@ function standbyToPin(){
 function revealDashboard(){
   document.body.classList.add('dr-animating');
   document.body.classList.add('dashboard-ready');
-  setTimeout(() => { document.body.classList.remove('dr-animating'); }, 1300);
+  // Longest stagger: 0.54s delay + 0.6s duration = 1.14s → clear at 1500ms.
+  setTimeout(() => { document.body.classList.remove('dr-animating'); }, 1500);
 }
 
 /* Re-trigger the KPI progress bar fill (CSS width transition) without
