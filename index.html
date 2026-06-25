@@ -5133,7 +5133,12 @@ function renderRaceDetail(slice, gmvTotal, achPct, idealAch, dailyTarget, avgDai
     </div>`;
 }
 
-loadData();
+// Data is loaded ONLY after successful PIN authentication.
+// If session is already valid (sessionStorage), load immediately.
+// Otherwise, pinUnlock() will call loadData() after auth.
+if(sessionStorage.getItem('fc_unlocked')==='1'){
+  loadData();
+}
 
 // ═══════════════════════════════════════════════════════
 // DATE RANGE PICKER ENGINE
@@ -6544,7 +6549,11 @@ function pinUnlock(){
   pin.classList.add('unlocked');
   setTimeout(() => { pin.style.display = 'none'; }, 420);
 
-  if(reduced){ document.body.classList.add('dashboard-ready'); return; }
+  if(reduced){
+    document.body.classList.add('dashboard-ready');
+    if(!allData || !allData.length) loadData();
+    return;
+  }
 
   // Show splash first (must be in layout before resetting child animations)
   const splash = document.getElementById('splash-screen');
@@ -6580,7 +6589,11 @@ function pinUnlock(){
 
   setTimeout(() => {
     splash.classList.add('splash-exit');
-    setTimeout(() => { document.body.classList.add('dashboard-ready'); }, 80);
+    setTimeout(() => {
+      document.body.classList.add('dashboard-ready');
+      // Load data now that user is authenticated (only if not already loaded)
+      if(!allData || !allData.length) loadData();
+    }, 80);
     setTimeout(() => { splash.style.display = 'none'; }, 900);
   }, 2050);
 }
