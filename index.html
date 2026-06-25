@@ -2321,11 +2321,12 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   pointer-events: none;
 }
 #splash-screen.splash-exit {
-  animation: splash-fade-out 0.7s cubic-bezier(0.5,0,0.75,0) forwards;
+  animation: splash-zoom-in 0.65s cubic-bezier(0.4,0,0.6,1) forwards;
 }
-@keyframes splash-fade-out {
+@keyframes splash-zoom-in {
   0%   { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.04); }
+  60%  { opacity: 1; transform: scale(1.6); }
+  100% { opacity: 0; transform: scale(2.6); }
 }
 
 #splash-inner {
@@ -2471,6 +2472,89 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   #splash-screen.splash-exit { animation: none !important; opacity: 0; }
 }
 /* ── END SPLASH ─────────────────────────────────────────── */
+
+/* ── DASHBOARD REVEAL ───────────────────────────────────── */
+/* All animatable elements start invisible; .dashboard-ready enables them */
+body:not(.dashboard-ready) .header,
+body:not(.dashboard-ready) .nav,
+body:not(.dashboard-ready) .kpi-filter-bar,
+body:not(.dashboard-ready) .kpi-scroll,
+body:not(.dashboard-ready) .page {
+  opacity: 0;
+}
+
+/* Header slides down */
+body.dashboard-ready .header {
+  animation: dr-slide-down 0.55s cubic-bezier(0.16,1,0.3,1) 0.00s both;
+}
+/* Nav slides down slightly after */
+body.dashboard-ready .nav {
+  animation: dr-slide-down 0.55s cubic-bezier(0.16,1,0.3,1) 0.08s both;
+}
+/* Filter bar fades in */
+body.dashboard-ready .kpi-filter-bar {
+  animation: dr-fade-up 0.5s cubic-bezier(0.16,1,0.3,1) 0.14s both;
+}
+/* KPI scroll area fades up */
+body.dashboard-ready .kpi-scroll {
+  animation: dr-fade-up 0.6s cubic-bezier(0.16,1,0.3,1) 0.18s both;
+}
+/* Pages fade up */
+body.dashboard-ready .page {
+  animation: dr-fade-up 0.6s cubic-bezier(0.16,1,0.3,1) 0.22s both;
+}
+
+/* Cards stagger inside any visible page */
+body.dashboard-ready .card {
+  animation: dr-card-in 0.55s cubic-bezier(0.16,1,0.3,1) both;
+}
+body.dashboard-ready .card:nth-child(1) { animation-delay: 0.25s; }
+body.dashboard-ready .card:nth-child(2) { animation-delay: 0.32s; }
+body.dashboard-ready .card:nth-child(3) { animation-delay: 0.39s; }
+body.dashboard-ready .card:nth-child(4) { animation-delay: 0.46s; }
+body.dashboard-ready .card:nth-child(5) { animation-delay: 0.53s; }
+body.dashboard-ready .card:nth-child(n+6) { animation-delay: 0.58s; }
+
+/* KPI hero banner */
+body.dashboard-ready .hero-banner {
+  animation: dr-card-in 0.6s cubic-bezier(0.16,1,0.3,1) 0.28s both;
+}
+/* KPI stat cards stagger */
+body.dashboard-ready .kpi-card:nth-child(1) { animation: dr-card-in 0.5s cubic-bezier(0.16,1,0.3,1) 0.30s both; }
+body.dashboard-ready .kpi-card:nth-child(2) { animation: dr-card-in 0.5s cubic-bezier(0.16,1,0.3,1) 0.36s both; }
+body.dashboard-ready .kpi-card:nth-child(3) { animation: dr-card-in 0.5s cubic-bezier(0.16,1,0.3,1) 0.42s both; }
+body.dashboard-ready .kpi-card:nth-child(4) { animation: dr-card-in 0.5s cubic-bezier(0.16,1,0.3,1) 0.48s both; }
+body.dashboard-ready .kpi-card:nth-child(5) { animation: dr-card-in 0.5s cubic-bezier(0.16,1,0.3,1) 0.54s both; }
+body.dashboard-ready .kpi-card:nth-child(n+6) { animation: dr-card-in 0.5s cubic-bezier(0.16,1,0.3,1) 0.58s both; }
+
+@keyframes dr-slide-down {
+  from { opacity: 0; transform: translateY(-18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes dr-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes dr-card-in {
+  from { opacity: 0; transform: translateY(22px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Reduced motion: skip entry animations */
+@media (prefers-reduced-motion: reduce) {
+  body.dashboard-ready .header,
+  body.dashboard-ready .nav,
+  body.dashboard-ready .kpi-filter-bar,
+  body.dashboard-ready .kpi-scroll,
+  body.dashboard-ready .page,
+  body.dashboard-ready .card,
+  body.dashboard-ready .hero-banner,
+  body.dashboard-ready .kpi-card {
+    animation: none !important;
+    opacity: 1;
+  }
+}
+/* ── END DASHBOARD REVEAL ───────────────────────────────── */
 #pin-box {
   display: flex; flex-direction: column; align-items: center;
   gap: 0; padding: 0 24px; width: 100%; max-width: 320px;
@@ -6290,19 +6374,29 @@ function pinUnlock(){
     brand.appendChild(span);
   });
 
-  // 3. After ~2.2s exit with scale-fade
+  // 3. After ~2.1s: zoom-in exit
+  const exitDelay = reduced ? 0 : 2050;
   setTimeout(() => {
+    // Reveal dashboard slightly before splash fully disappears (overlap = premium)
+    document.body.classList.add('dashboard-ready');
     splash.classList.add('splash-exit');
-    setTimeout(() => { splash.style.display = 'none'; }, 720);
-  }, reduced ? 0 : 2050);
+    setTimeout(() => { splash.style.display = 'none'; }, 680);
+  }, exitDelay);
 
   // 4. Hide PIN screen element after it fades
   setTimeout(() => { pinScreen.style.display = 'none'; }, 450);
+
+  // 5. If reduced motion, reveal immediately
+  if (reduced) document.body.classList.add('dashboard-ready');
 }
 
 // Init
 (function(){
-  if(sessionStorage.getItem(PIN_SESSION)==='1'){ document.getElementById('pin-screen').style.display='none'; return; }
+  if(sessionStorage.getItem(PIN_SESSION)==='1'){
+    document.getElementById('pin-screen').style.display='none';
+    document.body.classList.add('dashboard-ready');
+    return;
+  }
   const stored = localStorage.getItem(PIN_KEY);
   if(!stored){
     _pinMode = 'set';
