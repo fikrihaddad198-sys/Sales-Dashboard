@@ -2312,6 +2312,121 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 #pin-screen.unlocked {
   opacity: 0; pointer-events: none; visibility: hidden;
 }
+
+/* ── SPLASH SCREEN ─────────────────────────────────────── */
+#splash-screen {
+  position: fixed; inset: 0; z-index: 10000;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg, #0f0d0b);
+  pointer-events: none;
+}
+#splash-screen.splash-exit {
+  animation: splash-fade-out 0.7s cubic-bezier(0.5,0,0.75,0) forwards;
+}
+@keyframes splash-fade-out {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.04); }
+}
+
+#splash-inner {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0;
+}
+
+/* Logo mark container */
+#splash-logo-mark {
+  width: 72px; height: 72px; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; margin-bottom: 28px;
+  background: rgba(201,168,76,0.08);
+  border: 1px solid rgba(201,168,76,0.22);
+  box-shadow:
+    0 0 0 0 rgba(201,168,76,0),
+    0 1px 0 rgba(255,255,255,0.08) inset;
+  opacity: 0;
+  transform: scale(0.4);
+  animation: splash-logo-in 0.65s cubic-bezier(0.16,1,0.3,1) 0.05s forwards;
+}
+[data-theme="light"] #splash-logo-mark {
+  background: rgba(46,107,69,0.08);
+  border: 1px solid rgba(46,107,69,0.22);
+}
+#splash-logo-mark .splash-icon {
+  display: block; width: 42px; height: 54px;
+}
+@keyframes splash-logo-in {
+  0%   { opacity: 0; transform: scale(0.4); box-shadow: 0 0 0 0 rgba(201,168,76,0), 0 1px 0 rgba(255,255,255,0.08) inset; }
+  55%  { opacity: 1; transform: scale(1.08); box-shadow: 0 0 0 18px rgba(201,168,76,0.06), 0 0 60px rgba(201,168,76,0.28), 0 1px 0 rgba(255,255,255,0.12) inset; }
+  100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(201,168,76,0), 0 0 22px rgba(201,168,76,0.18), 0 1px 0 rgba(255,255,255,0.08) inset; }
+}
+[data-theme="light"] #splash-logo-mark {
+  animation-name: splash-logo-in-green;
+}
+@keyframes splash-logo-in-green {
+  0%   { opacity: 0; transform: scale(0.4); box-shadow: 0 0 0 0 rgba(46,107,69,0), 0 1px 0 rgba(255,255,255,0.35) inset; }
+  55%  { opacity: 1; transform: scale(1.08); box-shadow: 0 0 0 18px rgba(46,107,69,0.07), 0 0 60px rgba(46,107,69,0.32), 0 1px 0 rgba(255,255,255,0.35) inset; }
+  100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(46,107,69,0), 0 0 22px rgba(46,107,69,0.22), 0 1px 0 rgba(255,255,255,0.35) inset; }
+}
+
+/* Brand name — each letter animated via JS spans */
+#splash-brand {
+  display: flex; align-items: baseline; gap: 0;
+  font-size: 36px; font-weight: 900; letter-spacing: 8px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+#splash-brand .sl { /* stagger letter */
+  display: inline-block;
+  background: linear-gradient(135deg, #e8d49a 0%, #c9a84c 50%, #a07830 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  opacity: 0;
+  transform: translateY(24px);
+  animation: splash-char-in 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+[data-theme="light"] #splash-brand .sl {
+  background: linear-gradient(135deg, #2e6b45 0%, #3d8c5a 50%, #1e4d31 100%);
+  -webkit-background-clip: text; background-clip: text;
+}
+@keyframes splash-char-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Subtitle */
+#splash-sub {
+  font-size: 11px; font-weight: 500; letter-spacing: 3.5px;
+  text-transform: uppercase; color: var(--t3);
+  opacity: 0;
+  transform: translateY(10px);
+  animation: splash-sub-in 0.55s cubic-bezier(0.16,1,0.3,1) 0.75s forwards;
+}
+@keyframes splash-sub-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Sweep line */
+#splash-line {
+  width: 0; height: 1px; margin-top: 20px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.6), transparent);
+  animation: splash-line-grow 0.55s cubic-bezier(0.16,1,0.3,1) 1.0s forwards;
+}
+[data-theme="light"] #splash-line {
+  background: linear-gradient(90deg, transparent, rgba(46,107,69,0.6), transparent);
+}
+@keyframes splash-line-grow {
+  to { width: 200px; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  #splash-logo-mark, #splash-brand .sl, #splash-sub, #splash-line {
+    animation: none !important;
+    opacity: 1; transform: none; width: 200px;
+  }
+  #splash-screen.splash-exit { animation: none !important; opacity: 0; }
+}
+/* ── END SPLASH ─────────────────────────────────────────── */
 #pin-box {
   display: flex; flex-direction: column; align-items: center;
   gap: 0; padding: 0 24px; width: 100%; max-width: 320px;
@@ -2449,6 +2564,19 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
     </div>
   </div>
 </div>
+
+<!-- ═══ SPLASH SCREEN ═══ -->
+<div id="splash-screen" style="display:none;" aria-hidden="true">
+  <div id="splash-inner">
+    <div id="splash-logo-mark">
+      <span class="splash-icon header-logo-icon" style="width:42px;height:54px;display:block;"></span>
+    </div>
+    <div id="splash-brand"></div>
+    <div id="splash-sub">Sales Intelligence</div>
+    <div id="splash-line"></div>
+  </div>
+</div>
+<!-- ═══ END SPLASH ═══ -->
 
 <div id="brand-mark" aria-hidden="true"></div>
 
@@ -6029,9 +6157,38 @@ async function pinSubmit(){
 }
 
 function pinUnlock(){
-  const screen = document.getElementById('pin-screen');
-  screen.classList.add('unlocked');
-  setTimeout(()=>{ screen.style.display='none'; }, 420);
+  // 1. Fade out PIN screen
+  const pinScreen = document.getElementById('pin-screen');
+  pinScreen.classList.add('unlocked');
+
+  // 2. Show splash
+  const splash = document.getElementById('splash-screen');
+  splash.style.display = 'flex';
+
+  // Build stagger letters for brand name
+  const brand = document.getElementById('splash-brand');
+  brand.innerHTML = '';
+  const letters = 'FORE COFFEE'.split('');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  letters.forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.className = 'sl';
+    span.textContent = ch === ' ' ? ' ' : ch;
+    if (!reduced) {
+      // logo animates 0.05s→0.7s, chars start at 0.38s staggered
+      span.style.animationDelay = (0.38 + i * 0.038) + 's';
+    }
+    brand.appendChild(span);
+  });
+
+  // 3. After ~2.2s exit with scale-fade
+  setTimeout(() => {
+    splash.classList.add('splash-exit');
+    setTimeout(() => { splash.style.display = 'none'; }, 720);
+  }, reduced ? 0 : 2050);
+
+  // 4. Hide PIN screen element after it fades
+  setTimeout(() => { pinScreen.style.display = 'none'; }, 450);
 }
 
 // Init
