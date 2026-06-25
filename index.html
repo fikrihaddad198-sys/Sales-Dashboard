@@ -2701,6 +2701,21 @@ body.dashboard-ready .kpi-card:nth-child(n+6) { animation: dr-card-in 0.5s cubic
     opacity: 1;
   }
 }
+/* ── Lock-out animation ── */
+body.dashboard-locking .header,
+body.dashboard-locking .nav,
+body.dashboard-locking .kpi-filter-bar,
+body.dashboard-locking .kpi-scroll,
+body.dashboard-locking .page {
+  animation: dr-lock-out 0.32s cubic-bezier(0.4,0,1,1) forwards !important;
+}
+body.dashboard-locking .card {
+  animation: dr-lock-out 0.28s cubic-bezier(0.4,0,1,1) forwards !important;
+}
+@keyframes dr-lock-out {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-10px) scale(0.98); }
+}
 /* ── END DASHBOARD REVEAL ───────────────────────────────── */
 #pin-box {
   display: flex; flex-direction: column; align-items: center;
@@ -6496,79 +6511,29 @@ async function pinSubmit(){
   }
 }
 
-function pinUnlock(){
-  // Ensure standby is hidden
-  const sb = document.getElementById('standby-screen');
-  if(sb){ sb.classList.remove('standby-in'); setTimeout(()=>{ sb.style.display='none'; }, 320); }
-
-  // 1. Fade out PIN screen
-  const pinScreen = document.getElementById('pin-screen');
-  pinScreen.classList.add('unlocked');
-
-  // 2. Show splash
-  const splash = document.getElementById('splash-screen');
-  splash.style.display = 'flex';
-
-  // Build stagger letters for brand name
-  const brand = document.getElementById('splash-brand');
-  brand.innerHTML = '';
-  const letters = 'FORE COFFEE'.split('');
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  letters.forEach((ch, i) => {
-    const span = document.createElement('span');
-    span.className = 'sl';
-    span.textContent = ch === ' ' ? ' ' : ch;
-    if (!reduced) {
-      // logo animates 0.05s→0.7s, chars start at 0.38s staggered
-      span.style.animationDelay = (0.38 + i * 0.038) + 's';
-    }
-    brand.appendChild(span);
-  });
-
-  // 3. After ~2.1s: zoom-in exit
-  const exitDelay = reduced ? 0 : 2050;
-  setTimeout(() => {
-    splash.classList.add('splash-exit');
-    // Dashboard starts appearing as iris opens (60ms in) — overlap = seamless
-    setTimeout(() => { document.body.classList.add('dashboard-ready'); }, 80);
-    // Hide splash after iris fully closed (60ms delay + 780ms iris = 840ms)
-    setTimeout(() => { splash.style.display = 'none'; }, 900);
-  }, exitDelay);
-
-  // 4. Hide PIN screen element after it fades
-  setTimeout(() => { pinScreen.style.display = 'none'; }, 450);
-
-  // 5. If reduced motion, reveal immediately
-  if (reduced) document.body.classList.add('dashboard-ready');
-}
-
 // Precompute correct PIN hash once at startup
 let _PIN_CORRECT = '';
 sha256(FORE_PIN).then(h => { _PIN_CORRECT = h; });
 
+/* ── Lock dashboard with exit animation ── */
 function lockDashboard(){
-  // Clear session so re-entry requires PIN
   sessionStorage.removeItem(PIN_SESSION);
-  // Show standby screen with fade-in
-  const sb = document.getElementById('standby-screen');
-  sb.style.display = 'flex';
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    sb.classList.add('standby-in');
-  }));
-  // Hide dashboard
-  document.body.classList.remove('dashboard-ready');
+  document.body.classList.add('dashboard-locking');
+  setTimeout(() => {
+    document.body.classList.remove('dashboard-ready', 'dashboard-locking');
+    const sb = document.getElementById('standby-screen');
+    sb.style.display = 'flex';
+    requestAnimationFrame(() => requestAnimationFrame(() => sb.classList.add('standby-in')));
+  }, 350);
 }
 
+/* ── Standby logo click → PIN screen ── */
 function standbyToPin(){
-  // Standby → PIN screen
-  const sb = document.getElementById('standby-screen');
+  const sb  = document.getElementById('standby-screen');
   const pin = document.getElementById('pin-screen');
-  // Reset pin buffer
-  _pinBuf = '';
-  pinRender();
-  document.getElementById('pin-error').textContent = '';
-  document.getElementById('pin-error').classList.remove('show');
-  // Show PIN, hide standby with slight overlap
+  _pinBuf = ''; pinRender();
+  const errEl = document.getElementById('pin-error');
+  errEl.textContent = ''; errEl.classList.remove('show');
   pin.style.display = 'flex'; pin.style.opacity = '0';
   pin.classList.remove('unlocked');
   requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -6578,6 +6543,49 @@ function standbyToPin(){
     setTimeout(() => { sb.style.display = 'none'; }, 320);
   }));
 }
+
+/* ── Correct PIN → splash → dashboard ── */
+function pinUnlock(){
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const sb = document.getElementById('standby-screen');
+  if(sb){ sb.classList.remove('standby-in'); setTimeout(()=>{ sb.style.display='none'; }, 300); }
+
+  const pin = document.getElementById('pin-screen');
+  pin.classList.add('unlocked');
+  setTimeout(() => { pin.style.display = 'none'; }, 420);
+
+  if(reduced){ document.body.classList.add('dashboard-ready'); return; }
+
+  // Show splash first (must be in layout before resetting child animations)
+  const splash = document.getElementById('splash-screen');
+  splash.style.display = 'flex';
+  splash.classList.remove('splash-exit');
+
+  // Restart child @keyframes: none → reflow → restore
+  const ids = ['splash-curtain','splash-logo-mark','splash-sub','splash-line'];
+  ids.forEach(id => { const el=document.getElementById(id); if(el) el.style.animation='none'; });
+  void splash.offsetHeight;
+  ids.forEach(id => { const el=document.getElementById(id); if(el) el.style.animation=''; });
+
+  // Fresh stagger letters
+  const brand = document.getElementById('splash-brand');
+  brand.innerHTML = '';
+  'FORE COFFEE'.split('').forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.className = 'sl';
+    span.textContent = ch;
+    span.style.animationDelay = (0.38 + i * 0.038) + 's';
+    brand.appendChild(span);
+  });
+
+  setTimeout(() => {
+    splash.classList.add('splash-exit');
+    setTimeout(() => { document.body.classList.add('dashboard-ready'); }, 80);
+    setTimeout(() => { splash.style.display = 'none'; }, 900);
+  }, 2050);
+}
+
 
 // Init
 (function(){
