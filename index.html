@@ -4014,7 +4014,7 @@ function toggleTheme(){
 /* ═══════════════════════════════════════════════════
    PAGE: KPI SUMMARY
 ═══════════════════════════════════════════════════ */
-function calcKpi(){
+function calcKpi(skipCharts){
   const s=getVal('kpi-start'), e=getVal('kpi-end');
   if(!s||!e||!allData.length) return;
   const rows=filterData(s,e); if(!rows.length) return;
@@ -4119,7 +4119,7 @@ function calcKpi(){
   const iptEl=document.getElementById('h-avg-ipt');
   if(iptEl) iptEl.textContent=avg(rows,'ipt').toFixed(2);
 
-  buildGauge(achPct);
+  if(!skipCharts) buildGauge(achPct);
 
   /* Contribution bars */
   const contribItems=[
@@ -4152,8 +4152,10 @@ function calcKpi(){
       .map(x=>`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;"><div style="font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:3px;">${x.l}</div><div style="font-size:12px;font-weight:700;color:var(--t1);font-family:var(--mono);">${x.v}</div></div>`).join('')}
     </div>`;
 
-  buildKpiTrend(rows,ma7);
-  buildKpiStacked(rows);
+  if(!skipCharts){
+    buildKpiTrend(rows,ma7);
+    buildKpiStacked(rows);
+  }
   setTimeout(()=>window.attachReveal&&window.attachReveal(), 80);
 }
 function computeMA(rows,key,w){ return rows.map((d,i)=>{ const sl=rows.slice(Math.max(0,i-w+1),i+1); return{ date:d.date, value:sl.reduce((a,r)=>a+(r[key]||0),0)/sl.length }; }); }
@@ -6725,16 +6727,28 @@ function pinUnlock(){
     brand.appendChild(span);
   });
 
-  // Load data immediately (user is authenticated); data fetches during the 2s splash
+  // Prepare content BEHIND the splash so heavy work (Chart.js) finishes before
+  // the reveal — this is what keeps the card entrance smooth.
+  //  • First load: fetch + render during the 2s splash.
+  //  • Re-lock (data cached): rebuild charts now so they're freshly painted by
+  //    reveal time; otherwise the entrance animates over stale heavy canvases
+  //    and jitters.
   if(!allData || !allData.length) loadData();
+  else renderCurrentPage();
 
   setTimeout(() => {
     splash.classList.add('splash-exit');
     // Hide splash after iris closes
     setTimeout(() => { splash.style.display = 'none'; }, 900);
-    // Reveal dashboard AFTER splash is fully gone, then re-fire number animations
+    // Reveal dashboard AFTER splash is fully gone
     setTimeout(() => {
       revealDashboard();
+      // Replay the progress bar + hero counter animations at reveal time
+      // WITHOUT rebuilding charts (they're already painted) — so re-lock looks
+      // identical to first load instead of showing a static, pre-filled bar.
+      if(currentPage === 'kpi' && allData && allData.length){
+        requestAnimationFrame(() => calcKpi(true));
+      }
     }, 920);
   }, 2050);
 }
