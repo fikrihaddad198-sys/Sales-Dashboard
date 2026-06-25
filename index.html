@@ -1329,7 +1329,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201,168,76,0.40); }
 .btn:hover::after { opacity: 1; }
-.btn:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(201,168,76,0.2); }
+.btn:active { transform: translateY(0) scale(0.97); box-shadow: 0 2px 8px rgba(201,168,76,0.2); }
 
 .btn-ghost {
   background: transparent;
@@ -1342,6 +1342,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   transition: all 0.20s; font-family: var(--font);
 }
 .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-05); }
+.btn-ghost:active { transform: scale(0.97); }
 .btn-ghost.green:hover { border-color:var(--green); color:var(--green); background:var(--green-10); }
 .btn-ghost.red:hover   { border-color:var(--red);   color:var(--red);   background:var(--red-10);   }
 
@@ -1397,6 +1398,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   font-family: var(--font); letter-spacing: 0.3px; white-space: nowrap;
 }
 .toggle-btn.active { background: var(--bg1); color: var(--t1); box-shadow: var(--e1); }
+.toggle-btn:active { transform: scale(0.95); }
 
 /* ─────────────────────────────────────────────────────
    TAB GROUP
@@ -1404,14 +1406,23 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .tab-group { display: flex; gap: 2px; flex-wrap: wrap; }
 .tab-btn {
   background: none; border: 1px solid transparent;
-  color: var(--t3); padding: 3px 11px; border-radius: 20px;
-  font-size: 10px; font-weight: 600;
-  cursor: pointer; transition: all 0.18s; font-family: var(--font);
+  color: var(--t3); padding: 4px 12px; border-radius: 20px;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.3px;
+  cursor: pointer; font-family: var(--font);
+  transition: color 0.18s, background 0.18s, border-color 0.18s, transform 0.12s;
 }
-.tab-btn:hover { color: var(--t2); border-color: var(--border); }
+.tab-btn:hover { color: var(--t1); border-color: var(--border-md); background: var(--bg3); }
+.tab-btn:active { transform: scale(0.96); }
 .tab-btn.active {
-  background: rgba(201,168,76,0.10); border-color: rgba(201,168,76,0.22); color: var(--cyan);
+  background: var(--acc-pill-bg, rgba(201,168,76,0.12));
+  border-color: var(--acc-pill-border, rgba(201,168,76,0.28));
+  color: var(--acc-pill-color, var(--gold));
 }
+/* Per-channel tab accent when used inside channel context */
+[data-ch-color="offline"]  .tab-btn.active { --acc-pill-bg: rgba(167,139,250,0.12); --acc-pill-border: rgba(167,139,250,0.30); --acc-pill-color: #a78bfa; }
+[data-ch-color="gofood"]   .tab-btn.active { --acc-pill-bg: rgba(52,211,153,0.12);  --acc-pill-border: rgba(52,211,153,0.30);  --acc-pill-color: #34d399; }
+[data-ch-color="grabfood"] .tab-btn.active { --acc-pill-bg: rgba(251,146,60,0.12);  --acc-pill-border: rgba(251,146,60,0.30);  --acc-pill-color: #fb923c; }
+[data-ch-color="shopee"]   .tab-btn.active { --acc-pill-bg: rgba(248,113,113,0.12); --acc-pill-border: rgba(248,113,113,0.30); --acc-pill-color: #f87171; }
 
 /* ─────────────────────────────────────────────────────
    TABLE
@@ -1420,6 +1431,19 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   overflow-x: auto;
   border-radius: var(--r4);
   border: 1px solid var(--border);
+}
+.empty, .no-data {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px 24px; gap: 10px; text-align: center;
+  color: var(--t3); font-size: 12px; letter-spacing: 0.3px;
+}
+.empty::before, .no-data::before {
+  content: '';
+  display: block; width: 32px; height: 32px;
+  border: 1.5px solid var(--border-md);
+  border-radius: 8px;
+  background: var(--bg3);
+  margin-bottom: 4px;
 }
 table { border-collapse: collapse; width: 100%; font-size: 11px; }
 thead th {
@@ -1432,13 +1456,15 @@ thead th {
 }
 tbody td {
   padding: 10px 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
   color: var(--t1); white-space: nowrap;
-  transition: background 0.12s;
+  transition: background 0.14s;
 }
-[data-theme="light"] tbody td { border-bottom: 1px solid rgba(0,0,0,0.03); }
+tbody tr:nth-child(even) td { background: rgba(255,255,255,0.012); }
+[data-theme="light"] tbody tr:nth-child(even) td { background: rgba(0,0,0,0.018); }
+[data-theme="light"] tbody td { border-bottom: 1px solid rgba(0,0,0,0.05); }
 tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: var(--surface); }
+tbody tr:hover td { background: var(--bg3) !important; }
 .td-mono { font-family: var(--mono); font-size: 11px; }
 .sticky-col { position: sticky; left: 0; z-index: 1; background: var(--bg1); }
 tbody tr:hover .sticky-col { background: var(--bg2); }
@@ -2480,8 +2506,8 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   <div class="section-hdr mb16">
     <div class="section-title"><div class="sdot"></div>Period Comparison</div>
     <div class="toggle-group">
-      <button class="toggle-btn active" id="mode-weekly" onclick="setPeriodMode('weekly')">📅 Weekly</button>
-      <button class="toggle-btn" id="mode-custom" onclick="setPeriodMode('custom')">🔧 Custom</button>
+      <button class="toggle-btn active" id="mode-weekly" onclick="setPeriodMode('weekly')">Weekly</button>
+      <button class="toggle-btn" id="mode-custom" onclick="setPeriodMode('custom')">Custom</button>
     </div>
   </div>
 
@@ -2586,11 +2612,11 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
     <div class="section-title"><div class="sdot"></div>FLDT Analysis</div>
     <div class="row" style="gap:7px;">
       <div class="toggle-group">
-        <button class="toggle-btn active" id="fldt-mode-weekly" onclick="setFldtMode('weekly')">📅 3 Minggu</button>
-        <button class="toggle-btn" id="fldt-mode-custom" onclick="setFldtMode('custom')">🔧 Custom</button>
+        <button class="toggle-btn active" id="fldt-mode-weekly" onclick="setFldtMode('weekly')">3 Minggu</button>
+        <button class="toggle-btn" id="fldt-mode-custom" onclick="setFldtMode('custom')">Custom</button>
       </div>
-      <button class="btn-ghost green" onclick="downloadFldtExcel()">⬇ Excel</button>
-      <button class="btn-ghost red" onclick="downloadFldtPDF()">⬇ PDF</button>
+      <button class="btn-ghost green" onclick="downloadFldtExcel()">Excel</button>
+      <button class="btn-ghost red" onclick="downloadFldtPDF()">PDF</button>
     </div>
   </div>
 
@@ -3160,17 +3186,24 @@ function getVal(id){ return document.getElementById(id)?.value||''; }
    NAVIGATION
 ═══════════════════════════════════════════════════ */
 let currentPage='kpi';
-function showPage(p,btn){
+function showPage(p,btn,skipHash){
   document.querySelectorAll('.page').forEach(el=>{ el.classList.remove('active'); el.scrollTop=0; });
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const pageEl=document.getElementById('page-'+p);
   if(pageEl) pageEl.classList.add('active');
   if(btn) btn.classList.add('active');
+  else { const nb=document.querySelector('.nav-btn[data-page="'+p+'"]'); if(nb) nb.classList.add('active'); }
   currentPage=p;
+  if(!skipHash) history.replaceState(null,'','#'+p);
   if(allData.length) renderPage(p);
-  // Trigger reveal on the new active page (as scroll root)
   setTimeout(()=>{ if(window.attachReveal){ window.attachReveal(pageEl); window.attachReveal(); } }, 50);
 }
+/* Restore page from URL hash on load */
+window.addEventListener('DOMContentLoaded',()=>{
+  const hash=location.hash.replace('#','');
+  const valid=['kpi','channel','period','fldt','allsumm','d2d','race'];
+  if(hash && valid.includes(hash)) showPage(hash,null,true);
+});
 function renderCurrentPage(){ renderPage(currentPage); }
 function renderPage(p){
   if(p==='kpi') calcKpi();
@@ -3420,7 +3453,7 @@ function buildKpiStacked(rows){
     backgroundColor:'rgba(10,12,16,0.97)',
     titleColor:TC.text2, bodyColor:'#e8ead8',
     borderColor:'rgba(201,168,76,0.20)', borderWidth:1,
-    cornerRadius:12, padding:14, usePointStyle:true,
+    usePointStyle:true,
     callbacks:{
       title:ctx=>{ const r=rows[ctx[0].dataIndex]; return r?fmtShortDate(r.date):''; },
       label:ctx=>{
@@ -3485,7 +3518,7 @@ function applyChannelFilter(){
   charts.chPie=new Chart(document.getElementById('ch-pie-chart'),{
     type:'doughnut',
     data:{ labels:channels.map(c=>c.name), datasets:[{ data:channels.map(c=>c.val), backgroundColor:channels.map(c=>c.color+'cc'), borderWidth:0, hoverOffset:6 }] },
-    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', animation:{duration:700}, plugins:{ legend:{position:'right',labels:{color:TC.text2,font:{size:11},padding:14,usePointStyle:true}}, tooltip:{backgroundColor:'rgba(10,14,22,0.97)',titleColor:TC.text2,bodyColor:'#eef2ee',borderColor:'rgba(201,168,76,0.18)',borderWidth:1,cornerRadius:10,padding:12,callbacks:{label:ctx=>' '+ctx.label+': '+fmtRp(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,total))+')'}}} } }
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', animation:{duration:700}, plugins:{ legend:{position:'right',labels:{color:TC.text2,font:{size:11},padding:14,usePointStyle:true}}, tooltip:{...baseOptions().plugins.tooltip,callbacks:{label:ctx=>' '+ctx.label+': '+fmtRp(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,total))+')'}}} } }
   );
   destroyChart('chBar');
   charts.chBar=new Chart(document.getElementById('ch-bar-chart'),{
