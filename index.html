@@ -3116,11 +3116,11 @@ body.dashboard-locking .card {
     </div>
     <div class="filter-group">
       <span class="filter-label">Target GMV</span>
-      <input class="inp" type="text" id="kpi-target" placeholder="700000000" style="min-width:155px;"/>
+      <input class="inp" type="text" id="kpi-target" placeholder="700000000" style="min-width:155px;" oninput="onTargetInput()"/>
     </div>
     <div class="filter-group">
       <span class="filter-label">Hari</span>
-      <input class="inp inp-sm" type="text" id="kpi-days" placeholder="30"/>
+      <input class="inp inp-sm" type="text" id="kpi-days" placeholder="30" oninput="onTargetInput()"/>
     </div>
     
   </div>
@@ -4027,6 +4027,16 @@ function toggleTheme(){
 /* ═══════════════════════════════════════════════════
    PAGE: KPI SUMMARY
 ═══════════════════════════════════════════════════ */
+/* Recalculate + persist whenever the user edits the GMV target or day count.
+   Debounced so it doesn't rebuild charts on every keystroke. saveTarget()
+   inside calcKpi writes to localStorage so the value survives reloads/deploys. */
+let _targetTimer=null;
+function onTargetInput(){
+  saveTarget();                 // persist immediately (cheap, no rebuild)
+  clearTimeout(_targetTimer);
+  _targetTimer=setTimeout(()=>{ if(allData&&allData.length) calcKpi(); }, 400);
+}
+
 function calcKpi(skipCharts){
   const s=getVal('kpi-start'), e=getVal('kpi-end');
   if(!s||!e||!allData.length) return;
