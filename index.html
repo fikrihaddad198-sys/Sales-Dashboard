@@ -1190,6 +1190,53 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   flex-shrink: 0;
 }
 
+.stacked-card-hdr {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 10px; margin-bottom: 6px; flex-wrap: wrap;
+}
+.stacked-card-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; color: var(--t2); letter-spacing: 0.3px;
+}
+.stacked-card-period {
+  font-size: 9px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase;
+  color: var(--t3);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px; padding: 2px 8px;
+}
+.stacked-legend {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.sl-pill {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 9.5px; font-weight: 600; color: var(--t3);
+  letter-spacing: 0.3px; cursor: default;
+  padding: 2px 6px; border-radius: 20px;
+  background: var(--bg3); border: 1px solid var(--border);
+  transition: color 0.2s, border-color 0.2s;
+}
+.sl-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.sl-pill[data-ch="offline"] .sl-dot  { background: var(--tc-offline, #a78bfa); }
+.sl-pill[data-ch="gofood"] .sl-dot   { background: var(--tc-gofood, #34d399); }
+.sl-pill[data-ch="grabfood"] .sl-dot { background: var(--tc-grabfood, #fb923c); }
+.sl-pill[data-ch="shopee"] .sl-dot   { background: var(--tc-shopee, #f87171); }
+.stacked-total-row {
+  display: flex; align-items: baseline; gap: 8px;
+  margin-bottom: 14px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.stacked-total-label {
+  font-size: 9px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--t3);
+}
+.stacked-total-val {
+  font-size: 15px; font-weight: 800; color: var(--t1);
+  font-family: var(--mono); letter-spacing: -0.5px;
+}
+
 .card-hdr {
   font-size: 11px; font-weight: 700; color: var(--t2);
   margin-bottom: 18px;
@@ -2370,9 +2417,25 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
           <div class="card-hdr"><div class="card-hdr-dot"></div>Daily GMV Trend + 7D MA</div>
           <div class="chart-wrap h260"><canvas id="kpi-trend-chart"></canvas></div>
         </div>
-        <div class="card reveal reveal-delay-1 card-glow">
-          <div class="card-hdr"><div class="card-hdr-dot"></div>Channel Stacked — Daily</div>
-          <div class="chart-wrap h260"><canvas id="kpi-stacked-chart"></canvas></div>
+        <div class="card reveal reveal-delay-1 card-glow stacked-card">
+          <div class="stacked-card-hdr">
+            <div class="stacked-card-title">
+              <div class="card-hdr-dot"></div>
+              <span>Channel Stacked</span>
+              <span class="stacked-card-period">Daily</span>
+            </div>
+            <div class="stacked-legend" id="stacked-legend">
+              <span class="sl-pill" data-ch="offline"><span class="sl-dot"></span>Offline</span>
+              <span class="sl-pill" data-ch="gofood"><span class="sl-dot"></span>GoFood</span>
+              <span class="sl-pill" data-ch="grabfood"><span class="sl-dot"></span>GrabFood</span>
+              <span class="sl-pill" data-ch="shopee"><span class="sl-dot"></span>Shopee</span>
+            </div>
+          </div>
+          <div class="stacked-total-row" id="stacked-total-row">
+            <span class="stacked-total-label">Total periode</span>
+            <span class="stacked-total-val" id="stacked-total-val">—</span>
+          </div>
+          <div class="chart-wrap h240"><canvas id="kpi-stacked-chart"></canvas></div>
         </div>
       </div>
     </div>
@@ -3330,11 +3393,59 @@ function buildKpiTrend(rows,ma7){
 }
 function buildKpiStacked(rows){
   destroyChart('kpiStacked');
-  const mk=(label,key,color)=>({ label, data:rows.map(r=>r[key]||0), backgroundColor:color+'bb', borderRadius:{topLeft:2,topRight:2}, borderSkipped:false, barPercentage:.85, categoryPercentage:.9 });
+  // Update legend dot colors from TC
+  const chMap={offline:TC.offline,gofood:TC.gofood,grabfood:TC.grabfood,shopee:TC.shopee};
+  document.querySelectorAll('#stacked-legend .sl-pill').forEach(p=>{
+    const c=chMap[p.dataset.ch]; if(c) p.querySelector('.sl-dot').style.background=c;
+    p.querySelector('.sl-dot').style.boxShadow='0 0 4px '+c+'88';
+  });
+  // Update total
+  const total=(rows.reduce((s,r)=>(s+(r.offline||0)+(r.gofood||0)+(r.grabfood||0)+(r.shopee||0)),0));
+  const tvEl=document.getElementById('stacked-total-val');
+  if(tvEl) tvEl.textContent=fmtRp(total);
+  // Dataset builder
+  const mk=(label,key,color,isTop)=>({
+    label, data:rows.map(r=>r[key]||0),
+    backgroundColor:color+'cc',
+    hoverBackgroundColor:color,
+    borderRadius: isTop?{topLeft:4,topRight:4}:{topLeft:0,topRight:0},
+    borderSkipped:false, barPercentage:.75, categoryPercentage:.85,
+  });
+  const datasets=[mk('Offline','offline',TC.offline,false),mk('GoFood','gofood',TC.gofood,false),mk('GrabFood','grabfood',TC.grabfood,false),mk('Shopee','shopee',TC.shopee,true)];
+  const base=baseOptions();
+  const customTooltip={
+    backgroundColor:'rgba(10,12,16,0.97)',
+    titleColor:TC.text2, bodyColor:'#e8ead8',
+    borderColor:'rgba(201,168,76,0.20)', borderWidth:1,
+    cornerRadius:12, padding:14, usePointStyle:true,
+    callbacks:{
+      title:ctx=>{ const r=rows[ctx[0].dataIndex]; return r?fmtShortDate(r.date):''; },
+      label:ctx=>{
+        const val=ctx.parsed.y||0;
+        const tot=rows[ctx.dataIndex]&&(['offline','gofood','grabfood','shopee'].reduce((s,k)=>s+(rows[ctx.dataIndex][k]||0),0))||1;
+        const pct=((val/tot)*100).toFixed(1);
+        return '  '+ctx.dataset.label+': '+fmtRp(val)+' ('+pct+'%)';
+      },
+      footer:ctx=>{
+        const r=rows[ctx[0].dataIndex]; if(!r) return '';
+        const tot=(r.offline||0)+(r.gofood||0)+(r.grabfood||0)+(r.shopee||0);
+        return 'Total: '+fmtRp(tot);
+      }
+    }
+  };
   charts.kpiStacked=new Chart(document.getElementById('kpi-stacked-chart'),{
     type:'bar',
-    data:{ labels:rows.map(r=>fmtShortDate(r.date)), datasets:[mk('Offline','offline',TC.offline),mk('GoFood','gofood',TC.gofood),mk('GrabFood','grabfood',TC.grabfood),mk('Shopee','shopee',TC.shopee)] },
-    options:{ ...baseOptions(), interaction:{mode:'index',intersect:false}, scales:{ ...baseOptions().scales, x:{...baseOptions().scales.x,stacked:true}, y:{...baseOptions().scales.y,stacked:true} } }
+    data:{ labels:rows.map(r=>fmtShortDate(r.date)), datasets },
+    options:{
+      ...base,
+      interaction:{mode:'index',intersect:false},
+      plugins:{...base.plugins, tooltip:{...base.plugins?.tooltip,...customTooltip}, legend:{display:false}},
+      scales:{
+        ...base.scales,
+        x:{...base.scales?.x, stacked:true, grid:{...base.scales?.x?.grid, display:false}, ticks:{...base.scales?.x?.ticks, maxRotation:0, maxTicksLimit:10}},
+        y:{...base.scales?.y, stacked:true, grid:{color:TC.grid, drawBorder:false}, ticks:{...base.scales?.y?.ticks, callback:v=>v>=1e9?(v/1e9).toFixed(1)+'B':v>=1e6?(v/1e6).toFixed(0)+'M':v}}
+      }
+    }
   });
 }
 
