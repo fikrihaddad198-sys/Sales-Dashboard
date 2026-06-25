@@ -242,6 +242,10 @@ body::after {
   from { text-shadow: 0 0 0px rgba(201,168,76,0); }
   to   { text-shadow: 0 0 18px rgba(201,168,76,0.35); }
 }
+@keyframes glow-number-green {
+  from { text-shadow: 0 0 0px rgba(46,107,69,0); }
+  to   { text-shadow: 0 0 18px rgba(46,107,69,0.40); }
+}
 @keyframes stagger-up {
   from { opacity:0; transform:translateY(16px); }
   to   { opacity:1; transform:none; }
@@ -406,6 +410,12 @@ body::after {
 .hero-num, .hero-kpi-val, .fc-big {
   animation: number-count 0.4s cubic-bezier(0.22,1,0.36,1) forwards,
              glow-number   0.8s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
+}
+[data-theme="light"] .hero-num,
+[data-theme="light"] .hero-kpi-val,
+[data-theme="light"] .fc-big {
+  animation: number-count 0.4s cubic-bezier(0.22,1,0.36,1) forwards,
+             glow-number-green 0.8s cubic-bezier(0.22,1,0.36,1) 0.3s forwards;
 }
 /* mc-val gets glow only on first mount via .metric-card:hover */
 
@@ -2431,6 +2441,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 [data-theme="light"] #splash-brand .sl {
   background: linear-gradient(135deg, #2e6b45 0%, #3d8c5a 50%, #1e4d31 100%);
   -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 @keyframes splash-char-in {
   to { opacity: 1; transform: translateY(0); }
