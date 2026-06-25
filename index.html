@@ -2193,9 +2193,46 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 #page-kpi .card-hdr-dot,
 #page-kpi .sdot { box-shadow: none; }
 
-/* hero banner — ghost reveal */
+/* ── KPI HERO CARD — refined, lighter, more premium ── */
 #page-kpi .hero-banner {
-  border-radius: 18px;
+  border-radius: 20px;
+  /* Thinner, more translucent background — card feels lighter */
+  background: rgba(255,255,255,0.018) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  padding: 40px 44px;
+  /* Subtle inner top highlight — depth without weight */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06),
+              0 1px 2px rgba(0,0,0,0.25);
+  transition: border-color 0.40s cubic-bezier(0.22,1,0.36,1),
+              box-shadow   0.40s cubic-bezier(0.22,1,0.36,1),
+              transform    0.40s cubic-bezier(0.22,1,0.36,1);
+}
+[data-theme="light"] #page-kpi .hero-banner {
+  background: rgba(255,255,255,0.72) !important;
+  border: 1px solid rgba(46,107,69,0.10) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.90),
+              0 2px 12px rgba(27,42,31,0.07);
+}
+/* Hover — subtle lift only 3px, no scale, refined glow */
+#page-kpi .hero-banner:hover,
+#page-kpi .hero-banner.ghost-on {
+  border-color: rgba(201,168,76,0.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08),
+              0 4px 24px rgba(0,0,0,0.30),
+              0 0 40px rgba(201,168,76,0.08) !important;
+  transform: translateY(-3px) !important;
+}
+.reveal.hero-banner.ghost-on {
+  transform: translateY(-3px) !important;
+}
+[data-theme="light"] #page-kpi .hero-banner:hover,
+[data-theme="light"] #page-kpi .hero-banner.ghost-on {
+  border-color: rgba(46,107,69,0.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.95),
+              0 4px 20px rgba(27,42,31,0.10),
+              0 0 32px rgba(46,107,69,0.07) !important;
 }
 #page-kpi .hero-banner .orb1,
 #page-kpi .hero-banner .orb2 { display: none; }      /* remove ambient orbs */
@@ -2270,158 +2307,6 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   #page-kpi .h-col { padding: 0; border: none !important; }
   #page-kpi .h-col-gmv { border-bottom: 1px solid var(--border) !important; padding-bottom: 18px; }
 }
-
-/* ── CARDLESS KPI HERO ──────────────────────────────────
-   Strip the card shell from the KPI hero: no background,
-   no border, no blur. Numbers float directly on the page bg.
-   Separators become subtle hairlines only.                  */
-#page-kpi .hero-banner.cardless {
-  background: transparent !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  padding: 8px 0 28px !important;
-  margin-bottom: 0 !important;
-}
-#page-kpi .hero-banner.cardless::after { display: none !important; }
-#page-kpi .hero-banner.cardless .orb1,
-#page-kpi .hero-banner.cardless .orb2,
-#page-kpi .hero-banner.cardless .orb3 { display: none !important; }
-
-/* Disable whole-banner hover lift — each column lifts independently */
-#page-kpi .hero-banner.cardless:hover,
-#page-kpi .hero-banner.cardless.ghost-on,
-.reveal.hero-banner.cardless.ghost-on {
-  transform: none !important;
-  box-shadow: none !important;
-  border-color: transparent !important;
-}
-
-/* ── PREMIUM HOVER SYSTEM ────────────────────────────────────
-   3-layer effect:
-   1. Spotlight dimming   — siblings fade to 38%
-   2. Number glow + scale — focused number glows & breathes (scale 1.03)
-   3. Label color shift   — eyebrow/label shifts to accent color
-   No dividers. No underline. Pure typographic feel.             */
-
-#page-kpi .hero-banner.cardless .h-col {
-  border-radius: 12px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  position: relative;
-  transition: opacity 0.28s cubic-bezier(0.22,1,0.36,1);
-}
-/* Remove dividers entirely */
-#page-kpi .hero-banner.cardless .h-col-gmv,
-#page-kpi .hero-banner.cardless .h-col-mid {
-  border-right: none !important;
-  box-shadow: none !important;
-}
-
-/* Number + value — prepare for scale transition */
-#page-kpi .hero-banner.cardless .hero-num,
-#page-kpi .hero-banner.cardless .hero-kpi-val {
-  display: inline-block;
-  transition: transform 0.28s cubic-bezier(0.22,1,0.36,1),
-              text-shadow 0.28s ease;
-  transform-origin: left center;
-  will-change: transform, text-shadow;
-}
-#page-kpi .hero-banner.cardless .h-col-mid .hero-kpi-val,
-#page-kpi .hero-banner.cardless .h-col-right .hero-kpi-val {
-  transform-origin: center center;
-}
-
-/* Label transition */
-#page-kpi .hero-banner.cardless .h-col .hero-eyebrow,
-#page-kpi .hero-banner.cardless .h-col .hero-kpi-label {
-  transition: opacity 0.28s ease, color 0.28s ease;
-}
-
-/* 1. Spotlight — dim all when any col is hovered */
-#page-kpi .hero-banner.cardless .hero-3col:has(.h-col:hover) .h-col {
-  opacity: 0.38;
-}
-
-/* 2+3. Focused column — full opacity, number scales + glows, label shifts */
-#page-kpi .hero-banner.cardless .h-col:hover {
-  opacity: 1 !important;
-}
-
-/* GMV — gold glow (dark) */
-#page-kpi .hero-banner.cardless .h-col:hover .hero-num {
-  transform: scale(1.03);
-  text-shadow: 0 0 28px rgba(201,168,76,0.50), 0 0 56px rgba(201,168,76,0.18);
-}
-/* Achievement + Pace — gold glow (dark) */
-#page-kpi .hero-banner.cardless .h-col:hover .hero-kpi-val {
-  transform: scale(1.04);
-  text-shadow: 0 0 22px rgba(201,168,76,0.44), 0 0 44px rgba(201,168,76,0.15);
-}
-
-/* Label shifts to gold */
-#page-kpi .hero-banner.cardless .h-col:hover .hero-eyebrow {
-  opacity: 1;
-  -webkit-text-fill-color: var(--gold);
-  color: var(--gold);
-}
-#page-kpi .hero-banner.cardless .h-col:hover .hero-kpi-label {
-  color: var(--gold);
-  opacity: 1;
-}
-
-/* ── Light mode overrides ── */
-[data-theme="light"] #page-kpi .hero-banner.cardless .h-col:hover .hero-num {
-  text-shadow: 0 0 28px rgba(46,107,69,0.32), 0 0 56px rgba(46,107,69,0.12);
-}
-[data-theme="light"] #page-kpi .hero-banner.cardless .h-col:hover .hero-kpi-val {
-  text-shadow: 0 0 22px rgba(46,107,69,0.28), 0 0 44px rgba(46,107,69,0.10);
-}
-[data-theme="light"] #page-kpi .hero-banner.cardless .h-col:hover .hero-eyebrow {
-  -webkit-text-fill-color: #2e6b45;
-  color: #2e6b45;
-}
-[data-theme="light"] #page-kpi .hero-banner.cardless .h-col:hover .hero-kpi-label {
-  color: #2e6b45;
-}
-
-/* GMV number — bigger, more monumental without card frame */
-#page-kpi .hero-banner.cardless .hero-num {
-  font-size: clamp(40px, 6vw, 72px) !important;
-  letter-spacing: -3px !important;
-  background: linear-gradient(135deg, var(--t1) 0%, rgba(242,239,233,0.72) 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-[data-theme="light"] #page-kpi .hero-banner.cardless .hero-num {
-  background: linear-gradient(135deg, #1a2e22 0%, #2e6b45 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Achievement + Pace values */
-#page-kpi .hero-banner.cardless .hero-kpi-val {
-  font-size: 48px !important;
-}
-
-/* Eyebrow label — subtler */
-#page-kpi .hero-banner.cardless .hero-eyebrow {
-  letter-spacing: 5px;
-  opacity: 0.7;
-}
-
-/* Progress track — slightly thicker so it reads without card */
-#page-kpi .hero-banner.cardless .progress-track {
-  height: 6px;
-  background: rgba(255,255,255,0.05);
-}
-[data-theme="light"] #page-kpi .hero-banner.cardless .progress-track {
-  background: rgba(27,42,31,0.06);
-}
-
-/* ─────────────────────────────────────────────────────── */
 
 /* Hero micro-stats (Total Transaksi + Avg IPT) */
 #page-kpi .hero-micro-stats {
@@ -3333,7 +3218,7 @@ body.dashboard-locking .card {
     <div id="kpi-hero" style="display:none">
 
       <!-- Hero Banner -->
-      <div class="hero-banner cardless reveal mb18" id="hero-banner-el">
+      <div class="hero-banner reveal mb18" id="hero-banner-el">
         <div class="hero-3col">
           <div class="h-col h-col-gmv kpi-clickable" onclick="openKpiModal('gmv',this)" title="Lihat breakdown GMV">
             <div class="hero-eyebrow">Current GMV</div>
