@@ -2271,6 +2271,69 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   #page-kpi .h-col-gmv { border-bottom: 1px solid var(--border) !important; padding-bottom: 18px; }
 }
 
+/* ── CARDLESS KPI HERO ──────────────────────────────────
+   Strip the card shell from the KPI hero: no background,
+   no border, no blur. Numbers float directly on the page bg.
+   Separators become subtle hairlines only.                  */
+#page-kpi .hero-banner.cardless {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 8px 0 28px !important;
+  margin-bottom: 0 !important;
+}
+#page-kpi .hero-banner.cardless::after { display: none !important; }
+#page-kpi .hero-banner.cardless .orb1,
+#page-kpi .hero-banner.cardless .orb2,
+#page-kpi .hero-banner.cardless .orb3 { display: none !important; }
+
+/* Column dividers become hairlines with more breathing */
+#page-kpi .hero-banner.cardless .h-col-gmv {
+  border-right: 1px solid var(--border) !important;
+}
+#page-kpi .hero-banner.cardless .h-col-mid {
+  border-right: 1px solid var(--border) !important;
+}
+
+/* GMV number — bigger, more monumental without card frame */
+#page-kpi .hero-banner.cardless .hero-num {
+  font-size: clamp(40px, 6vw, 72px) !important;
+  letter-spacing: -3px !important;
+  background: linear-gradient(135deg, var(--t1) 0%, rgba(242,239,233,0.72) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+[data-theme="light"] #page-kpi .hero-banner.cardless .hero-num {
+  background: linear-gradient(135deg, #1a2e22 0%, #2e6b45 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Achievement + Pace values */
+#page-kpi .hero-banner.cardless .hero-kpi-val {
+  font-size: 48px !important;
+}
+
+/* Eyebrow label — subtler */
+#page-kpi .hero-banner.cardless .hero-eyebrow {
+  letter-spacing: 5px;
+  opacity: 0.7;
+}
+
+/* Progress track — slightly thicker so it reads without card */
+#page-kpi .hero-banner.cardless .progress-track {
+  height: 6px;
+  background: rgba(255,255,255,0.05);
+}
+[data-theme="light"] #page-kpi .hero-banner.cardless .progress-track {
+  background: rgba(27,42,31,0.06);
+}
+
+/* ─────────────────────────────────────────────────────── */
+
 /* Hero micro-stats (Total Transaksi + Avg IPT) */
 #page-kpi .hero-micro-stats {
   display: flex;
@@ -3181,7 +3244,7 @@ body.dashboard-locking .card {
     <div id="kpi-hero" style="display:none">
 
       <!-- Hero Banner -->
-      <div class="hero-banner reveal mb18" id="hero-banner-el">
+      <div class="hero-banner cardless reveal mb18" id="hero-banner-el">
         <div class="hero-3col">
           <div class="h-col h-col-gmv kpi-clickable" onclick="openKpiModal('gmv',this)" title="Lihat breakdown GMV">
             <div class="hero-eyebrow">Current GMV</div>
