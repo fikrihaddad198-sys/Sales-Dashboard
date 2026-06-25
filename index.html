@@ -2434,16 +2434,24 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   100% { background: rgba(244,241,232,0); }
 }
 
-/* EXIT: only the LOGO MARK grows (scale ~7x) toward the watermark size and
-   fades; the brand text + sub + line fade out quickly so they don't balloon. */
+/* EXIT: only the LOGO MARK glyph grows toward the watermark and fades.
+   --hero-dx/--hero-dy are computed in JS so the growing logo's center lands
+   EXACTLY on the brand-mark watermark center (perfect alignment). The rounded
+   box chrome (bg/border/shadow) fades away so only the glyph enlarges. */
 #splash-screen.splash-exit #splash-logo-mark {
   animation: splash-grow-into-bg 0.95s cubic-bezier(0.33,0,0.30,1) forwards;
   transform-origin: center center;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
 @keyframes splash-grow-into-bg {
-  0%   { opacity: 1;   transform: scale(1);   filter: blur(0px); }
-  55%  { opacity: 0.5; transform: scale(4.2); filter: blur(0px); }
-  100% { opacity: 0;   transform: scale(7.2); filter: blur(3px); }
+  0%   { opacity: 1;
+         transform: translate(0,0) scale(1); filter: blur(0px); }
+  55%  { opacity: 0.55;
+         transform: translate(calc(var(--hero-dx,0px)*0.55), calc(var(--hero-dy,90px)*0.55)) scale(8); filter: blur(0px); }
+  100% { opacity: 0;
+         transform: translate(var(--hero-dx,0px), var(--hero-dy,90px)) scale(15); filter: blur(3px); }
 }
 #splash-screen.splash-exit #splash-brand,
 #splash-screen.splash-exit #splash-sub,
@@ -2458,14 +2466,17 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 /* HERO-IN: brand-mark fades in AT its resting size (the size the splash logo
    grows to), with a bright glow that settles — completing the illusion that
    the enlarging splash logo became the background watermark. */
+/* Brand-mark receives the growing logo at an inflated size, then slowly
+   DEFLATES ("kempes") to its resting size with a strong ease-out so the
+   user can savour the settle before the dashboard appears. 1.5s. */
 #brand-mark.hero-in {
-  animation: brand-mark-hero-in 1.10s cubic-bezier(0.22,1,0.36,1) forwards !important;
+  animation: brand-mark-hero-in 1.6s cubic-bezier(0.16,1,0.3,1) forwards !important;
 }
 @keyframes brand-mark-hero-in {
-  0%   { opacity: 0;    transform: translate(-50%,-50%) scale(1.18);
-         filter: drop-shadow(0 0 26px rgba(201,168,76,0.85)); }
-  45%  { opacity: 0.16; transform: translate(-50%,-50%) scale(1.05);
-         filter: drop-shadow(0 0 14px rgba(201,168,76,0.45)); }
+  0%   { opacity: 0.18; transform: translate(-50%,-50%) scale(1.25);
+         filter: drop-shadow(0 0 30px rgba(201,168,76,0.90)); }
+  18%  { opacity: 0.24; transform: translate(-50%,-50%) scale(1.18);
+         filter: drop-shadow(0 0 20px rgba(201,168,76,0.55)); }
   100% { opacity: 0.03; transform: translate(-50%,-50%) scale(1.00);
          filter: drop-shadow(0 0 3px rgba(201,168,76,0.20)); }
 }
@@ -2473,10 +2484,10 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   animation-name: brand-mark-hero-in-green;
 }
 @keyframes brand-mark-hero-in-green {
-  0%   { opacity: 0;    transform: translate(-50%,-50%) scale(1.18);
-         filter: drop-shadow(0 0 26px rgba(46,107,69,0.80)); }
-  45%  { opacity: 0.14; transform: translate(-50%,-50%) scale(1.05);
-         filter: drop-shadow(0 0 14px rgba(46,107,69,0.42)); }
+  0%   { opacity: 0.16; transform: translate(-50%,-50%) scale(1.25);
+         filter: drop-shadow(0 0 30px rgba(46,107,69,0.85)); }
+  18%  { opacity: 0.22; transform: translate(-50%,-50%) scale(1.18);
+         filter: drop-shadow(0 0 20px rgba(46,107,69,0.52)); }
   100% { opacity: 0.04; transform: translate(-50%,-50%) scale(1.00);
          filter: drop-shadow(0 0 3px rgba(46,107,69,0.20)); }
 }
@@ -6922,23 +6933,36 @@ function pinUnlock(){
   else renderCurrentPage();
 
   setTimeout(() => {
+    const bm = document.getElementById('brand-mark');
+    const lm = document.getElementById('splash-logo-mark');
+
+    // Measure exact centers so the growing logo lands precisely on the
+    // watermark center — guarantees perfect alignment at any viewport size.
+    if(bm && lm){
+      const lr = lm.getBoundingClientRect();
+      const br = bm.getBoundingClientRect();
+      const dx = (br.left + br.width/2)  - (lr.left + lr.width/2);
+      const dy = (br.top  + br.height/2) - (lr.top  + lr.height/2);
+      lm.style.setProperty('--hero-dx', dx.toFixed(1) + 'px');
+      lm.style.setProperty('--hero-dy', dy.toFixed(1) + 'px');
+    }
+
     splash.classList.add('splash-exit');
 
-    // Hero transition: brand-mark zooms from large → resting size,
-    // appearing to "receive" the splash logo as it shrinks away.
-    const bm = document.getElementById('brand-mark');
+    // Brand-mark receives the growing logo inflated, then slowly deflates
+    // ("kempes") to resting size — the moment the user gets to savour.
     if(bm){ bm.classList.add('hero-in'); }
-    // Remove hero-in after animation so breathing loop resumes.
-    setTimeout(() => { if(bm) bm.classList.remove('hero-in'); }, 1150);
+    // Remove hero-in after the 1.6s deflate so the breathing loop resumes.
+    setTimeout(() => { if(bm) bm.classList.remove('hero-in'); }, 1650);
 
-    // Hide splash after iris fully closes (1.05s).
-    setTimeout(() => { splash.style.display = 'none'; }, 1080);
-    // Reveal dashboard slightly before iris finishes — cards and progress bar
-    // begin fading in while logo is still in motion for a seamless blend.
+    // Hide splash after the logo finishes growing + bg fades out (~0.95s).
+    setTimeout(() => { splash.style.display = 'none'; }, 1000);
+    // Reveal dashboard AFTER the watermark deflate completes (~1.6s) so the
+    // user savours the settle before the KPI cards animate in.
     setTimeout(() => {
       revealDashboard();
       replayProgressBar();
-    }, 840);
+    }, 1600);
   }, 2050);
 }
 
