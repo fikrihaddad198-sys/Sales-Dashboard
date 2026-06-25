@@ -2426,15 +2426,39 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   100% { clip-path: circle(0%   at 50% 42%); }
 }
 
-/* EXIT: content blasts forward while iris closes — pure aesthetic layer.
-   Extended to 0.5s to match the slower iris so the logo shrink feels long
-   and creamy rather than abrupt. */
+/* EXIT: logo shrinks INTO the background, becoming the brand-mark watermark.
+   Scale collapses to near-zero so it appears to fly backwards into the bg. */
 #splash-screen.splash-exit #splash-inner {
-  animation: splash-blast-fwd 0.50s cubic-bezier(0.55,0,1,0.45) forwards;
+  animation: splash-into-bg 0.80s cubic-bezier(0.55,0,0.45,1) forwards;
 }
-@keyframes splash-blast-fwd {
-  0%   { opacity: 1; transform: scale(1)    translateY(0);   filter: blur(0px); }
-  100% { opacity: 0; transform: scale(1.30) translateY(-8px); filter: blur(10px); }
+@keyframes splash-into-bg {
+  0%   { opacity: 1; transform: scale(1);    filter: blur(0px); }
+  60%  { opacity: 0.6; filter: blur(0px); }
+  100% { opacity: 0; transform: scale(0.08); filter: blur(2px); }
+}
+
+/* HERO-IN: brand-mark starts large (matching splash logo's apparent size)
+   and settles to its resting size — completing the illusion that the splash
+   logo "flew back" and became the background watermark. */
+#brand-mark.hero-in {
+  animation: brand-mark-hero-in 1.10s cubic-bezier(0.22,1,0.36,1) forwards !important;
+}
+@keyframes brand-mark-hero-in {
+  0%   { opacity: 0.30; transform: translate(-50%,-50%) scale(4.5);
+         filter: drop-shadow(0 0 24px rgba(201,168,76,0.80)); }
+  55%  { opacity: 0.14; filter: drop-shadow(0 0 12px rgba(201,168,76,0.40)); }
+  100% { opacity: 0.03; transform: translate(-50%,-50%) scale(1.00);
+         filter: drop-shadow(0 0 3px rgba(201,168,76,0.20)); }
+}
+[data-theme="light"] #brand-mark.hero-in {
+  animation-name: brand-mark-hero-in-green;
+}
+@keyframes brand-mark-hero-in-green {
+  0%   { opacity: 0.28; transform: translate(-50%,-50%) scale(4.5);
+         filter: drop-shadow(0 0 24px rgba(46,107,69,0.75)); }
+  55%  { opacity: 0.12; filter: drop-shadow(0 0 12px rgba(46,107,69,0.38)); }
+  100% { opacity: 0.04; transform: translate(-50%,-50%) scale(1.00);
+         filter: drop-shadow(0 0 3px rgba(46,107,69,0.20)); }
 }
 
 #splash-inner {
@@ -6879,16 +6903,20 @@ function pinUnlock(){
 
   setTimeout(() => {
     splash.classList.add('splash-exit');
-    // Hide splash after the (now slower, 1.05s) iris fully closes.
+
+    // Hero transition: brand-mark zooms from large → resting size,
+    // appearing to "receive" the splash logo as it shrinks away.
+    const bm = document.getElementById('brand-mark');
+    if(bm){ bm.classList.add('hero-in'); }
+    // Remove hero-in after animation so breathing loop resumes.
+    setTimeout(() => { if(bm) bm.classList.remove('hero-in'); }, 1150);
+
+    // Hide splash after iris fully closes (1.05s).
     setTimeout(() => { splash.style.display = 'none'; }, 1080);
-    // Reveal dashboard slightly BEFORE the iris finishes closing, so the
-    // card/progress entrance overlaps the shrinking logo. The two motions
-    // blend into one continuous move — the "mix" is imperceptible.
+    // Reveal dashboard slightly before iris finishes — cards and progress bar
+    // begin fading in while logo is still in motion for a seamless blend.
     setTimeout(() => {
       revealDashboard();
-      // Re-animate ONLY the progress bar width (lightweight, no innerHTML
-      // rebuild) so the reveal doesn't "slam" content in mid-animation.
-      // Hero numbers re-animate via their CSS (paused until dashboard-ready).
       replayProgressBar();
     }, 840);
   }, 2050);
