@@ -1238,17 +1238,24 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 .card-hdr {
-  font-size: 11px; font-weight: 700; color: var(--t2);
+  font-size: 10px; font-weight: 600; color: var(--t2);
   margin-bottom: 18px;
-  display: flex; align-items: center; gap: 8px;
-  letter-spacing: 0.3px;
+  display: flex; align-items: center; gap: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
   position: relative; z-index: 2;
+  padding-left: 10px;
+  border-left: 2px solid var(--acc, var(--gold));
 }
-.card-hdr-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: radial-gradient(circle, var(--gold) 0%, var(--acc, var(--cyan)) 100%);
-  box-shadow: 0 0 10px var(--acc, var(--cyan)), 0 0 4px rgba(201,168,76,0.6);
-  flex-shrink: 0;
+.card-hdr-dot { display: none; }
+[data-theme="light"] .card-hdr {
+  border-left-color: var(--acc, #2e6b45);
+  color: var(--t2);
+}
+.card-hdr.mb0 { margin-bottom: 0; }
+.race-chart-title {
+  font-size: 10px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--t2);
+  padding-left: 10px; border-left: 2px solid var(--acc, var(--gold));
 }
 
 /* ─────────────────────────────────────────────────────
@@ -2365,9 +2372,6 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
       <!-- Hero Banner -->
       <div class="hero-banner reveal mb18" id="hero-banner-el">
-        <div class="orb1"></div>
-        <div class="orb2"></div>
-        <div class="orb3"></div>
         <div class="hero-3col">
           <div class="h-col h-col-gmv">
             <div class="hero-eyebrow">Current GMV</div>
@@ -2691,16 +2695,16 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
     <div class="filter-group" style="gap:8px;">
       <span class="filter-label">Speed</span>
       <div class="toggle-group">
-        <button class="toggle-btn active" id="rspeed-5000" onclick="setRaceSpeed(5000)">🐌</button>
-        <button class="toggle-btn" id="rspeed-3000" onclick="setRaceSpeed(3000)">🐢</button>
-        <button class="toggle-btn" id="rspeed-1500" onclick="setRaceSpeed(1500)">🚶</button>
-        <button class="toggle-btn" id="rspeed-700" onclick="setRaceSpeed(700)">🏃</button>
-        <button class="toggle-btn" id="rspeed-200" onclick="setRaceSpeed(200)">⚡</button>
+        <button class="toggle-btn active" id="rspeed-5000" onclick="setRaceSpeed(5000)">0.2×</button>
+        <button class="toggle-btn" id="rspeed-3000" onclick="setRaceSpeed(3000)">0.5×</button>
+        <button class="toggle-btn" id="rspeed-1500" onclick="setRaceSpeed(1500)">1×</button>
+        <button class="toggle-btn" id="rspeed-700" onclick="setRaceSpeed(700)">2×</button>
+        <button class="toggle-btn" id="rspeed-200" onclick="setRaceSpeed(200)">5×</button>
       </div>
     </div>
     
-    <button class="btn" id="race-play-btn" onclick="toggleRace()">▶ Play</button>
-    <button class="btn-ghost" onclick="resetRace()">↺ Reset</button>
+    <button class="btn" id="race-play-btn" onclick="toggleRace()">Play</button>
+    <button class="btn-ghost" onclick="resetRace()">Reset</button>
     <div class="race-day-display" id="race-day-display">—</div>
   </div>
 
@@ -2753,7 +2757,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
   <!-- BAR CHART RACE -->
   <div class="race-chart-section">
-    <div class="race-chart-title"><div class="card-hdr-dot" style="display:inline-block;margin-right:6px;"></div>Channel Race</div>
+    <div class="race-chart-title">Channel Race</div>
     <div class="race-bars" id="race-bars">
       <!-- rendered by JS -->
     </div>
@@ -2767,7 +2771,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
   <!-- DETAIL INSIGHT CARD -->
   <div class="card" id="race-detail-card" style="margin-top:14px;display:none;">
-    <div class="card-hdr"><div class="card-hdr-dot"></div>Sales Insight — Real-time Analysis</div>
+    <div class="card-hdr"><div class="card-hdr-dot"></div>Ringkasan Performa</div>
     <div id="race-detail-content"></div>
   </div>
 </div><!-- /race-inner -->
