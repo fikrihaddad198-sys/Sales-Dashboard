@@ -2418,12 +2418,56 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   to { width: 200px; }
 }
 
+/* ── Elegant light flicker / lens flash ── */
+#splash-flicker {
+  position: absolute; inset: 0; border-radius: inherit;
+  pointer-events: none; overflow: hidden;
+}
+#splash-flicker::before {
+  content: '';
+  position: absolute;
+  top: -60%; left: -40%;
+  width: 60%; height: 220%;
+  background: linear-gradient(105deg,
+    transparent 0%,
+    rgba(255,255,255,0.0) 35%,
+    rgba(255,255,255,0.55) 50%,
+    rgba(255,255,255,0.0) 65%,
+    transparent 100%
+  );
+  transform: translateX(-100%) skewX(-12deg);
+  animation: splash-shimmer 0.38s ease-out 0.58s forwards;
+  will-change: transform;
+}
+@keyframes splash-shimmer {
+  0%   { transform: translateX(-100%) skewX(-12deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateX(380%) skewX(-12deg); opacity: 0; }
+}
+/* Full-screen flash at peak (when logo glow is biggest ~0.55s) */
+#splash-screen::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 1;
+  background: radial-gradient(ellipse 60% 40% at 50% 48%, rgba(201,168,76,0.07) 0%, transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  animation: splash-ambient 1.8s ease-out 0.3s forwards;
+}
+[data-theme="light"] #splash-screen::before {
+  background: radial-gradient(ellipse 60% 40% at 50% 48%, rgba(46,107,69,0.08) 0%, transparent 70%);
+}
+@keyframes splash-ambient {
+  0%   { opacity: 0; }
+  25%  { opacity: 1; }
+  100% { opacity: 0; }
+}
 /* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   #splash-logo-mark, #splash-brand .sl, #splash-sub, #splash-line {
     animation: none !important;
     opacity: 1; transform: none; width: 200px;
   }
+  #splash-flicker::before, #splash-screen::before { animation: none !important; }
   #splash-screen.splash-exit { animation: none !important; opacity: 0; }
 }
 /* ── END SPLASH ─────────────────────────────────────────── */
@@ -2490,20 +2534,84 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 }
 .pin-key {
   width: 72px; height: 72px; border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
+  /* Layered glass: top highlight + bottom shadow edge = 3D pill */
+  background:
+    linear-gradient(160deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.04) 60%, rgba(0,0,0,0.08) 100%);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.18) inset,      /* top shine */
+    0 -1px 0 rgba(0,0,0,0.25) inset,            /* bottom depth */
+    0 4px 12px rgba(0,0,0,0.35),                /* drop shadow */
+    0 1px 3px rgba(0,0,0,0.20);
   color: var(--t1, #f0ece4);
-  font-size: 22px; font-weight: 500;
+  font-size: 22px; font-weight: 400; letter-spacing: 0;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
-  transition: background 0.12s, transform 0.1s, box-shadow 0.12s;
+  transition:
+    background 0.15s ease,
+    transform 0.08s cubic-bezier(0.4,0,0.2,1),
+    box-shadow 0.08s cubic-bezier(0.4,0,0.2,1);
   font-family: var(--font, 'DM Sans', sans-serif);
   -webkit-tap-highlight-color: transparent;
+  position: relative; overflow: hidden;
+  will-change: transform;
 }
-.pin-key:hover { background: rgba(255,255,255,0.10); }
-.pin-key:active { transform: scale(0.92); background: rgba(201,168,76,0.18); }
-.pin-key-empty { background: transparent !important; border-color: transparent !important; cursor: default; }
+/* Hover: lift + glow */
+.pin-key:not(.pin-key-empty):hover {
+  background:
+    linear-gradient(160deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.08) 60%, rgba(0,0,0,0.04) 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.22) inset,
+    0 -1px 0 rgba(0,0,0,0.20) inset,
+    0 6px 18px rgba(0,0,0,0.38),
+    0 2px 6px rgba(201,168,76,0.10);
+  transform: translateY(-1px);
+}
+/* Active: depress into surface — 3D push-down */
+.pin-key:not(.pin-key-empty):active {
+  background:
+    linear-gradient(160deg, rgba(0,0,0,0.10) 0%, rgba(255,255,255,0.04) 100%);
+  box-shadow:
+    0 0px 0 rgba(255,255,255,0.06) inset,
+    0 2px 0 rgba(0,0,0,0.35) inset,             /* deeper inner shadow on press */
+    0 1px 4px rgba(0,0,0,0.30),
+    0 0 12px rgba(201,168,76,0.14);
+  transform: translateY(2px) scale(0.95);
+  transition-duration: 0.04s;
+}
+/* Light mode keys */
+[data-theme="light"] .pin-key {
+  background:
+    linear-gradient(160deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.55) 60%, rgba(200,220,210,0.30) 100%);
+  border: 1px solid rgba(46,107,69,0.15);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,1) inset,
+    0 -1px 0 rgba(0,0,0,0.06) inset,
+    0 4px 14px rgba(0,0,0,0.10),
+    0 1px 3px rgba(0,0,0,0.08);
+  color: #1a2e22;
+}
+[data-theme="light"] .pin-key:not(.pin-key-empty):hover {
+  background:
+    linear-gradient(160deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.80) 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,1) inset,
+    0 -1px 0 rgba(0,0,0,0.05) inset,
+    0 6px 20px rgba(46,107,69,0.12),
+    0 2px 6px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+[data-theme="light"] .pin-key:not(.pin-key-empty):active {
+  background:
+    linear-gradient(160deg, rgba(230,242,236,1) 0%, rgba(255,255,255,0.70) 100%);
+  box-shadow:
+    0 0px 0 rgba(255,255,255,0.5) inset,
+    0 2px 0 rgba(0,0,0,0.08) inset,
+    0 1px 4px rgba(0,0,0,0.10);
+  transform: translateY(2px) scale(0.95);
+}
+.pin-key-empty { background: transparent !important; border-color: transparent !important; box-shadow: none !important; cursor: default; }
 .pin-key-del { font-size: 14px; }
-.pin-key-del:active { background: rgba(248,113,113,0.15) !important; }
+.pin-key-del:active { box-shadow: 0 0 14px rgba(248,113,113,0.20) !important; }
 </style>
 <style id="brand-mark-style">
 /* Fore logo watermark — masked shape, color follows theme.
@@ -2570,6 +2678,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   <div id="splash-inner">
     <div id="splash-logo-mark">
       <span class="splash-icon header-logo-icon" style="width:42px;height:54px;display:block;"></span>
+      <div id="splash-flicker" aria-hidden="true"></div>
     </div>
     <div id="splash-brand"></div>
     <div id="splash-sub">Sales Intelligence</div>
