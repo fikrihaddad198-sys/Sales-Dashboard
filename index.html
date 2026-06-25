@@ -2434,23 +2434,23 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   100% { background: rgba(244,241,232,0); }
 }
 
-/* EXIT: SINGLE-ELEMENT shared transition. The small splash glyph does NOT
-   grow (scaling its low-res PNG mask 12× would blur it and create a seam
-   against the crisp watermark). Instead it just dissolves in place with a
-   tiny grow, while the brand-mark watermark itself does the real morph —
-   growing from this glyph's exact position+size up to its resting place.
-   Because the brand-mark renders its mask crisp at every size, there is no
-   handoff: it IS the watermark the whole way. Truly seamless. */
+/* EXIT: SINGLE-ELEMENT shared transition. The glyph and the brand-mark are
+   the IDENTICAL flat-gold masked silhouette. The glyph simply crossfades out
+   while the brand-mark — starting SOLID at the glyph's exact spot+size —
+   takes its place and grows. Because they're identical at the swap moment,
+   the handover is invisible: one solid logo enlarges and thins into the
+   watermark. No scale on the glyph (it must not diverge from the brand-mark
+   that overlaps it). */
 #splash-screen.splash-exit #splash-logo-mark {
-  animation: splash-glyph-dissolve 0.55s cubic-bezier(0.4,0,0.6,1) forwards;
+  animation: splash-glyph-dissolve 0.28s ease forwards;
   transform-origin: center center;
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
 }
 @keyframes splash-glyph-dissolve {
-  0%   { opacity: 1; transform: scale(1); }
-  100% { opacity: 0; transform: scale(1.35); }
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
 }
 #splash-screen.splash-exit #splash-brand,
 #splash-screen.splash-exit #splash-sub,
@@ -2474,18 +2474,18 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   animation: brand-mark-hero-in 2.4s cubic-bezier(0.22,1,0.30,1) forwards !important;
 }
 @keyframes brand-mark-hero-in {
-  0%   { opacity: 0.0;
+  0%   { opacity: 1.0;
          transform: translate(calc(-50% + var(--bm-sx,0px)), calc(-50% + var(--bm-sy,0px))) scale(var(--bm-ss,0.08));
-         filter: drop-shadow(0 0 6px rgba(201,168,76,0.9)); }
-  18%  { opacity: 0.50;
-         transform: translate(calc(-50% + var(--bm-sx,0px)*0.7), calc(-50% + var(--bm-sy,0px)*0.7)) scale(calc(var(--bm-ss,0.08) + (1.06 - var(--bm-ss,0.08))*0.32));
-         filter: drop-shadow(0 0 30px rgba(201,168,76,1.0))
-                 drop-shadow(0 0 70px rgba(201,168,76,0.5)); }
-  60%  { opacity: 0.16;
+         filter: drop-shadow(0 0 8px rgba(201,168,76,0.45)); }
+  30%  { opacity: 0.55;
+         transform: translate(calc(-50% + var(--bm-sx,0px)*0.55), calc(-50% + var(--bm-sy,0px)*0.55)) scale(calc(var(--bm-ss,0.08) + (1.06 - var(--bm-ss,0.08))*0.55));
+         filter: drop-shadow(0 0 26px rgba(201,168,76,0.85))
+                 drop-shadow(0 0 60px rgba(201,168,76,0.45)); }
+  62%  { opacity: 0.18;
          transform: translate(-50%,-50%) scale(1.06);
-         filter: drop-shadow(0 0 40px rgba(201,168,76,0.85))
-                 drop-shadow(0 0 90px rgba(201,168,76,0.40))
-                 drop-shadow(0 0 150px rgba(201,168,76,0.18)); }
+         filter: drop-shadow(0 0 40px rgba(201,168,76,0.80))
+                 drop-shadow(0 0 90px rgba(201,168,76,0.38))
+                 drop-shadow(0 0 150px rgba(201,168,76,0.16)); }
   100% { opacity: 0.04; transform: translate(-50%,-50%) scale(1.00);
          filter: drop-shadow(0 0 4px rgba(201,168,76,0.20)); }
 }
@@ -2493,18 +2493,18 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   animation-name: brand-mark-hero-in-green;
 }
 @keyframes brand-mark-hero-in-green {
-  0%   { opacity: 0.0;
+  0%   { opacity: 1.0;
          transform: translate(calc(-50% + var(--bm-sx,0px)), calc(-50% + var(--bm-sy,0px))) scale(var(--bm-ss,0.08));
-         filter: drop-shadow(0 0 6px rgba(46,107,69,0.85)); }
-  18%  { opacity: 0.48;
-         transform: translate(calc(-50% + var(--bm-sx,0px)*0.7), calc(-50% + var(--bm-sy,0px)*0.7)) scale(calc(var(--bm-ss,0.08) + (1.06 - var(--bm-ss,0.08))*0.32));
-         filter: drop-shadow(0 0 30px rgba(46,107,69,0.95))
-                 drop-shadow(0 0 70px rgba(46,107,69,0.48)); }
-  60%  { opacity: 0.16;
+         filter: drop-shadow(0 0 8px rgba(46,107,69,0.42)); }
+  30%  { opacity: 0.55;
+         transform: translate(calc(-50% + var(--bm-sx,0px)*0.55), calc(-50% + var(--bm-sy,0px)*0.55)) scale(calc(var(--bm-ss,0.08) + (1.06 - var(--bm-ss,0.08))*0.55));
+         filter: drop-shadow(0 0 26px rgba(46,107,69,0.80))
+                 drop-shadow(0 0 60px rgba(46,107,69,0.42)); }
+  62%  { opacity: 0.18;
          transform: translate(-50%,-50%) scale(1.06);
-         filter: drop-shadow(0 0 40px rgba(46,107,69,0.80))
-                 drop-shadow(0 0 90px rgba(46,107,69,0.38))
-                 drop-shadow(0 0 150px rgba(46,107,69,0.16)); }
+         filter: drop-shadow(0 0 40px rgba(46,107,69,0.75))
+                 drop-shadow(0 0 90px rgba(46,107,69,0.36))
+                 drop-shadow(0 0 150px rgba(46,107,69,0.15)); }
   100% { opacity: 0.04; transform: translate(-50%,-50%) scale(1.00);
          filter: drop-shadow(0 0 4px rgba(46,107,69,0.18)); }
 }
@@ -6986,8 +6986,10 @@ function pinUnlock(){
       }
     }, 2500);
 
-    // Hide splash after the glyph has fully dissolved (0.55s).
-    setTimeout(() => { splash.style.display = 'none'; }, 650);
+    // Hide splash only after the background fade (0.95s) completes, so the
+    // remaining backdrop never pops away mid-fade. The glyph is already
+    // invisible (0.28s) and the brand-mark carries the morph above it.
+    setTimeout(() => { splash.style.display = 'none'; }, 1000);
     // Reveal dashboard AFTER the watermark morph + kempes fully completes.
     setTimeout(() => {
       revealDashboard();
