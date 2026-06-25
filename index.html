@@ -2470,7 +2470,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
    DEFLATES ("kempes") to its resting size with a strong ease-out so the
    user can savour the settle before the dashboard appears. 1.5s. */
 #brand-mark.hero-in {
-  animation: brand-mark-hero-in 1.6s cubic-bezier(0.16,1,0.3,1) forwards !important;
+  animation: brand-mark-hero-in 1.4s cubic-bezier(0.16,1,0.3,1) forwards !important;
 }
 @keyframes brand-mark-hero-in {
   0%   { opacity: 0.18; transform: translate(-50%,-50%) scale(1.25);
@@ -3090,28 +3090,28 @@ body.dashboard-locking .card {
   0%,100% {
     opacity: .02;
     transform: translate(-50%,-50%) scale(1.00);
-    filter: drop-shadow(0 0 3px rgba(201,168,76,0.20));
+    filter: drop-shadow(0 0 4px rgba(201,168,76,0.22));
   }
   50% {
-    opacity: .03;
-    transform: translate(-50%,-50%) scale(1.03);
-    filter: drop-shadow(0 0 8px  rgba(201,168,76,0.90))
-            drop-shadow(0 0 20px rgba(201,168,76,0.40))
-            drop-shadow(0 0 40px rgba(201,168,76,0.15));
+    opacity: .05;
+    transform: translate(-50%,-50%) scale(1.06);
+    filter: drop-shadow(0 0 12px rgba(201,168,76,1.0))
+            drop-shadow(0 0 28px rgba(201,168,76,0.55))
+            drop-shadow(0 0 56px rgba(201,168,76,0.22));
   }
 }
 @keyframes brand-mark-breathe-green {
   0%,100% {
     opacity: .02;
     transform: translate(-50%,-50%) scale(1.00);
-    filter: drop-shadow(0 0 3px rgba(46,107,69,0.20));
+    filter: drop-shadow(0 0 4px rgba(46,107,69,0.22));
   }
   50% {
-    opacity: .03;
-    transform: translate(-50%,-50%) scale(1.03);
-    filter: drop-shadow(0 0 8px  rgba(46,107,69,0.85))
-            drop-shadow(0 0 20px rgba(46,107,69,0.38))
-            drop-shadow(0 0 40px rgba(46,107,69,0.14));
+    opacity: .05;
+    transform: translate(-50%,-50%) scale(1.06);
+    filter: drop-shadow(0 0 12px rgba(46,107,69,0.95))
+            drop-shadow(0 0 28px rgba(46,107,69,0.52))
+            drop-shadow(0 0 56px rgba(46,107,69,0.20));
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -6949,20 +6949,21 @@ function pinUnlock(){
 
     splash.classList.add('splash-exit');
 
-    // Brand-mark receives the growing logo inflated, then slowly deflates
-    // ("kempes") to resting size — the moment the user gets to savour.
-    if(bm){ bm.classList.add('hero-in'); }
-    // Remove hero-in after the 1.6s deflate so the breathing loop resumes.
-    setTimeout(() => { if(bm) bm.classList.remove('hero-in'); }, 1650);
+    // Brand-mark hero-in is DELAYED to ~650ms — by then the splash logo has
+    // grown large, so the watermark appears as a seamless CONTINUATION of it
+    // (not a second logo showing behind a tiny one). It then deflates.
+    setTimeout(() => { if(bm) bm.classList.add('hero-in'); }, 650);
+    // Remove hero-in after it starts (650) + 1.4s deflate = 2050ms.
+    setTimeout(() => { if(bm) bm.classList.remove('hero-in'); }, 2100);
 
     // Hide splash after the logo finishes growing + bg fades out (~0.95s).
     setTimeout(() => { splash.style.display = 'none'; }, 1000);
-    // Reveal dashboard AFTER the watermark deflate completes (~1.6s) so the
+    // Reveal dashboard AFTER the watermark deflate completes (~2050ms) so the
     // user savours the settle before the KPI cards animate in.
     setTimeout(() => {
       revealDashboard();
       replayProgressBar();
-    }, 1600);
+    }, 2080);
   }, 2050);
 }
 
