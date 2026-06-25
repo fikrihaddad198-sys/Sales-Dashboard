@@ -2299,20 +2299,43 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   border-color: transparent !important;
 }
 
-/* Per-column independent hover lift */
+/* ── SPOTLIGHT DIMMING — premium focus without physical lift ──
+   When any column is hovered, siblings fade to 45% opacity.
+   The focused column keeps full opacity + gold underline accent. */
 #page-kpi .hero-banner.cardless .h-col {
   border-radius: 12px;
   padding-top: 10px;
   padding-bottom: 10px;
-  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1),
-              background 0.25s ease;
+  transition: opacity 0.30s cubic-bezier(0.22,1,0.36,1);
+  position: relative;
 }
+/* Underline accent — hidden by default, slides in on focus */
+#page-kpi .hero-banner.cardless .h-col::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 50%;
+  width: 0; height: 1.5px;
+  background: var(--gold);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: width 0.35s cubic-bezier(0.22,1,0.36,1),
+              opacity 0.35s ease;
+  opacity: 0;
+}
+[data-theme="light"] #page-kpi .hero-banner.cardless .h-col::before {
+  background: #2e6b45;
+}
+/* When parent is hovered: dim ALL columns */
+#page-kpi .hero-banner.cardless .hero-3col:has(.h-col:hover) .h-col {
+  opacity: 0.42;
+}
+/* Then bring focused column back to full + show accent */
 #page-kpi .hero-banner.cardless .h-col:hover {
-  transform: translateY(-5px);
-  background: rgba(255,255,255,0.03);
+  opacity: 1 !important;
 }
-[data-theme="light"] #page-kpi .hero-banner.cardless .h-col:hover {
-  background: rgba(46,107,69,0.04);
+#page-kpi .hero-banner.cardless .h-col:hover::before {
+  width: 40px;
+  opacity: 1;
 }
 
 /* Column dividers become hairlines */
