@@ -474,7 +474,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     0 4px 32px rgba(0,0,0,0.65),
     0 0 0 0 transparent;
   display: flex; align-items: center;
-  padding: 0 var(--sp6); gap: var(--sp4);
+  padding: 0 max(var(--sp6), calc((100% - 1280px) / 2 + var(--sp6)));
+  gap: var(--sp4);
   flex-shrink: 0; position: relative; z-index: 200;
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
@@ -679,7 +680,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   -webkit-backdrop-filter: blur(28px) saturate(180%);
   border-bottom: 1px solid rgba(201,168,76,0.10);
   display: flex; align-items: center;
-  padding: 0 var(--sp4); gap: 1px;
+  padding: 0 max(var(--sp4), calc((100% - 1280px) / 2 + var(--sp4))); gap: 1px;
   flex-shrink: 0; overflow-x: auto; overflow-y: hidden;
   position: relative; z-index: 199;
   box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 4px 20px rgba(0,0,0,0.6);
@@ -793,7 +794,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .app-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; position:relative; z-index:1; }
 .page {
   display: none; flex: 1; overflow-y: auto;
-  padding: var(--sp6) var(--sp7); scroll-behavior: smooth;
+  padding: var(--sp6) max(var(--sp7), calc((100% - 1280px) / 2));
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
@@ -863,7 +865,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 .kpi-filter-bar {
   display: flex; align-items: center; gap: var(--sp3); flex-wrap: wrap;
-  padding: 11px var(--sp6);
+  padding: 11px max(var(--sp6), calc((100% - 1280px) / 2 + var(--sp6)));
   background: rgba(7,12,9,0.78);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
@@ -872,6 +874,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   box-shadow: 0 1px 0 rgba(255,255,255,0.028) inset, 0 4px 24px rgba(0,0,0,0.5);
 }
 [data-theme="light"] .kpi-filter-bar {
+  padding-left: max(var(--sp6), calc((100% - 1280px) / 2 + var(--sp6)));
+  padding-right: max(var(--sp6), calc((100% - 1280px) / 2 + var(--sp6)));
   background: rgba(46,107,69,0.82);
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
@@ -910,7 +914,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .filter-sep { color: var(--t3); font-size: 11px; }
 
 .kpi-scroll {
-  padding: var(--sp6) var(--sp7);
+  padding: var(--sp6) max(var(--sp7), calc((100% - 1280px) / 2));
 }
 .kpi-scroll::-webkit-scrollbar { width: 3px; }
 
