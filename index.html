@@ -840,24 +840,36 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   box-shadow: 0 1px 0 rgba(255,255,255,0.028) inset, 0 4px 24px rgba(0,0,0,0.5);
 }
 [data-theme="light"] .kpi-filter-bar {
-  background: #2e6b45;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-bottom: 1px solid rgba(0,0,0,0.12);
-  box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+  background: rgba(46,107,69,0.82);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border-bottom: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 4px 18px rgba(27,42,31,0.22);
 }
-[data-theme="light"] .kpi-filter-bar .filter-label { color: rgba(255,255,255,0.85); }
-[data-theme="light"] .kpi-filter-bar .filter-sep { color: rgba(255,255,255,0.5); }
+[data-theme="light"] .kpi-filter-bar .filter-label { color: rgba(255,255,255,0.9); }
+[data-theme="light"] .kpi-filter-bar .filter-sep { color: rgba(255,255,255,0.45); }
+/* Override global light drp-btn style inside filter bar */
 [data-theme="light"] .kpi-filter-bar .drp-btn {
-  color: #fff; border-color: rgba(255,255,255,0.3);
-  background: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.18) !important;
+  border: 1px solid rgba(255,255,255,0.32) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.22) inset, 0 4px 12px rgba(0,0,0,0.12) !important;
+  color: #fff !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-[data-theme="light"] .kpi-filter-bar .drp-btn:hover { background: rgba(255,255,255,0.2); }
+[data-theme="light"] .kpi-filter-bar .drp-btn:hover {
+  background: rgba(255,255,255,0.26) !important;
+  border-color: rgba(255,255,255,0.5) !important;
+}
+[data-theme="light"] .kpi-filter-bar .drp-btn-icon,
+[data-theme="light"] .kpi-filter-bar .drp-btn-arrow { color: rgba(255,255,255,0.8); }
 [data-theme="light"] .kpi-filter-bar .inp {
-  color: #fff; border-color: rgba(255,255,255,0.3);
-  background: rgba(255,255,255,0.12);
+  color: #fff !important;
+  border-color: rgba(255,255,255,0.32) !important;
+  background: rgba(255,255,255,0.18) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.22) inset !important;
 }
-[data-theme="light"] .kpi-filter-bar .inp::placeholder { color: rgba(255,255,255,0.45); }
+[data-theme="light"] .kpi-filter-bar .inp::placeholder { color: rgba(255,255,255,0.5); }
 .filter-group { display: flex; align-items: center; gap: var(--sp2); }
 .filter-label {
   font-size: 9.5px; font-weight: 700; color: var(--t3);
