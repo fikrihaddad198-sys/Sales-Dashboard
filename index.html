@@ -2317,37 +2317,41 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 #splash-screen {
   position: fixed; inset: 0; z-index: 10000;
   display: flex; align-items: center; justify-content: center;
-  background: var(--bg, #0f0d0b);
+  /* transparent — #splash-curtain handles background */
+  background: transparent;
   pointer-events: none;
-  /* Promote entire screen to its own GPU layer from the start */
-  will-change: transform;
-  transform: translateZ(0);
 }
 
-/* Content (logo, text) fades out first — fast so zoom feels instant */
-#splash-screen.splash-exit #splash-inner {
-  animation: splash-content-out 0.18s ease-in forwards;
-}
-@keyframes splash-content-out {
-  to { opacity: 0; transform: scale(1.08); }
-}
-
-/* The zoom layer — pure simple div, no children, pure GPU transform */
-#splash-zoom-layer {
+/* ── Curtain: the solid background behind content ── */
+/* clip-path circle defines what's VISIBLE of the curtain.
+   Large circle = curtain covers screen. Circle → 0 = curtain vanishes → dashboard revealed. */
+#splash-curtain {
   position: absolute; inset: 0;
   background: var(--bg, #0f0d0b);
-  will-change: transform, opacity;
-  transform: translateZ(0) scale(1);
-  opacity: 0; /* hidden until exit */
-  border-radius: 0;
+  /* clip origin 50% 42% = roughly where the logo sits vertically */
+  clip-path: circle(150% at 50% 42%);
+  will-change: clip-path;
+  transform: translateZ(0);
+  z-index: 0;
 }
-#splash-screen.splash-exit #splash-zoom-layer {
-  animation: splash-zoom-burst 0.72s cubic-bezier(0.22,1,0.36,1) 0.12s forwards;
+
+/* EXIT phase 1: content blasts forward — scale + blur fly-past feel */
+#splash-screen.splash-exit #splash-inner {
+  animation: splash-blast-fwd 0.30s cubic-bezier(0.55,0,1,0.45) forwards;
 }
-@keyframes splash-zoom-burst {
-  0%   { opacity: 1; transform: translateZ(0) scale(1);    }
-  15%  { opacity: 1; transform: translateZ(0) scale(1.12); }
-  100% { opacity: 0; transform: translateZ(0) scale(5.5);  }
+@keyframes splash-blast-fwd {
+  0%   { opacity: 1; transform: scale(1)    translateY(0);    filter: blur(0px); }
+  100% { opacity: 0; transform: scale(1.40) translateY(-10px); filter: blur(14px); }
+}
+
+/* EXIT phase 2: iris wipe — curtain shrinks from logo center outward */
+/* Starts 60ms after content begins fading, so dive feels simultaneous */
+#splash-screen.splash-exit #splash-curtain {
+  animation: splash-iris-close 0.78s cubic-bezier(0.87,0,0.13,1) 0.06s forwards;
+}
+@keyframes splash-iris-close {
+  0%   { clip-path: circle(150% at 50% 42%); }
+  100% { clip-path: circle(0%   at 50% 42%); }
 }
 
 #splash-inner {
@@ -2490,6 +2494,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
     opacity: 1; transform: none; width: 200px;
   }
   #splash-flicker::before, #splash-screen::before { animation: none !important; }
+  #splash-curtain { clip-path: circle(0% at 50% 42%) !important; }
   #splash-screen.splash-exit { animation: none !important; opacity: 0; }
 }
 /* ── END SPLASH ─────────────────────────────────────────── */
@@ -2780,8 +2785,8 @@ body.dashboard-ready .kpi-card:nth-child(n+6) { animation: dr-card-in 0.5s cubic
 
 <!-- ═══ SPLASH SCREEN ═══ -->
 <div id="splash-screen" style="display:none;" aria-hidden="true">
-  <div id="splash-zoom-layer"></div>
-  <div id="splash-inner">
+  <div id="splash-curtain"></div>
+  <div id="splash-inner" style="position:relative;z-index:1;">
     <div id="splash-logo-mark">
       <span class="splash-icon header-logo-icon" style="width:42px;height:54px;display:block;"></span>
       <div id="splash-flicker" aria-hidden="true"></div>
@@ -6399,12 +6404,11 @@ function pinUnlock(){
   // 3. After ~2.1s: zoom-in exit
   const exitDelay = reduced ? 0 : 2050;
   setTimeout(() => {
-    // Dashboard reveals as zoom accelerates (overlap = no dead time)
     splash.classList.add('splash-exit');
-    // Dashboard starts appearing 200ms into the zoom (content already fading)
-    setTimeout(() => { document.body.classList.add('dashboard-ready'); }, 200);
-    // Remove splash element after full animation (180ms content + 120ms delay + 720ms zoom)
-    setTimeout(() => { splash.style.display = 'none'; }, 1060);
+    // Dashboard starts appearing as iris opens (60ms in) — overlap = seamless
+    setTimeout(() => { document.body.classList.add('dashboard-ready'); }, 80);
+    // Hide splash after iris fully closed (60ms delay + 780ms iris = 840ms)
+    setTimeout(() => { splash.style.display = 'none'; }, 900);
   }, exitDelay);
 
   // 4. Hide PIN screen element after it fades
