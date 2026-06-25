@@ -2415,18 +2415,22 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   will-change: clip-path;
 }
 
-/* EXIT: iris wipes entire screen (including content) shut together */
+/* EXIT: iris wipes entire screen (including content) shut together.
+   Slightly slower (1.05s) + gentler easing so the hand-off into the
+   dashboard reveal feels seamless — the "mix" should be imperceptible. */
 #splash-screen.splash-exit {
-  animation: splash-iris-close 0.82s cubic-bezier(0.87,0,0.13,1) forwards;
+  animation: splash-iris-close 1.05s cubic-bezier(0.83,0,0.17,1) forwards;
 }
 @keyframes splash-iris-close {
   0%   { clip-path: circle(150% at 50% 42%); }
   100% { clip-path: circle(0%   at 50% 42%); }
 }
 
-/* EXIT: content blasts forward while iris closes — pure aesthetic layer */
+/* EXIT: content blasts forward while iris closes — pure aesthetic layer.
+   Extended to 0.5s to match the slower iris so the logo shrink feels long
+   and creamy rather than abrupt. */
 #splash-screen.splash-exit #splash-inner {
-  animation: splash-blast-fwd 0.38s cubic-bezier(0.55,0,1,0.45) forwards;
+  animation: splash-blast-fwd 0.50s cubic-bezier(0.55,0,1,0.45) forwards;
 }
 @keyframes splash-blast-fwd {
   0%   { opacity: 1; transform: scale(1)    translateY(0);   filter: blur(0px); }
@@ -6875,16 +6879,18 @@ function pinUnlock(){
 
   setTimeout(() => {
     splash.classList.add('splash-exit');
-    // Hide splash after iris closes
-    setTimeout(() => { splash.style.display = 'none'; }, 900);
-    // Reveal dashboard AFTER splash is fully gone
+    // Hide splash after the (now slower, 1.05s) iris fully closes.
+    setTimeout(() => { splash.style.display = 'none'; }, 1080);
+    // Reveal dashboard slightly BEFORE the iris finishes closing, so the
+    // card/progress entrance overlaps the shrinking logo. The two motions
+    // blend into one continuous move — the "mix" is imperceptible.
     setTimeout(() => {
       revealDashboard();
       // Re-animate ONLY the progress bar width (lightweight, no innerHTML
       // rebuild) so the reveal doesn't "slam" content in mid-animation.
       // Hero numbers re-animate via their CSS (paused until dashboard-ready).
       replayProgressBar();
-    }, 920);
+    }, 840);
   }, 2050);
 }
 
