@@ -6587,14 +6587,24 @@ function pinUnlock(){
     brand.appendChild(span);
   });
 
+  // Load data immediately (user is authenticated); data fetches during the 2s splash
+  if(!allData || !allData.length) loadData();
+
   setTimeout(() => {
     splash.classList.add('splash-exit');
+    // Hide splash after iris closes
+    setTimeout(() => { splash.style.display = 'none'; }, 900);
+    // Reveal dashboard AFTER splash is fully gone, then re-fire number animations
     setTimeout(() => {
       document.body.classList.add('dashboard-ready');
-      // Load data now that user is authenticated (only if not already loaded)
-      if(!allData || !allData.length) loadData();
-    }, 80);
-    setTimeout(() => { splash.style.display = 'none'; }, 900);
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.hero-num, .hero-kpi-val, .fc-big').forEach(el => {
+          el.style.animation = 'none';
+          void el.offsetHeight;
+          el.style.animation = '';
+        });
+      });
+    }, 920);
   }, 2050);
 }
 
