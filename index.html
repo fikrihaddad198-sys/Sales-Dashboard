@@ -17,6 +17,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900;1,14..32,400&family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 /* ─────────────────────────────────────────────────────
    DESIGN TOKENS
@@ -3132,7 +3134,12 @@ body.dashboard-locking .card {
       <span class="filter-label">Hari</span>
       <input class="inp inp-sm" type="text" id="kpi-days" placeholder="30" oninput="onTargetInput()"/>
     </div>
-    
+    <div class="filter-group" style="margin-left:auto;">
+      <button class="drp-btn" id="kpi-export-btn" onclick="exportKpiPDF()" title="Export ringkasan KPI ke PDF">
+        <span class="drp-btn-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span>
+        <span class="drp-btn-text">Export PDF</span>
+      </button>
+    </div>
   </div>
 
   <div class="kpi-scroll">
@@ -6828,6 +6835,74 @@ function pinUnlock(){
     if(headerIcon) icon.style.cssText = headerIcon.style.cssText || getComputedStyle(headerIcon).cssText;
   }
 })();
+
+/* ── Export current KPI summary to PDF ──
+   Captures the rendered KPI hero + metrics + charts as an image and lays it
+   onto an A4 portrait PDF. Lets the team share a snapshot without dashboard
+   access. */
+async function exportKpiPDF(){
+  const btn = document.getElementById('kpi-export-btn');
+  const node = document.getElementById('kpi-hero');
+  if(!node || node.style.display==='none' || !allData || !allData.length){
+    alert('Data belum siap. Tunggu dashboard selesai memuat.');
+    return;
+  }
+  if(typeof html2canvas==='undefined' || !window.jspdf){
+    alert('Library export belum termuat. Cek koneksi internet lalu coba lagi.');
+    return;
+  }
+  const lbl = btn ? btn.querySelector('.drp-btn-text') : null;
+  const orig = lbl ? lbl.textContent : '';
+  if(lbl) lbl.textContent = 'Menyiapkan…';
+  if(btn) btn.style.pointerEvents = 'none';
+  try{
+    const bg = getComputedStyle(document.body).backgroundColor || '#0f0d0b';
+    const canvas = await html2canvas(node, {
+      backgroundColor: bg,
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      windowWidth: node.scrollWidth
+    });
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','mm','a4');
+    const pw = pdf.internal.pageSize.getWidth();
+    const ph = pdf.internal.pageSize.getHeight();
+    const margin = 8;
+    const imgW = pw - margin*2;
+    const imgH = canvas.height * imgW / canvas.width;
+    const img = canvas.toDataURL('image/jpeg', 0.92);
+    // Header line
+    const theme = document.documentElement.getAttribute('data-theme');
+    const period = (document.getElementById('drp-lbl-kpi')||{}).textContent || '';
+    pdf.setFontSize(13); pdf.setTextColor(theme==='light'?'#2e6b45':'#c9a84c');
+    pdf.text('Fore Coffee — KPI Summary', margin, 12);
+    pdf.setFontSize(8); pdf.setTextColor('#888');
+    pdf.text(period + '   ·   ' + new Date().toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'}), margin, 17);
+    let y = 22;
+    // If the image is taller than one page, slice it across pages.
+    if(imgH <= ph - y - margin){
+      pdf.addImage(img, 'JPEG', margin, y, imgW, imgH);
+    }else{
+      // paginate by drawing the same image shifted up per page
+      let remaining = imgH; let offset = 0; let first = true;
+      while(remaining > 0){
+        const avail = (first ? ph - y - margin : ph - margin*2);
+        pdf.addImage(img, 'JPEG', margin, (first?y:margin) - offset, imgW, imgH);
+        remaining -= avail; offset += avail;
+        if(remaining > 0){ pdf.addPage(); first = false; }
+      }
+    }
+    const fname = 'Fore-KPI-' + new Date().toISOString().slice(0,10) + '.pdf';
+    pdf.save(fname);
+  }catch(e){
+    console.error('exportKpiPDF:', e);
+    alert('Gagal membuat PDF. Coba lagi.');
+  }finally{
+    if(lbl) lbl.textContent = orig;
+    if(btn) btn.style.pointerEvents = '';
+  }
+}
 
 /* ── PWA: register service worker (enables install + offline shell) ── */
 if('serviceWorker' in navigator){
