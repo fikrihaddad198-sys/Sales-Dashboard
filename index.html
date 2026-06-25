@@ -2290,7 +2290,32 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 #page-kpi .hero-banner.cardless .orb2,
 #page-kpi .hero-banner.cardless .orb3 { display: none !important; }
 
-/* Column dividers become hairlines with more breathing */
+/* Disable whole-banner hover lift — each column lifts independently */
+#page-kpi .hero-banner.cardless:hover,
+#page-kpi .hero-banner.cardless.ghost-on,
+.reveal.hero-banner.cardless.ghost-on {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+/* Per-column independent hover lift */
+#page-kpi .hero-banner.cardless .h-col {
+  border-radius: 12px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1),
+              background 0.25s ease;
+}
+#page-kpi .hero-banner.cardless .h-col:hover {
+  transform: translateY(-5px);
+  background: rgba(255,255,255,0.03);
+}
+[data-theme="light"] #page-kpi .hero-banner.cardless .h-col:hover {
+  background: rgba(46,107,69,0.04);
+}
+
+/* Column dividers become hairlines */
 #page-kpi .hero-banner.cardless .h-col-gmv {
   border-right: 1px solid var(--border) !important;
 }
