@@ -2638,6 +2638,61 @@ body:not(.dashboard-ready) .fc-big {
   animation-play-state: paused;
 }
 
+/* ── SKELETON LOADING (shown while Google Sheet is fetching) ── */
+#kpi-skeleton { display: none; }
+#kpi-skeleton.show { display: block; }
+.skel {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface);
+  border-radius: var(--r4);
+}
+.skel::after {
+  content: '';
+  position: absolute; inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(201,168,76,0.10) 50%,
+    transparent 100%);
+  animation: skel-shimmer 1.4s ease-in-out infinite;
+}
+[data-theme="light"] .skel::after {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(46,107,69,0.12) 50%,
+    transparent 100%);
+}
+@keyframes skel-shimmer {
+  100% { transform: translateX(100%); }
+}
+.skel-hero {
+  display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 20px;
+  padding: 26px; margin-bottom: 18px;
+  border: 1px solid var(--border); border-radius: var(--r6);
+  background: var(--surface);
+}
+.skel-col { display: flex; flex-direction: column; gap: 12px; }
+.skel-line { height: 12px; }
+.skel-line.lg { height: 38px; }
+.skel-line.sm { height: 9px; }
+.skel-line.w40 { width: 40%; }
+.skel-line.w60 { width: 60%; }
+.skel-line.w80 { width: 80%; }
+.skel-bar { height: 8px; border-radius: 999px; margin-top: 18px; }
+.skel-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  margin-bottom: 18px;
+}
+.skel-metric { height: 92px; border: 1px solid var(--border); }
+@media (max-width: 720px) {
+  .skel-hero { grid-template-columns: 1fr; }
+  .skel-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel::after { animation: none; }
+}
+
 /* Header slides down */
 body.dashboard-ready .header {
   animation: dr-slide-down 0.55s cubic-bezier(0.16,1,0.3,1) 0.00s both;
@@ -3041,6 +3096,38 @@ body.dashboard-locking .card {
   </div>
 
   <div class="kpi-scroll">
+    <!-- Skeleton loader: shown while the Google Sheet data is fetching -->
+    <div id="kpi-skeleton" aria-hidden="true">
+      <div class="skel-hero">
+        <div class="skel-col">
+          <div class="skel skel-line sm w40"></div>
+          <div class="skel skel-line lg w80"></div>
+          <div class="skel skel-line sm w60"></div>
+        </div>
+        <div class="skel-col">
+          <div class="skel skel-line sm w40"></div>
+          <div class="skel skel-line lg w60"></div>
+          <div class="skel skel-line sm w60"></div>
+        </div>
+        <div class="skel-col">
+          <div class="skel skel-line sm w40"></div>
+          <div class="skel skel-line lg w60"></div>
+          <div class="skel skel-line sm w60"></div>
+        </div>
+      </div>
+      <div class="skel skel-bar"></div>
+      <div class="skel-grid" style="margin-top:18px">
+        <div class="skel skel-metric"></div>
+        <div class="skel skel-metric"></div>
+        <div class="skel skel-metric"></div>
+        <div class="skel skel-metric"></div>
+        <div class="skel skel-metric"></div>
+        <div class="skel skel-metric"></div>
+        <div class="skel skel-metric"></div>
+        <div class="skel skel-metric"></div>
+      </div>
+    </div>
+
     <div id="kpi-hero" style="display:none">
 
       <!-- Hero Banner -->
@@ -3726,6 +3813,10 @@ function grad(ctx, color, a1=0.22, a2=0){
 async function loadData(){
   const el=document.getElementById('last-updated'); // may be absent (badge removed)
   if(el) el.textContent='loading…';
+  // Show skeleton only on first load (when there's no data yet to display)
+  const skel=document.getElementById('kpi-skeleton');
+  const firstLoad=!allData||!allData.length;
+  if(skel && firstLoad) skel.classList.add('show');
   try{
     const ctrl=new AbortController();
     const tid=setTimeout(()=>ctrl.abort(),15000);
@@ -3734,8 +3825,10 @@ async function loadData(){
     const text=await res.text();
     allData=parseCSV(text);
     if(el) el.textContent=new Date().toLocaleTimeString('id-ID');
+    if(skel) skel.classList.remove('show');
     initDefaults(); renderCurrentPage();
   }catch(e){
+    if(skel) skel.classList.remove('show');
     if(el) el.textContent=e.name==='AbortError'?'TIMEOUT':'ERROR';
     console.error('loadData:',e);
   }
