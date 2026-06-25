@@ -2301,6 +2301,94 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 @media (max-width: 700px) {
   .contrib-grid { grid-template-columns: repeat(2,1fr); }
 }
+
+/* ══ PIN AUTH SCREEN ══ */
+#pin-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg, #0f0d0b);
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+#pin-screen.unlocked {
+  opacity: 0; pointer-events: none; visibility: hidden;
+}
+#pin-box {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0; padding: 0 24px; width: 100%; max-width: 320px;
+}
+#pin-logo {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 28px;
+}
+.pin-logo-mark {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: rgba(201,168,76,0.10);
+  border: 1px solid rgba(201,168,76,0.28);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 14px rgba(201,168,76,0.18);
+}
+.pin-logo-text {
+  font-size: 15px; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(130deg, #e0c98a 0%, #c9a84c 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+#pin-title {
+  font-size: 20px; font-weight: 700; color: var(--t1, #f0ece4);
+  letter-spacing: -0.3px; margin-bottom: 6px; text-align: center;
+}
+#pin-subtitle {
+  font-size: 11px; color: var(--t3, #5c554b);
+  letter-spacing: 0.5px; margin-bottom: 32px; text-align: center;
+}
+#pin-dots {
+  display: flex; gap: 14px; margin-bottom: 10px;
+}
+.pin-dot {
+  width: 13px; height: 13px; border-radius: 50%;
+  border: 2px solid rgba(201,168,76,0.3);
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.pin-dot.filled {
+  background: #c9a84c;
+  border-color: #c9a84c;
+  transform: scale(1.15);
+}
+#pin-error {
+  height: 18px; font-size: 11px; font-weight: 600;
+  color: #f87171; letter-spacing: 0.3px; margin-bottom: 24px;
+  text-align: center; opacity: 0; transition: opacity 0.2s;
+}
+#pin-error.show { opacity: 1; }
+@keyframes pin-shake {
+  0%,100%{ transform:translateX(0); }
+  20%    { transform:translateX(-8px); }
+  40%    { transform:translateX(8px); }
+  60%    { transform:translateX(-6px); }
+  80%    { transform:translateX(6px); }
+}
+#pin-dots.shake { animation: pin-shake 0.38s cubic-bezier(0.36,0.07,0.19,0.97); }
+#pin-numpad {
+  display: grid; grid-template-columns: repeat(3, 72px);
+  gap: 12px;
+}
+.pin-key {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--t1, #f0ece4);
+  font-size: 22px; font-weight: 500;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s, transform 0.1s, box-shadow 0.12s;
+  font-family: var(--font, 'DM Sans', sans-serif);
+  -webkit-tap-highlight-color: transparent;
+}
+.pin-key:hover { background: rgba(255,255,255,0.10); }
+.pin-key:active { transform: scale(0.92); background: rgba(201,168,76,0.18); }
+.pin-key-empty { background: transparent !important; border-color: transparent !important; cursor: default; }
+.pin-key-del { font-size: 14px; }
+.pin-key-del:active { background: rgba(248,113,113,0.15) !important; }
 </style>
 <style id="brand-mark-style">
 /* Fore logo watermark — masked shape, color follows theme.
@@ -2325,6 +2413,43 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 </style>
 </head>
 <body>
+<!-- ════ PIN AUTH SCREEN ════ -->
+<div id="pin-screen">
+  <div id="pin-box">
+    <div id="pin-logo">
+      <div class="pin-logo-mark"><span class="header-logo-icon" style="width:22px;height:28px;display:block;"></span></div>
+      <div class="pin-logo-text">Fore Coffee</div>
+    </div>
+    <div id="pin-title">Masukkan PIN</div>
+    <div id="pin-subtitle">Dashboard Sales Intelligence</div>
+    <div id="pin-dots">
+      <span class="pin-dot"></span>
+      <span class="pin-dot"></span>
+      <span class="pin-dot"></span>
+      <span class="pin-dot"></span>
+      <span class="pin-dot"></span>
+      <span class="pin-dot"></span>
+    </div>
+    <div id="pin-error"></div>
+    <div id="pin-numpad">
+      <button class="pin-key" onclick="pinKey('1')">1</button>
+      <button class="pin-key" onclick="pinKey('2')">2</button>
+      <button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button>
+      <button class="pin-key" onclick="pinKey('5')">5</button>
+      <button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button>
+      <button class="pin-key" onclick="pinKey('8')">8</button>
+      <button class="pin-key" onclick="pinKey('9')">9</button>
+      <button class="pin-key pin-key-empty"></button>
+      <button class="pin-key" onclick="pinKey('0')">0</button>
+      <button class="pin-key pin-key-del" onclick="pinDel()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="brand-mark" aria-hidden="true"></div>
 
 <!-- ═══ DATE RANGE PICKER POPUP ═══ -->
@@ -5830,5 +5955,108 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(
   </div>
   <div class="kpi-modal-table" id="kpi-modal-table"></div>
 </div>
+
+<script>
+/* ══ PIN AUTH ══ */
+const PIN_KEY = 'fc_pin_hash';
+const PIN_SESSION = 'fc_unlocked';
+const PIN_LEN = 6;
+let _pinBuf = '';
+let _pinMode = 'check'; // 'set' | 'confirm' | 'check'
+let _pinFirst = '';
+
+async function sha256(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function pinRender(){
+  document.querySelectorAll('.pin-dot').forEach((d,i)=>{
+    d.classList.toggle('filled', i < _pinBuf.length);
+  });
+}
+
+function pinKey(k){
+  if(_pinBuf.length >= PIN_LEN) return;
+  _pinBuf += k;
+  pinRender();
+  if(_pinBuf.length === PIN_LEN) setTimeout(pinSubmit, 120);
+}
+
+function pinDel(){
+  _pinBuf = _pinBuf.slice(0,-1);
+  pinRender();
+}
+
+function pinError(msg){
+  const el = document.getElementById('pin-error');
+  const dots = document.getElementById('pin-dots');
+  el.textContent = msg; el.classList.add('show');
+  dots.classList.add('shake');
+  setTimeout(()=>{ dots.classList.remove('shake'); }, 400);
+  setTimeout(()=>{ el.classList.remove('show'); }, 2500);
+  _pinBuf = ''; pinRender();
+}
+
+async function pinSubmit(){
+  const hash = await sha256(_pinBuf);
+
+  if(_pinMode === 'set'){
+    _pinFirst = hash;
+    _pinBuf = '';
+    _pinMode = 'confirm';
+    document.getElementById('pin-title').textContent = 'Konfirmasi PIN';
+    document.getElementById('pin-subtitle').textContent = 'Masukkan PIN yang sama sekali lagi';
+    pinRender();
+    return;
+  }
+
+  if(_pinMode === 'confirm'){
+    if(hash !== _pinFirst){ pinError('PIN tidak cocok, coba lagi'); _pinMode='set'; _pinFirst=''; document.getElementById('pin-title').textContent='Buat PIN Baru'; document.getElementById('pin-subtitle').textContent='Pilih 6 digit PIN untuk dashboard ini'; return; }
+    localStorage.setItem(PIN_KEY, hash);
+    pinUnlock();
+    return;
+  }
+
+  // check mode
+  const stored = localStorage.getItem(PIN_KEY);
+  if(hash === stored){
+    sessionStorage.setItem(PIN_SESSION,'1');
+    pinUnlock();
+  } else {
+    pinError('PIN salah');
+  }
+}
+
+function pinUnlock(){
+  const screen = document.getElementById('pin-screen');
+  screen.classList.add('unlocked');
+  setTimeout(()=>{ screen.style.display='none'; }, 420);
+}
+
+// Init
+(function(){
+  if(sessionStorage.getItem(PIN_SESSION)==='1'){ document.getElementById('pin-screen').style.display='none'; return; }
+  const stored = localStorage.getItem(PIN_KEY);
+  if(!stored){
+    _pinMode = 'set';
+    document.getElementById('pin-title').textContent = 'Buat PIN Baru';
+    document.getElementById('pin-subtitle').textContent = 'Pilih 6 digit PIN untuk dashboard ini';
+  }
+  // keyboard support
+  document.addEventListener('keydown', e=>{
+    if(document.getElementById('pin-screen').style.display==='none') return;
+    if(e.key>='0'&&e.key<='9') pinKey(e.key);
+    else if(e.key==='Backspace') pinDel();
+  });
+  // Apply logo mask same as header
+  const icon = document.querySelector('.pin-logo-mark .header-logo-icon');
+  if(icon){
+    const headerIcon = document.querySelector('.header-logo-icon');
+    if(headerIcon) icon.style.cssText = headerIcon.style.cssText || getComputedStyle(headerIcon).cssText;
+  }
+})();
+</script>
+
 </body>
 </html>
