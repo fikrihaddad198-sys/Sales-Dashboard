@@ -555,6 +555,33 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .header-right {
   margin-left: auto; display: flex; align-items: center; gap: var(--sp2);
 }
+/* ── Lock button ── */
+.lock-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  color: var(--t2);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.lock-btn:hover {
+  background: rgba(255,255,255,0.12);
+  color: var(--t1);
+  box-shadow: 0 0 10px rgba(201,168,76,0.15);
+}
+.lock-btn:active { transform: scale(0.92); }
+[data-theme="light"] .lock-btn {
+  background: rgba(46,107,69,0.08);
+  border: 1px solid rgba(46,107,69,0.18);
+  color: var(--t2);
+}
+[data-theme="light"] .lock-btn:hover {
+  background: rgba(46,107,69,0.14);
+  color: #1a3d29;
+  box-shadow: 0 0 10px rgba(46,107,69,0.18);
+}
 .header-clock {
   font-family: var(--mono); font-size: 11px; color: var(--t3);
   letter-spacing: 0.5px; padding: 0 var(--sp2);
@@ -2499,6 +2526,81 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 }
 /* ── END SPLASH ─────────────────────────────────────────── */
 
+/* ══ STANDBY SCREEN ══════════════════════════════════════ */
+#standby-screen {
+  position: fixed; inset: 0; z-index: 9990;
+  display: none;
+  align-items: center; justify-content: center;
+  background: var(--bg, #0f0d0b);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+#standby-screen.standby-visible {
+  display: flex;
+}
+#standby-screen.standby-in {
+  opacity: 1;
+}
+#standby-logo-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  border: none; background: none; padding: 40px;
+}
+#standby-logo-btn:focus-visible { outline: none; }
+
+/* The big mark */
+#standby-mark {
+  width: 100px; height: 100px; border-radius: 28px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(201,168,76,0.08);
+  border: 1px solid rgba(201,168,76,0.22);
+  box-shadow: 0 0 0 0 rgba(201,168,76,0.2), 0 0 40px rgba(201,168,76,0.12), 0 1px 0 rgba(255,255,255,0.08) inset;
+  animation: standby-pulse 3.5s ease-in-out infinite;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease;
+}
+[data-theme="light"] #standby-mark {
+  background: rgba(46,107,69,0.08);
+  border: 1px solid rgba(46,107,69,0.22);
+  animation-name: standby-pulse-green;
+}
+#standby-mark .standby-icon {
+  display: block; width: 58px; height: 74px;
+}
+
+#standby-logo-btn:hover #standby-mark {
+  transform: scale(1.06);
+  box-shadow: 0 0 0 12px rgba(201,168,76,0.06), 0 0 60px rgba(201,168,76,0.22), 0 1px 0 rgba(255,255,255,0.10) inset;
+}
+[data-theme="light"] #standby-logo-btn:hover #standby-mark {
+  box-shadow: 0 0 0 12px rgba(46,107,69,0.06), 0 0 60px rgba(46,107,69,0.22), 0 1px 0 rgba(255,255,255,0.35) inset;
+}
+#standby-logo-btn:active #standby-mark { transform: scale(0.96); }
+
+#standby-hint {
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--t3); opacity: 0;
+  animation: standby-hint-pulse 3.5s ease-in-out 0.8s infinite;
+}
+
+@keyframes standby-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.15), 0 0 30px rgba(201,168,76,0.10), 0 1px 0 rgba(255,255,255,0.08) inset; }
+  50%      { box-shadow: 0 0 0 14px rgba(201,168,76,0.04), 0 0 55px rgba(201,168,76,0.20), 0 1px 0 rgba(255,255,255,0.10) inset; }
+}
+@keyframes standby-pulse-green {
+  0%,100% { box-shadow: 0 0 0 0 rgba(46,107,69,0.15), 0 0 30px rgba(46,107,69,0.10), 0 1px 0 rgba(255,255,255,0.35) inset; }
+  50%      { box-shadow: 0 0 0 14px rgba(46,107,69,0.05), 0 0 55px rgba(46,107,69,0.22), 0 1px 0 rgba(255,255,255,0.42) inset; }
+}
+@keyframes standby-hint-pulse {
+  0%,100% { opacity: 0.3; }
+  50%      { opacity: 0.7; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #standby-mark { animation: none; }
+  #standby-hint { animation: none; opacity: 0.5; }
+}
+/* ══ END STANDBY ══════════════════════════════════════════ */
+
 /* ── DASHBOARD REVEAL ───────────────────────────────────── */
 /* All animatable elements start invisible; .dashboard-ready enables them */
 body:not(.dashboard-ready) .header,
@@ -2783,6 +2885,17 @@ body.dashboard-ready .kpi-card:nth-child(n+6) { animation: dr-card-in 0.5s cubic
   </div>
 </div>
 
+<!-- ═══ STANDBY SCREEN ═══ -->
+<div id="standby-screen" aria-label="Dashboard terkunci">
+  <button id="standby-logo-btn" onclick="standbyToPin()" aria-label="Klik untuk masuk PIN">
+    <div id="standby-mark">
+      <span class="standby-icon header-logo-icon" style="width:58px;height:74px;display:block;"></span>
+    </div>
+    <div id="standby-hint">Ketuk untuk membuka</div>
+  </button>
+</div>
+<!-- ═══ END STANDBY ═══ -->
+
 <!-- ═══ SPLASH SCREEN ═══ -->
 <div id="splash-screen" style="display:none;" aria-hidden="true">
   <div id="splash-curtain"></div>
@@ -2826,6 +2939,12 @@ body.dashboard-ready .kpi-card:nth-child(n+6) { animation: dr-card-in 0.5s cubic
   <div class="header-divider"></div>
   <div class="header-store">Kemang Raya</div>
   <div class="header-right">
+    <button class="lock-btn" id="lock-btn" onclick="lockDashboard()" title="Kunci Dashboard" aria-label="Kunci Dashboard">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </button>
     <button class="theme-switch" id="theme-btn" onclick="toggleTheme()" title="Toggle Theme" role="switch" aria-label="Toggle light/dark theme">
       <span class="theme-switch-track">
         <span class="theme-switch-stars"></span>
@@ -6306,9 +6425,13 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(
 
 <script>
 /* ══ PIN AUTH ══ */
+// ┌─────────────────────────────────────────────────────────┐
+// │  GANTI PIN: ubah nilai FORE_PIN di bawah ini           │
+// └─────────────────────────────────────────────────────────┘
+const FORE_PIN = '103007';
+
 const PIN_SESSION = 'fc_unlocked';
-const PIN_LEN = 6;
-// Hardcoded PIN hash (SHA-256 of "103007") — never stored in plaintext
+const PIN_LEN = FORE_PIN.length;
 let _pinBuf = '';
 
 async function sha256(str){
@@ -6355,6 +6478,10 @@ async function pinSubmit(){
 }
 
 function pinUnlock(){
+  // Ensure standby is hidden
+  const sb = document.getElementById('standby-screen');
+  if(sb){ sb.classList.remove('standby-in'); setTimeout(()=>{ sb.style.display='none'; }, 320); }
+
   // 1. Fade out PIN screen
   const pinScreen = document.getElementById('pin-screen');
   pinScreen.classList.add('unlocked');
@@ -6398,7 +6525,40 @@ function pinUnlock(){
 
 // Precompute correct PIN hash once at startup
 let _PIN_CORRECT = '';
-sha256('103007').then(h => { _PIN_CORRECT = h; });
+sha256(FORE_PIN).then(h => { _PIN_CORRECT = h; });
+
+function lockDashboard(){
+  // Clear session so re-entry requires PIN
+  sessionStorage.removeItem(PIN_SESSION);
+  // Show standby screen with fade-in
+  const sb = document.getElementById('standby-screen');
+  sb.style.display = 'flex';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    sb.classList.add('standby-in');
+  }));
+  // Hide dashboard
+  document.body.classList.remove('dashboard-ready');
+}
+
+function standbyToPin(){
+  // Standby → PIN screen
+  const sb = document.getElementById('standby-screen');
+  const pin = document.getElementById('pin-screen');
+  // Reset pin buffer
+  _pinBuf = '';
+  pinRender();
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('pin-error').classList.remove('show');
+  // Show PIN, hide standby with slight overlap
+  pin.style.display = 'flex'; pin.style.opacity = '0';
+  pin.classList.remove('unlocked');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    pin.style.transition = 'opacity 0.28s ease';
+    pin.style.opacity = '1';
+    sb.classList.remove('standby-in');
+    setTimeout(() => { sb.style.display = 'none'; }, 320);
+  }));
+}
 
 // Init
 (function(){
