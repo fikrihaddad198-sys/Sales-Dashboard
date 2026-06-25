@@ -278,12 +278,36 @@ body::after {
   100% { background-position:  300px 0; }
 }
 @keyframes logo-pulse {
-  0%,100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.20) inset, 0 0 0 1px rgba(201,168,76,0.45), 0 0 0 3px rgba(201,168,76,0.10), 0 0 28px rgba(201,168,76,0.55), 0 2px 8px rgba(0,0,0,0.45); }
-  50%      { box-shadow: 0 0 0 1px rgba(255,255,255,0.22) inset, 0 0 0 1px rgba(201,168,76,0.60), 0 0 0 4px rgba(201,168,76,0.18), 0 0 40px rgba(201,168,76,0.70), 0 2px 8px rgba(0,0,0,0.45); }
+  0%,100% {
+    background: rgba(201,168,76,0.06);
+    border-color: rgba(201,168,76,0.22);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset,
+                0 0 10px rgba(201,168,76,0.18),
+                0 2px 8px rgba(0,0,0,0.30);
+  }
+  50% {
+    background: rgba(201,168,76,0.13);
+    border-color: rgba(201,168,76,0.38);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.10) inset,
+                0 0 22px rgba(201,168,76,0.32),
+                0 2px 8px rgba(0,0,0,0.30);
+  }
 }
 @keyframes logo-pulse-green {
-  0%,100% { box-shadow: 0 1px 0 rgba(255,255,255,0.35) inset, 0 0 0 1px rgba(46,107,69,0.35), 0 0 0 3px rgba(46,107,69,0.08), 0 0 18px rgba(46,107,69,0.30), 0 2px 8px rgba(0,0,0,0.10); }
-  50%      { box-shadow: 0 1px 0 rgba(255,255,255,0.35) inset, 0 0 0 1px rgba(46,107,69,0.50), 0 0 0 4px rgba(46,107,69,0.14), 0 0 28px rgba(46,107,69,0.42), 0 2px 8px rgba(0,0,0,0.10); }
+  0%,100% {
+    background: rgba(46,107,69,0.07);
+    border-color: rgba(46,107,69,0.22);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.30) inset,
+                0 0 10px rgba(46,107,69,0.14),
+                0 2px 8px rgba(0,0,0,0.08);
+  }
+  50% {
+    background: rgba(46,107,69,0.14);
+    border-color: rgba(46,107,69,0.36);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.35) inset,
+                0 0 20px rgba(46,107,69,0.24),
+                0 2px 8px rgba(0,0,0,0.08);
+  }
 }
 [data-theme="light"] .header-logo-mark { animation-name: logo-pulse-green; }
 @keyframes scan-line {
@@ -521,26 +545,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .header-logo-mark {
   width: 30px; height: 30px; border-radius: 9px;
-  background: rgba(201,168,76,0.08);
-  border: 1px solid rgba(201,168,76,0.28);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.08) inset,
-    0 0 14px rgba(201,168,76,0.18),
-    0 2px 8px rgba(0,0,0,0.30);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  animation: logo-pulse 4s ease-in-out infinite;
-  transition: background 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease;
+  animation: logo-pulse 5.5s ease-in-out infinite;
 }
 [data-theme="light"] .header-logo-mark {
-  background: rgba(46,107,69,0.10);
-  border: 1px solid rgba(46,107,69,0.30);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.35) inset,
-    0 0 12px rgba(46,107,69,0.18),
-    0 2px 8px rgba(0,0,0,0.10);
+  animation-name: logo-pulse-green;
 }
 .header-logo-text {
   font-size: 13px; font-weight: 800; letter-spacing: 2.5px;
