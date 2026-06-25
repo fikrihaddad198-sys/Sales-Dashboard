@@ -2413,17 +2413,17 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <!-- Hero Banner -->
       <div class="hero-banner reveal mb18" id="hero-banner-el">
         <div class="hero-3col">
-          <div class="h-col h-col-gmv kpi-clickable" onclick="openKpiModal('gmv')" title="Lihat breakdown GMV">
+          <div class="h-col h-col-gmv kpi-clickable" onclick="openKpiModal('gmv',this)" title="Lihat breakdown GMV">
             <div class="hero-eyebrow">Current GMV</div>
             <div class="hero-num" id="h-gmv">—</div>
             <div class="hero-sub" id="h-gmv-sub"></div>
           </div>
-          <div class="h-col h-col-mid kpi-clickable" onclick="openKpiModal('achievement')" title="Lihat detail achievement">
+          <div class="h-col h-col-mid kpi-clickable" onclick="openKpiModal('achievement',this)" title="Lihat detail achievement">
             <div class="hero-kpi-label">Achievement</div>
             <div class="hero-kpi-val arr-up" id="h-ach">—</div>
             <div class="h-col-sub">Ideal: <span id="h-vsideal">—</span></div>
           </div>
-          <div class="h-col h-col-right kpi-clickable" onclick="openKpiModal('pace')" title="Lihat detail pace">
+          <div class="h-col h-col-right kpi-clickable" onclick="openKpiModal('pace',this)" title="Lihat detail pace">
             <div class="hero-kpi-label">Daily Pace</div>
             <div class="hero-kpi-val" id="h-pace">—</div>
             <div class="h-col-sub">Avg <span id="h-pace-sub">—</span> / hari</div>
@@ -3361,7 +3361,7 @@ function calcKpi(){
   } else {
     const stripKeys=['target','gap','daily_target','forecast'];
   stripEl.innerHTML = stripItems.map((k,i)=>`
-      <div class="metric-card kpi-clickable" style="--mc:${k.c}" onclick="openKpiModal('${stripKeys[i]}')" title="Lihat detail">
+      <div class="metric-card kpi-clickable" style="--mc:${k.c}" onclick="openKpiModal('${stripKeys[i]}',this)" title="Lihat detail">
         <div class="mc-label">${k.l}</div>
         <div class="mc-val" style="color:${k.c}">${k.v}</div>
         <div class="mc-sub">${k.s}</div>
@@ -4792,54 +4792,32 @@ function setIfEmpty(id, val){
 }
 
 
-/* ── KPI Detail Modal — iOS bottom sheet ── */
+/* ── KPI Detail Modal — FLIP card-expand ── */
 #kpi-modal-overlay {
   position: fixed; inset: 0; z-index: 900;
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   opacity: 0;
-  transition: opacity 0.32s ease;
+  transition: opacity 0.3s ease;
+  display: none;
 }
-#kpi-modal-overlay.is-open { opacity: 1; }
-
 #kpi-modal {
   position: fixed; z-index: 901;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%) translateY(100%);
-  width: min(700px, 100vw);
-  max-height: 88dvh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: var(--bg1);
+  width: min(680px, 92vw);
+  max-height: 84vh;
+  overflow: hidden;
+  background: var(--bg2);
   border: 1px solid var(--border-md);
-  border-radius: 24px 24px 0 0;
-  padding: 0 24px 32px;
-  box-shadow: 0 -8px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05) inset;
-  /* iOS spring: open */
-  transition: transform 0.5s cubic-bezier(0.32,0.72,0,1);
-  will-change: transform;
-}
-#kpi-modal.is-open {
-  transform: translateX(-50%) translateY(0);
-}
-#kpi-modal.is-closing {
-  /* fast ease-in close — iOS dismiss */
-  transition: transform 0.32s cubic-bezier(0.4,0,1,0.6);
-  transform: translateX(-50%) translateY(110%);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.05) inset;
+  opacity: 0;
+  display: none;
+  will-change: transform, opacity;
 }
 [data-theme="light"] #kpi-modal {
-  box-shadow: 0 -8px 60px rgba(27,42,31,0.15), 0 0 0 1px rgba(255,255,255,0.8) inset;
-}
-/* Drag handle */
-#kpi-modal::before {
-  content: '';
-  display: block;
-  width: 36px; height: 4px;
-  background: var(--border-md);
-  border-radius: 2px;
-  margin: 14px auto 20px;
+  box-shadow: 0 32px 80px rgba(27,42,31,0.16), 0 0 0 1px rgba(255,255,255,0.8) inset;
 }
 .kpi-modal-header {
   display: flex; align-items: center; gap: 14px;
@@ -5478,8 +5456,10 @@ function openChannelPopup(key, name, color, cardEl){
 ══════════════════════════════════════════════════ */
 let _kpiModalChart = null;
 
-function openKpiModal(type){
+let _kpiModalSrc=null;
+function openKpiModal(type,cardEl){
   if(!_kpiRows||!_kpiRows.length) return;
+  _kpiModalSrc=cardEl||null;
   const rows = _kpiRows;
   const data = aggregateData(rows);
   const overlay = document.getElementById('kpi-modal-overlay');
@@ -5672,17 +5652,50 @@ function openKpiModal(type){
     ? `<table><thead><tr><th>Tanggal</th><th>Nilai</th>${tableRows[0].split('<td>').length>3?'<th>Status</th>':''}</tr></thead><tbody>${tableRows.join('')}</tbody></table>`
     : '';
 
-  // Show modal then trigger open class on next frame (iOS sheet slide-up)
-  overlay.style.display='block';
-  modal.style.display='block';
-  modal.scrollTop=0;
-  document.body.style.overflow='hidden';
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      overlay.classList.add('is-open');
-      modal.classList.add('is-open');
-    });
-  });
+  // Show modal invisible so canvas gets dimensions
+  overlay.style.display='block'; overlay.style.opacity='0';
+  modal.style.display='block'; modal.style.overflowY='hidden'; modal.style.opacity='0';
+  modal.offsetHeight; // force layout
+
+  // Build chart while invisible
+
+  modal.style.transition = 'none';
+  modal.style.transform  = 'none';
+  const mw = parseInt(getComputedStyle(modal).width)||680;
+  const mh = modal.scrollHeight||500;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const finalLeft = Math.round(Math.max(16, (vw - mw) / 2));
+  const finalTop  = Math.round(Math.max(16, Math.min((vh - mh) / 2, vh - mh - 16)));
+  modal.style.left = finalLeft + 'px';
+  modal.style.top  = finalTop  + 'px';
+
+  // Snapshot card position for FLIP origin
+  const _srcRect = _kpiModalSrc ? _kpiModalSrc.getBoundingClientRect() : null;
+  if(_srcRect){
+    const dx = (_srcRect.left + _srcRect.width/2)  - (finalLeft + mw/2);
+    const dy = (_srcRect.top  + _srcRect.height/2) - (finalTop  + mh/2);
+    const sx = _srcRect.width  / mw;
+    const sy = _srcRect.height / mh;
+    modal.style.borderRadius = '10px';
+    modal.style.transform    = `translate(${dx}px,${dy}px) scale(${sx},${sy})`;
+    modal.style.opacity      = '0';
+  }
+
+  overlay.style.display = 'block';
+  overlay.style.opacity = '0';
+  modal.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    modal.style.transition   = 'transform 0.62s cubic-bezier(0.16,1,0.3,1), opacity 0.22s ease, border-radius 0.62s ease';
+    modal.style.transform    = 'none';
+    modal.style.opacity      = '1';
+    modal.style.borderRadius = '22px';
+    overlay.style.transition = 'opacity 0.3s ease';
+    overlay.style.opacity    = '1';
+    // Enable scroll after animation
+    setTimeout(()=>{ modal.style.overflowY='auto'; }, 640);
+  }));
 
   // Build chart
   if(chartData && !modal.querySelector('#kpi-modal-chart')) return;
@@ -5707,16 +5720,37 @@ function openKpiModal(type){
 function closeKpiModal(){
   const overlay=document.getElementById('kpi-modal-overlay');
   const modal=document.getElementById('kpi-modal');
-  overlay.classList.remove('is-open');
-  modal.classList.remove('is-open');
-  modal.classList.add('is-closing');
-  setTimeout(()=>{
-    overlay.style.display='none';
-    modal.style.display='none';
-    modal.classList.remove('is-closing');
+  if(modal.style.display==='none') return;
+  modal.style.overflowY='hidden';
+
+  let dx=0,dy=0,sx=0.08,sy=0.08;
+  if(_kpiModalSrc){
+    const sr=_kpiModalSrc.getBoundingClientRect();
+    const mr=modal.getBoundingClientRect();
+    dx=(sr.left+sr.width/2)-(mr.left+mr.width/2);
+    dy=(sr.top+sr.height/2)-(mr.top+mr.height/2);
+    sx=sr.width/mr.width; sy=sr.height/mr.height;
+  }
+  modal.style.transition   = 'transform 0.42s cubic-bezier(0.5,0,0.75,0), opacity 0.18s ease 0.20s, border-radius 0.42s ease';
+  modal.style.transform    = `translate(${dx}px,${dy}px) scale(${sx},${sy})`;
+  modal.style.opacity      = '0';
+  modal.style.borderRadius = '10px';
+  overlay.style.transition = 'opacity 0.28s ease';
+  overlay.style.opacity    = '0';
+
+  let done=false;
+  function cleanup(){
+    if(done) return; done=true;
+    overlay.style.display='none'; overlay.style.opacity='0'; overlay.style.transition='';
+    modal.style.display='none'; modal.style.transform='none'; modal.style.transition=''; modal.style.opacity='0';
     document.body.style.overflow='';
     if(_kpiModalChart){ _kpiModalChart.destroy(); _kpiModalChart=null; }
-  }, 320);
+  }
+  modal.addEventListener('transitionend',function onDone(e){
+    if(e.propertyName!=='transform') return;
+    modal.removeEventListener('transitionend',onDone); cleanup();
+  });
+  setTimeout(cleanup,450);
 }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeKpiModal(); } });
 
