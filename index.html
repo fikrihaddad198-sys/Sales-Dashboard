@@ -2434,27 +2434,23 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   100% { background: rgba(244,241,232,0); }
 }
 
-/* EXIT: only the LOGO MARK glyph grows toward the watermark and fades.
-   --hero-dx/--hero-dy are computed in JS so the growing logo's center lands
-   EXACTLY on the brand-mark watermark center. --hero-scale is also computed
-   in JS as (brandMarkWidth / iconWidth) so the logo reaches the exact same
-   visual size as the watermark — no mismatch at the handoff point. */
+/* EXIT: SINGLE-ELEMENT shared transition. The small splash glyph does NOT
+   grow (scaling its low-res PNG mask 12× would blur it and create a seam
+   against the crisp watermark). Instead it just dissolves in place with a
+   tiny grow, while the brand-mark watermark itself does the real morph —
+   growing from this glyph's exact position+size up to its resting place.
+   Because the brand-mark renders its mask crisp at every size, there is no
+   handoff: it IS the watermark the whole way. Truly seamless. */
 #splash-screen.splash-exit #splash-logo-mark {
-  animation: splash-grow-into-bg 1.0s cubic-bezier(0.25,0,0.20,1) forwards;
+  animation: splash-glyph-dissolve 0.55s cubic-bezier(0.4,0,0.6,1) forwards;
   transform-origin: center center;
   background: transparent !important;
   border-color: transparent !important;
   box-shadow: none !important;
 }
-@keyframes splash-grow-into-bg {
-  0%   { opacity: 1;
-         transform: translate(0,0) scale(1); filter: blur(0px); }
-  62%  { opacity: 0.60;
-         transform: translate(calc(var(--hero-dx,0px)*0.62), calc(var(--hero-dy,0px)*0.62))
-                    scale(calc(var(--hero-scale,12) * 0.66)); filter: blur(0px); }
-  100% { opacity: 0;
-         transform: translate(var(--hero-dx,0px), var(--hero-dy,0px))
-                    scale(var(--hero-scale,12)); filter: blur(1.5px); }
+@keyframes splash-glyph-dissolve {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.35); }
 }
 #splash-screen.splash-exit #splash-brand,
 #splash-screen.splash-exit #splash-sub,
@@ -2466,25 +2462,30 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   100% { opacity: 0; transform: translateY(6px); }
 }
 
-/* HERO-IN: brand-mark FLASHES bright as the splash logo arrives at its
-   exact size, then DEFLATES ("kempes") smoothly over 2.2s with a spring
-   ease so the user savours the settle before the dashboard appears.
-   Starts from opacity:0 so there's a true crossfade — the glow builds
-   in as the logo fades out. Scale stays near 1.0 (subtle 1.04→1.0
-   overshoot) because the logo already arrives at the correct visual size. */
+/* HERO-IN: the brand-mark IS the morphing element. It starts exactly where
+   the splash glyph sits (--bm-sx/--bm-sy offset) at the glyph's size
+   (--bm-ss scale), then grows to its resting place. A single crisp element
+   doing the whole journey — no two-element handoff, so nothing to "seam".
+   Path: rise from the glyph (bright, building) → INFLATE just past resting
+   size (~scale 1.06, peak glow) → KEMPES settle to scale 1.0 (dim). The
+   inflate→settle is the "kempes" the user savours. base transform centering
+   is translate(-50%,-50%); offsets/scale are layered on top. 2.4s. */
 #brand-mark.hero-in {
-  animation: brand-mark-hero-in 2.2s cubic-bezier(0.16,1,0.3,1) forwards !important;
+  animation: brand-mark-hero-in 2.4s cubic-bezier(0.22,1,0.30,1) forwards !important;
 }
 @keyframes brand-mark-hero-in {
-  0%   { opacity: 0;    transform: translate(-50%,-50%) scale(1.04);
-         filter: drop-shadow(0 0 0px rgba(201,168,76,0)); }
-  10%  { opacity: 0.42; transform: translate(-50%,-50%) scale(1.04);
-         filter: drop-shadow(0 0 55px rgba(201,168,76,1.0))
-                 drop-shadow(0 0 100px rgba(201,168,76,0.55))
-                 drop-shadow(0 0 140px rgba(201,168,76,0.25)); }
-  38%  { opacity: 0.22; transform: translate(-50%,-50%) scale(1.02);
-         filter: drop-shadow(0 0 24px rgba(201,168,76,0.65))
-                 drop-shadow(0 0 52px rgba(201,168,76,0.28)); }
+  0%   { opacity: 0.0;
+         transform: translate(calc(-50% + var(--bm-sx,0px)), calc(-50% + var(--bm-sy,0px))) scale(var(--bm-ss,0.08));
+         filter: drop-shadow(0 0 6px rgba(201,168,76,0.9)); }
+  18%  { opacity: 0.50;
+         transform: translate(calc(-50% + var(--bm-sx,0px)*0.7), calc(-50% + var(--bm-sy,0px)*0.7)) scale(calc(var(--bm-ss,0.08) + (1.06 - var(--bm-ss,0.08))*0.32));
+         filter: drop-shadow(0 0 30px rgba(201,168,76,1.0))
+                 drop-shadow(0 0 70px rgba(201,168,76,0.5)); }
+  60%  { opacity: 0.16;
+         transform: translate(-50%,-50%) scale(1.06);
+         filter: drop-shadow(0 0 40px rgba(201,168,76,0.85))
+                 drop-shadow(0 0 90px rgba(201,168,76,0.40))
+                 drop-shadow(0 0 150px rgba(201,168,76,0.18)); }
   100% { opacity: 0.04; transform: translate(-50%,-50%) scale(1.00);
          filter: drop-shadow(0 0 4px rgba(201,168,76,0.20)); }
 }
@@ -2492,15 +2493,18 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   animation-name: brand-mark-hero-in-green;
 }
 @keyframes brand-mark-hero-in-green {
-  0%   { opacity: 0;    transform: translate(-50%,-50%) scale(1.04);
-         filter: drop-shadow(0 0 0px rgba(46,107,69,0)); }
-  10%  { opacity: 0.40; transform: translate(-50%,-50%) scale(1.04);
-         filter: drop-shadow(0 0 55px rgba(46,107,69,0.95))
-                 drop-shadow(0 0 100px rgba(46,107,69,0.52))
-                 drop-shadow(0 0 140px rgba(46,107,69,0.22)); }
-  38%  { opacity: 0.20; transform: translate(-50%,-50%) scale(1.02);
-         filter: drop-shadow(0 0 24px rgba(46,107,69,0.62))
-                 drop-shadow(0 0 52px rgba(46,107,69,0.26)); }
+  0%   { opacity: 0.0;
+         transform: translate(calc(-50% + var(--bm-sx,0px)), calc(-50% + var(--bm-sy,0px))) scale(var(--bm-ss,0.08));
+         filter: drop-shadow(0 0 6px rgba(46,107,69,0.85)); }
+  18%  { opacity: 0.48;
+         transform: translate(calc(-50% + var(--bm-sx,0px)*0.7), calc(-50% + var(--bm-sy,0px)*0.7)) scale(calc(var(--bm-ss,0.08) + (1.06 - var(--bm-ss,0.08))*0.32));
+         filter: drop-shadow(0 0 30px rgba(46,107,69,0.95))
+                 drop-shadow(0 0 70px rgba(46,107,69,0.48)); }
+  60%  { opacity: 0.16;
+         transform: translate(-50%,-50%) scale(1.06);
+         filter: drop-shadow(0 0 40px rgba(46,107,69,0.80))
+                 drop-shadow(0 0 90px rgba(46,107,69,0.38))
+                 drop-shadow(0 0 150px rgba(46,107,69,0.16)); }
   100% { opacity: 0.04; transform: translate(-50%,-50%) scale(1.00);
          filter: drop-shadow(0 0 4px rgba(46,107,69,0.18)); }
 }
@@ -6951,44 +6955,44 @@ function pinUnlock(){
 
     // Measure exact centers so the growing logo lands precisely on the
     // watermark center — guarantees perfect alignment at any viewport size.
+    // SINGLE-ELEMENT morph: position the brand-mark so it STARTS exactly on
+    // top of the splash glyph (same center, same rendered size), then it
+    // grows to its resting place. Compute the start offset + start scale.
     if(bm && lm){
-      const lr = lm.getBoundingClientRect();
-      const br = bm.getBoundingClientRect();
-      const dx = (br.left + br.width/2)  - (lr.left + lr.width/2);
-      const dy = (br.top  + br.height/2) - (lr.top  + lr.height/2);
-      lm.style.setProperty('--hero-dx', dx.toFixed(1) + 'px');
-      lm.style.setProperty('--hero-dy', dy.toFixed(1) + 'px');
-      // Compute exact scale so logo glyph (42px wide) grows to match the
-      // brand-mark watermark's visual width — perfect size at handoff.
       const icon = lm.querySelector('.splash-icon') || lm;
-      const ir = icon.getBoundingClientRect();
-      const heroScale = (br.width / ir.width).toFixed(2);
-      lm.style.setProperty('--hero-scale', heroScale);
+      const ir = icon.getBoundingClientRect();   // the glyph on screen
+      const br = bm.getBoundingClientRect();      // brand-mark at rest
+      const sx = (ir.left + ir.width/2)  - (br.left + br.width/2);
+      const sy = (ir.top  + ir.height/2) - (br.top  + br.height/2);
+      const ss = (ir.width / br.width);
+      bm.style.setProperty('--bm-sx', sx.toFixed(1) + 'px');
+      bm.style.setProperty('--bm-sy', sy.toFixed(1) + 'px');
+      bm.style.setProperty('--bm-ss', ss.toFixed(4));
     }
 
     splash.classList.add('splash-exit');
 
-    // hero-in starts at 280ms — early crossfade so the brand-mark FLASHES
-    // bright exactly as the growing logo arrives at its size, creating a
-    // seamless handoff (not two sequential events).
-    setTimeout(() => { if(bm) bm.classList.add('hero-in'); }, 280);
-    // Remove hero-in after: 280 + 2200ms deflate + small buffer = 2520ms.
-    // Then offset breathing to -3.5s so it resumes at the glow PEAK
-    // immediately (no flat gap before the first pulse).
+    // hero-in fires almost immediately (60ms): the brand-mark begins growing
+    // FROM the glyph's spot while the glyph dissolves over it — a true
+    // crossfade at the same position/size. One crisp element does the whole
+    // grow, so there is no seam.
+    setTimeout(() => { if(bm) bm.classList.add('hero-in'); }, 60);
+    // Remove hero-in after 60 + 2400ms morph = 2460ms. Then offset breathing
+    // to -3.5s so it resumes at the glow PEAK immediately (no flat gap).
     setTimeout(() => {
       if(bm){
         bm.classList.remove('hero-in');
         bm.style.animationDelay = '-3.5s';
       }
-    }, 2560);
+    }, 2500);
 
-    // Hide splash after logo finishes growing + bg fades (1.0s anim).
-    setTimeout(() => { splash.style.display = 'none'; }, 1050);
-    // Reveal dashboard AFTER watermark deflate fully completes.
+    // Hide splash after the glyph has fully dissolved (0.55s).
+    setTimeout(() => { splash.style.display = 'none'; }, 650);
+    // Reveal dashboard AFTER the watermark morph + kempes fully completes.
     setTimeout(() => {
       revealDashboard();
       replayProgressBar();
-    }, 2540);
+    }, 2480);
   }, 2050);
 }
 
