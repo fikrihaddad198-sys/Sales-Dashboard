@@ -2319,14 +2319,35 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   display: flex; align-items: center; justify-content: center;
   background: var(--bg, #0f0d0b);
   pointer-events: none;
+  /* Promote entire screen to its own GPU layer from the start */
+  will-change: transform;
+  transform: translateZ(0);
 }
-#splash-screen.splash-exit {
-  animation: splash-zoom-in 0.65s cubic-bezier(0.4,0,0.6,1) forwards;
+
+/* Content (logo, text) fades out first — fast so zoom feels instant */
+#splash-screen.splash-exit #splash-inner {
+  animation: splash-content-out 0.18s ease-in forwards;
 }
-@keyframes splash-zoom-in {
-  0%   { opacity: 1; transform: scale(1); }
-  60%  { opacity: 1; transform: scale(1.6); }
-  100% { opacity: 0; transform: scale(2.6); }
+@keyframes splash-content-out {
+  to { opacity: 0; transform: scale(1.08); }
+}
+
+/* The zoom layer — pure simple div, no children, pure GPU transform */
+#splash-zoom-layer {
+  position: absolute; inset: 0;
+  background: var(--bg, #0f0d0b);
+  will-change: transform, opacity;
+  transform: translateZ(0) scale(1);
+  opacity: 0; /* hidden until exit */
+  border-radius: 0;
+}
+#splash-screen.splash-exit #splash-zoom-layer {
+  animation: splash-zoom-burst 0.72s cubic-bezier(0.22,1,0.36,1) 0.12s forwards;
+}
+@keyframes splash-zoom-burst {
+  0%   { opacity: 1; transform: translateZ(0) scale(1);    }
+  15%  { opacity: 1; transform: translateZ(0) scale(1.12); }
+  100% { opacity: 0; transform: translateZ(0) scale(5.5);  }
 }
 
 #splash-inner {
@@ -2759,6 +2780,7 @@ body.dashboard-ready .kpi-card:nth-child(n+6) { animation: dr-card-in 0.5s cubic
 
 <!-- ═══ SPLASH SCREEN ═══ -->
 <div id="splash-screen" style="display:none;" aria-hidden="true">
+  <div id="splash-zoom-layer"></div>
   <div id="splash-inner">
     <div id="splash-logo-mark">
       <span class="splash-icon header-logo-icon" style="width:42px;height:54px;display:block;"></span>
@@ -6377,10 +6399,12 @@ function pinUnlock(){
   // 3. After ~2.1s: zoom-in exit
   const exitDelay = reduced ? 0 : 2050;
   setTimeout(() => {
-    // Reveal dashboard slightly before splash fully disappears (overlap = premium)
-    document.body.classList.add('dashboard-ready');
+    // Dashboard reveals as zoom accelerates (overlap = no dead time)
     splash.classList.add('splash-exit');
-    setTimeout(() => { splash.style.display = 'none'; }, 680);
+    // Dashboard starts appearing 200ms into the zoom (content already fading)
+    setTimeout(() => { document.body.classList.add('dashboard-ready'); }, 200);
+    // Remove splash element after full animation (180ms content + 120ms delay + 720ms zoom)
+    setTimeout(() => { splash.style.display = 'none'; }, 1060);
   }, exitDelay);
 
   // 4. Hide PIN screen element after it fades
