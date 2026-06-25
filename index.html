@@ -262,6 +262,11 @@ body::after {
   0%,100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.20) inset, 0 0 0 1px rgba(201,168,76,0.45), 0 0 0 3px rgba(201,168,76,0.10), 0 0 28px rgba(201,168,76,0.55), 0 2px 8px rgba(0,0,0,0.45); }
   50%      { box-shadow: 0 0 0 1px rgba(255,255,255,0.22) inset, 0 0 0 1px rgba(201,168,76,0.60), 0 0 0 4px rgba(201,168,76,0.18), 0 0 40px rgba(201,168,76,0.70), 0 2px 8px rgba(0,0,0,0.45); }
 }
+@keyframes logo-pulse-green {
+  0%,100% { box-shadow: 0 1px 0 rgba(255,255,255,0.35) inset, 0 0 0 1px rgba(46,107,69,0.35), 0 0 0 3px rgba(46,107,69,0.08), 0 0 18px rgba(46,107,69,0.30), 0 2px 8px rgba(0,0,0,0.10); }
+  50%      { box-shadow: 0 1px 0 rgba(255,255,255,0.35) inset, 0 0 0 1px rgba(46,107,69,0.50), 0 0 0 4px rgba(46,107,69,0.14), 0 0 28px rgba(46,107,69,0.42), 0 2px 8px rgba(0,0,0,0.10); }
+}
+[data-theme="light"] .header-logo-mark { animation-name: logo-pulse-green; }
 @keyframes scan-line {
   0%   { transform: translateY(-100%); opacity: 0; }
   10%  { opacity: 0.6; }
