@@ -2174,6 +2174,17 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   margin-bottom: 26px;
 }
 #page-kpi .h-col { padding: 0 32px; }
+.kpi-clickable { cursor: pointer; }
+.h-col.kpi-clickable { position: relative; transition: opacity 0.15s; }
+.h-col.kpi-clickable:hover { opacity: 0.82; }
+.h-col.kpi-clickable::after {
+  content: 'Detail →';
+  position: absolute; bottom: 4px; right: 0;
+  font-size: 9px; font-weight: 600; letter-spacing: 0.8px;
+  color: var(--t3); opacity: 0; transition: opacity 0.2s;
+  text-transform: uppercase;
+}
+.h-col.kpi-clickable:hover::after { opacity: 1; }
 #page-kpi .h-col-gmv { padding-left: 0; border-right: 1px solid var(--border); }
 #page-kpi .h-col-mid { border-right: 1px solid var(--border); }
 #page-kpi .h-col-right { padding-right: 0; }
@@ -2402,17 +2413,17 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
       <!-- Hero Banner -->
       <div class="hero-banner reveal mb18" id="hero-banner-el">
         <div class="hero-3col">
-          <div class="h-col h-col-gmv">
+          <div class="h-col h-col-gmv kpi-clickable" onclick="openKpiModal('gmv')" title="Lihat breakdown GMV">
             <div class="hero-eyebrow">Current GMV</div>
             <div class="hero-num" id="h-gmv">—</div>
             <div class="hero-sub" id="h-gmv-sub"></div>
           </div>
-          <div class="h-col h-col-mid">
+          <div class="h-col h-col-mid kpi-clickable" onclick="openKpiModal('achievement')" title="Lihat detail achievement">
             <div class="hero-kpi-label">Achievement</div>
             <div class="hero-kpi-val arr-up" id="h-ach">—</div>
             <div class="h-col-sub">Ideal: <span id="h-vsideal">—</span></div>
           </div>
-          <div class="h-col h-col-right">
+          <div class="h-col h-col-right kpi-clickable" onclick="openKpiModal('pace')" title="Lihat detail pace">
             <div class="hero-kpi-label">Daily Pace</div>
             <div class="hero-kpi-val" id="h-pace">—</div>
             <div class="h-col-sub">Avg <span id="h-pace-sub">—</span> / hari</div>
@@ -3348,8 +3359,9 @@ function calcKpi(){
       card.querySelector('.mc-sub').textContent = k.s;
     });
   } else {
-    stripEl.innerHTML = stripItems.map((k,i)=>`
-      <div class="metric-card" style="--mc:${k.c}">
+    const stripKeys=['target','gap','daily_target','forecast'];
+  stripEl.innerHTML = stripItems.map((k,i)=>`
+      <div class="metric-card kpi-clickable" style="--mc:${k.c}" onclick="openKpiModal('${stripKeys[i]}')" title="Lihat detail">
         <div class="mc-label">${k.l}</div>
         <div class="mc-val" style="color:${k.c}">${k.v}</div>
         <div class="mc-sub">${k.s}</div>
@@ -4779,6 +4791,98 @@ function setIfEmpty(id, val){
   box-shadow:0 0 10px rgba(201,168,76,.18);
 }
 
+
+/* ── KPI Detail Modal ── */
+#kpi-modal-overlay {
+  position: fixed; inset: 0; z-index: 900;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: kpi-overlay-in 0.25s ease forwards;
+}
+@keyframes kpi-overlay-in { from { opacity:0 } to { opacity:1 } }
+#kpi-modal {
+  position: fixed; z-index: 901;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%) scale(0.94);
+  width: min(680px, calc(100vw - 32px));
+  max-height: calc(100dvh - 64px);
+  overflow-y: auto;
+  background: var(--bg1);
+  border: 1px solid var(--border-md);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  animation: kpi-modal-in 0.28s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+[data-theme="light"] #kpi-modal {
+  box-shadow: 0 24px 80px rgba(27,42,31,0.18), 0 0 0 1px rgba(255,255,255,0.7) inset;
+}
+@keyframes kpi-modal-in {
+  from { opacity:0; transform: translate(-50%,-50%) scale(0.92) translateY(12px); }
+  to   { opacity:1; transform: translate(-50%,-50%) scale(1)    translateY(0); }
+}
+.kpi-modal-header {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 20px; padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.kpi-modal-icon {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; background: var(--bg3); border: 1px solid var(--border-md);
+}
+.kpi-modal-title {
+  font-size: 16px; font-weight: 800; color: var(--t1); letter-spacing: -0.3px;
+}
+.kpi-modal-sub {
+  font-size: 11px; color: var(--t3); margin-top: 2px; letter-spacing: 0.3px;
+}
+.kpi-modal-close {
+  margin-left: auto; background: var(--bg3); border: 1px solid var(--border);
+  color: var(--t3); border-radius: 8px; width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+.kpi-modal-close:hover { color: var(--t1); background: var(--bg2); }
+.kpi-modal-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  margin-bottom: 20px;
+}
+.kpi-modal-stat {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px;
+}
+.kpi-modal-stat-label {
+  font-size: 9px; font-weight: 700; color: var(--t3);
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+}
+.kpi-modal-stat-val {
+  font-size: 15px; font-weight: 800; color: var(--t1);
+  font-family: var(--mono); letter-spacing: -0.3px;
+}
+.kpi-modal-chart-wrap {
+  height: 220px; margin-bottom: 20px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px;
+}
+.kpi-modal-table { font-size: 11px; }
+.kpi-modal-table table { width: 100%; border-collapse: collapse; }
+.kpi-modal-table th {
+  font-size: 9px; font-weight: 700; color: var(--t3);
+  text-transform: uppercase; letter-spacing: 1px;
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.kpi-modal-table td {
+  padding: 8px 12px; color: var(--t1);
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  font-family: var(--mono);
+}
+[data-theme="light"] .kpi-modal-table td { border-bottom-color: rgba(0,0,0,0.04); }
+.kpi-modal-table tr:last-child td { border-bottom: none; }
+.kpi-modal-table tr:hover td { background: var(--bg3); }
 </style>
 <div id="ch-popup-backdrop" onclick="closeChannelPopup()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.80);z-index:900;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;"></div>
 <div id="ch-popup" style="display:none;position:fixed;top:0;left:0;z-index:901;width:min(92vw,680px);max-height:82vh;overflow:hidden;border-radius:22px;background:var(--bg2);border:1px solid var(--border-md);box-shadow:0 32px 80px rgba(0,0,0,0.5);opacity:0;will-change:transform,opacity;">
@@ -5349,6 +5453,246 @@ function openChannelPopup(key, name, color, cardEl){
   _popupOpen(cardEl);
 }
 
+
+/* ══════════════════════════════════════════════════
+   KPI DETAIL MODAL
+══════════════════════════════════════════════════ */
+let _kpiModalChart = null;
+
+function openKpiModal(type){
+  if(!_kpiRows||!_kpiRows.length) return;
+  const rows = _kpiRows;
+  const data = aggregateData(rows);
+  const overlay = document.getElementById('kpi-modal-overlay');
+  const modal   = document.getElementById('kpi-modal');
+
+  // Destroy previous chart
+  if(_kpiModalChart){ _kpiModalChart.destroy(); _kpiModalChart=null; }
+
+  let title='', sub='', icon='', stats=[], chartData=null, tableRows=[];
+  const labels = rows.map(r=>fmtShortDate(r.date));
+
+  if(type==='gmv'){
+    const ma7 = labels.map((_,i)=>{ const sl=rows.slice(Math.max(0,i-6),i+1); return sl.reduce((s,r)=>s+(r.gmv||0),0)/sl.length; });
+    title='Current GMV'; sub='Tren penjualan harian selama periode'; icon='📈';
+    stats=[
+      {l:'Total GMV',    v:fmtRp(data.gmv)},
+      {l:'Rata-rata/hari',v:fmtRp(data.gmv/rows.length)},
+      {l:'Hari terbaik', v:(()=>{ const i=rows.map(r=>r.gmv||0).indexOf(Math.max(...rows.map(r=>r.gmv||0))); return fmtShortDate(rows[i].date)+' ('+fmtRpJt(rows[i].gmv)+')'; })()},
+    ];
+    chartData={
+      type:'bar',
+      datasets:[
+        {type:'line',label:'7D MA',data:ma7,borderColor:'rgba(201,168,76,0.8)',borderWidth:2,pointRadius:0,tension:0.4,fill:false,order:0},
+        {type:'bar', label:'GMV Harian',data:rows.map(r=>r.gmv||0),backgroundColor:'rgba(34,211,238,0.25)',borderColor:'rgba(34,211,238,0.6)',borderWidth:1,borderRadius:{topLeft:3,topRight:3},borderSkipped:false,order:1},
+      ],
+    };
+    tableRows=rows.slice(-7).reverse().map(r=>`<tr><td>${fmtShortDate(r.date)}</td><td style="color:var(--cyan)">${fmtRp(r.gmv||0)}</td><td style="color:var(--t3)">${((r.gmv||0)/data.gmv*100).toFixed(1)}%</td></tr>`);
+
+  } else if(type==='achievement'){
+    const target = parseFloat(document.getElementById('kpi-target')?.value||0)||0;
+    const days   = parseFloat(document.getElementById('kpi-days')?.value||0)||rows.length;
+    const elapsed=rows.length; const remaining=Math.max(days-elapsed,0);
+    const achPct = target>0?(data.gmv/target*100):0;
+    const ideal  = target>0?(elapsed/days*100):0;
+    title='Achievement'; sub='Perbandingan pencapaian vs target ideal'; icon='🎯';
+    stats=[
+      {l:'Achievement',  v:fmtPct(achPct)},
+      {l:'Target Ideal', v:fmtPct(ideal)},
+      {l:'Gap vs Ideal', v:(achPct-ideal>0?'+':'')+fmtPct(achPct-ideal)},
+    ];
+    const cumGmv=rows.map((_,i)=>rows.slice(0,i+1).reduce((s,r)=>s+(r.gmv||0),0));
+    const idealLine=rows.map((_,i)=>target*(i+1)/days);
+    chartData={
+      type:'line',
+      datasets:[
+        {label:'Kumulatif GMV',data:cumGmv,borderColor:'rgba(34,211,238,0.9)',borderWidth:2,fill:true,backgroundColor:'rgba(34,211,238,0.06)',tension:0.3,pointRadius:0},
+        {label:'Target Ideal', data:idealLine,borderColor:'rgba(201,168,76,0.6)',borderWidth:1.5,borderDash:[4,3],pointRadius:0,tension:0,fill:false},
+      ],
+    };
+    tableRows=[
+      `<tr><td>GMV Aktual</td><td style="color:var(--cyan)">${fmtRp(data.gmv)}</td></tr>`,
+      `<tr><td>Target Periode</td><td style="color:var(--gold)">${fmtRp(target)}</td></tr>`,
+      `<tr><td>Sisa Target</td><td style="color:var(--red)">${fmtRp(Math.max(target-data.gmv,0))}</td></tr>`,
+      `<tr><td>Sisa Hari</td><td>${remaining} hari</td></tr>`,
+    ];
+
+  } else if(type==='pace'){
+    const target=parseFloat(document.getElementById('kpi-target')?.value||0)||0;
+    const days  =parseFloat(document.getElementById('kpi-days')?.value||0)||rows.length;
+    const dailyTarget=target/days;
+    const paces=rows.map(r=>dailyTarget>0?((r.gmv||0)/dailyTarget*100):0);
+    title='Daily Pace'; sub='Laju harian vs target per hari'; icon='⚡';
+    const avgPace=paces.reduce((a,b)=>a+b,0)/paces.length;
+    stats=[
+      {l:'Daily Target',  v:fmtRp(dailyTarget)},
+      {l:'Avg Pace',      v:fmtPct(avgPace)},
+      {l:'Hari ≥ target', v:paces.filter(p=>p>=100).length+' / '+rows.length+' hari'},
+    ];
+    chartData={
+      type:'bar',
+      datasets:[{
+        label:'Pace %',data:paces,
+        backgroundColor:paces.map(p=>p>=100?'rgba(52,211,153,0.5)':p>=80?'rgba(251,191,36,0.5)':'rgba(248,113,113,0.5)'),
+        borderColor:paces.map(p=>p>=100?'rgba(52,211,153,0.9)':p>=80?'rgba(251,191,36,0.9)':'rgba(248,113,113,0.9)'),
+        borderWidth:1, borderRadius:{topLeft:3,topRight:3}, borderSkipped:false,
+      }],
+    };
+    tableRows=rows.slice(-7).reverse().map(r=>{
+      const p=dailyTarget>0?((r.gmv||0)/dailyTarget*100):0;
+      const c=p>=100?'var(--green)':p>=80?'var(--amber)':'var(--red)';
+      return `<tr><td>${fmtShortDate(r.date)}</td><td>${fmtRp(r.gmv||0)}</td><td style="color:${c}">${p.toFixed(1)}%</td></tr>`;
+    });
+
+  } else if(type==='target'){
+    title='Target GMV'; sub='Progress pencapaian target bulan ini'; icon='🏆';
+    const target=parseFloat(document.getElementById('kpi-target')?.value||0)||0;
+    const achPct=target>0?(data.gmv/target*100):0;
+    stats=[
+      {l:'Target',     v:fmtRp(target)},
+      {l:'Tercapai',   v:fmtRp(data.gmv)},
+      {l:'Achievement',v:fmtPct(achPct)},
+    ];
+    const cumGmv=rows.map((_,i)=>rows.slice(0,i+1).reduce((s,r)=>s+(r.gmv||0),0));
+    chartData={type:'line',datasets:[
+      {label:'Kumulatif',data:cumGmv,borderColor:'rgba(34,211,238,0.9)',borderWidth:2,fill:true,backgroundColor:'rgba(34,211,238,0.06)',tension:0.3,pointRadius:0},
+      {label:'Target',data:rows.map(()=>target),borderColor:'rgba(201,168,76,0.5)',borderWidth:1.5,borderDash:[4,3],pointRadius:0,fill:false},
+    ]};
+    tableRows=[
+      `<tr><td>Target</td><td style="color:var(--gold)">${fmtRp(target)}</td></tr>`,
+      `<tr><td>GMV Aktual</td><td style="color:var(--cyan)">${fmtRp(data.gmv)}</td></tr>`,
+      `<tr><td>Gap</td><td style="color:var(--red)">${fmtRp(Math.abs(target-data.gmv))}</td></tr>`,
+    ];
+
+  } else if(type==='gap'){
+    title='Gap to Target'; sub='Yang harus dicapai untuk menutup gap'; icon='📉';
+    const target=parseFloat(document.getElementById('kpi-target')?.value||0)||0;
+    const days  =parseFloat(document.getElementById('kpi-days')?.value||0)||rows.length;
+    const gap=Math.max(target-data.gmv,0);
+    const remaining=Math.max(days-rows.length,0);
+    const reqDaily=remaining>0?gap/remaining:0;
+    const dailyTarget=target/days;
+    stats=[
+      {l:'Gap Tersisa',    v:fmtRp(gap)},
+      {l:'Sisa Hari',      v:remaining+' hari'},
+      {l:'Perlu/hari',     v:fmtRp(reqDaily)},
+    ];
+    chartData={type:'bar',datasets:[
+      {label:'Aktual',data:rows.map(r=>r.gmv||0),backgroundColor:'rgba(34,211,238,0.3)',borderColor:'rgba(34,211,238,0.7)',borderWidth:1,borderRadius:{topLeft:3,topRight:3},borderSkipped:false},
+      {label:'Target/hari',data:rows.map(()=>dailyTarget),type:'line',borderColor:'rgba(201,168,76,0.7)',borderWidth:1.5,borderDash:[4,3],pointRadius:0,fill:false},
+    ]};
+    tableRows=[
+      `<tr><td>Daily Target</td><td style="color:var(--gold)">${fmtRp(dailyTarget)}</td></tr>`,
+      `<tr><td>Required/hari</td><td style="color:var(--red)">${fmtRp(reqDaily)}</td></tr>`,
+      `<tr><td>Peningkatan</td><td style="color:var(--amber)">${fmtPct(reqDaily/dailyTarget*100-100)}</td></tr>`,
+    ];
+
+  } else if(type==='daily_target'){
+    title='Daily Target'; sub='Aktual per hari vs target harian'; icon='📅';
+    const target=parseFloat(document.getElementById('kpi-target')?.value||0)||0;
+    const days  =parseFloat(document.getElementById('kpi-days')?.value||0)||rows.length;
+    const dailyTarget=target/days;
+    const beatDays=rows.filter(r=>(r.gmv||0)>=dailyTarget).length;
+    stats=[
+      {l:'Daily Target',  v:fmtRp(dailyTarget)},
+      {l:'Hari ≥ Target', v:beatDays+' / '+rows.length},
+      {l:'Hit Rate',      v:fmtPct(beatDays/rows.length*100)},
+    ];
+    chartData={type:'bar',datasets:[
+      {label:'GMV Harian',data:rows.map(r=>r.gmv||0),backgroundColor:rows.map(r=>(r.gmv||0)>=dailyTarget?'rgba(52,211,153,0.45)':'rgba(248,113,113,0.35)'),borderColor:rows.map(r=>(r.gmv||0)>=dailyTarget?'rgba(52,211,153,0.8)':'rgba(248,113,113,0.7)'),borderWidth:1,borderRadius:{topLeft:3,topRight:3},borderSkipped:false},
+      {label:'Target',data:rows.map(()=>dailyTarget),type:'line',borderColor:'rgba(201,168,76,0.7)',borderWidth:1.5,borderDash:[4,3],pointRadius:0,fill:false},
+    ]};
+    tableRows=rows.slice(-7).reverse().map(r=>{
+      const hit=(r.gmv||0)>=dailyTarget;
+      return `<tr><td>${fmtShortDate(r.date)}</td><td style="color:${hit?'var(--green)':'var(--red)'}">${fmtRp(r.gmv||0)}</td><td>${hit?'✓ Tercapai':'✗ Miss'}</td></tr>`;
+    });
+
+  } else if(type==='forecast'){
+    title='Forecast EOM'; sub='Proyeksi GMV akhir bulan berdasarkan rata-rata'; icon='🔮';
+    const target=parseFloat(document.getElementById('kpi-target')?.value||0)||0;
+    const days  =parseFloat(document.getElementById('kpi-days')?.value||0)||rows.length;
+    const avgDaily=data.gmv/rows.length;
+    const remaining=Math.max(days-rows.length,0);
+    const forecastEom=data.gmv+avgDaily*remaining;
+    stats=[
+      {l:'Forecast EOM',  v:fmtRp(forecastEom)},
+      {l:'vs Target',     v:(forecastEom>=target?'+':'')+fmtRp(forecastEom-target)},
+      {l:'Avg/hari',      v:fmtRp(avgDaily)},
+    ];
+    // Actual + projected line
+    const allLabels=[...labels,...Array.from({length:remaining},(_,i)=>'H+'+(i+1))];
+    const actuals=[...rows.map(r=>r.gmv||0),...Array(remaining).fill(null)];
+    const projected=[...Array(rows.length).fill(null),data.gmv,...Array.from({length:remaining},(_,i)=>data.gmv+avgDaily*(i+1))];
+    chartData={type:'line',datasets:[
+      {label:'Aktual',data:actuals,borderColor:'rgba(34,211,238,0.9)',borderWidth:2,fill:true,backgroundColor:'rgba(34,211,238,0.06)',tension:0.3,pointRadius:0,spanGaps:false},
+      {label:'Proyeksi',data:projected,borderColor:'rgba(201,168,76,0.7)',borderWidth:1.5,borderDash:[5,4],tension:0.2,pointRadius:0,fill:false,spanGaps:true},
+      {label:'Target',data:allLabels.map(()=>target),borderColor:'rgba(248,113,113,0.5)',borderWidth:1,borderDash:[2,4],pointRadius:0,fill:false},
+    ]};
+    tableRows=[
+      `<tr><td>Forecast EOM</td><td style="color:var(--gold)">${fmtRp(forecastEom)}</td></tr>`,
+      `<tr><td>Target</td><td>${fmtRp(target)}</td></tr>`,
+      `<tr><td>Selisih</td><td style="color:${forecastEom>=target?'var(--green)':'var(--red)'}">${fmtRp(Math.abs(forecastEom-target))}</td></tr>`,
+      `<tr><td>Status</td><td style="color:${forecastEom>=target?'var(--green)':'var(--red)'}">${forecastEom>=target?'✓ On Track':'⚠ At Risk'}</td></tr>`,
+    ];
+    labels.splice(0, labels.length, ...allLabels);
+  }
+
+  // Populate modal
+  document.getElementById('kpi-modal-icon').textContent=icon;
+  document.getElementById('kpi-modal-title').textContent=title;
+  document.getElementById('kpi-modal-sub').textContent=sub;
+  document.getElementById('kpi-modal-stats').innerHTML=stats.map(s=>`
+    <div class="kpi-modal-stat">
+      <div class="kpi-modal-stat-label">${s.l}</div>
+      <div class="kpi-modal-stat-val">${s.v}</div>
+    </div>`).join('');
+
+  // Table
+  const hasTable = tableRows.length > 0;
+  document.getElementById('kpi-modal-table').innerHTML = hasTable
+    ? `<table><thead><tr><th>Tanggal</th><th>Nilai</th>${tableRows[0].split('<td>').length>3?'<th>Status</th>':''}</tr></thead><tbody>${tableRows.join('')}</tbody></table>`
+    : '';
+
+  // Show modal first (so canvas has dimensions)
+  overlay.style.display='block';
+  modal.style.display='block';
+  document.body.style.overflow='hidden';
+  modal.scrollTop=0;
+
+  // Build chart
+  if(chartData && !modal.querySelector('#kpi-modal-chart')) return;
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const base=baseOptions();
+  const ctx=document.getElementById('kpi-modal-chart');
+  if(!ctx) return;
+  _kpiModalChart=new Chart(ctx,{
+    type: chartData.type||'bar',
+    data:{ labels, datasets: chartData.datasets },
+    options:{
+      ...base,
+      plugins:{...base.plugins, legend:{display:true,position:'top',labels:{color:base.plugins?.tooltip?.titleColor||'#aaa',font:{size:10},padding:12,usePointStyle:true,pointStyleWidth:8}}},
+      scales:{...base.scales,
+        x:{...base.scales?.x, ticks:{...base.scales?.x?.ticks, maxTicksLimit:10, maxRotation:0}},
+        y:{...base.scales?.y},
+      }
+    }
+  });
+}
+
+function closeKpiModal(){
+  const overlay=document.getElementById('kpi-modal-overlay');
+  const modal=document.getElementById('kpi-modal');
+  overlay.style.animation='kpi-overlay-in 0.18s ease reverse forwards';
+  modal.style.animation='kpi-modal-in 0.18s cubic-bezier(0.22,1,0.36,1) reverse forwards';
+  setTimeout(()=>{
+    overlay.style.display='none'; modal.style.display='none';
+    overlay.style.animation=''; modal.style.animation='';
+    document.body.style.overflow='';
+    if(_kpiModalChart){ _kpiModalChart.destroy(); _kpiModalChart=null; }
+  },180);
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeKpiModal(); } });
+
 function closeChannelPopup(){
   const p=document.getElementById('ch-popup');
   if(p){ p.classList.remove('is-dual'); _detailOpen=false; }
@@ -5405,5 +5749,25 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(
   window.attachGhostGlow = function(){};
 })();
 </script>
+
+<!-- ════ KPI DETAIL MODAL ════ -->
+<div id="kpi-modal-overlay" onclick="closeKpiModal()" style="display:none"></div>
+<div id="kpi-modal" role="dialog" aria-modal="true" style="display:none">
+  <div class="kpi-modal-header">
+    <div class="kpi-modal-icon" id="kpi-modal-icon"></div>
+    <div>
+      <div class="kpi-modal-title" id="kpi-modal-title">—</div>
+      <div class="kpi-modal-sub" id="kpi-modal-sub"></div>
+    </div>
+    <button class="kpi-modal-close" onclick="closeKpiModal()" aria-label="Tutup">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="kpi-modal-stats" id="kpi-modal-stats"></div>
+  <div class="kpi-modal-chart-wrap" id="kpi-modal-chart-wrap">
+    <canvas id="kpi-modal-chart"></canvas>
+  </div>
+  <div class="kpi-modal-table" id="kpi-modal-table"></div>
+</div>
 </body>
 </html>
