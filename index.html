@@ -2630,6 +2630,13 @@ body:not(.dashboard-ready) .kpi-scroll,
 body:not(.dashboard-ready) .page {
   opacity: 0;
 }
+/* Pause number/glow animations while dashboard is hidden so they fire fresh
+   the moment the dashboard becomes visible — works in both dark and light mode */
+body:not(.dashboard-ready) .hero-num,
+body:not(.dashboard-ready) .hero-kpi-val,
+body:not(.dashboard-ready) .fc-big {
+  animation-play-state: paused;
+}
 
 /* Header slides down */
 body.dashboard-ready .header {
@@ -6608,13 +6615,6 @@ function pinUnlock(){
     // Reveal dashboard AFTER splash is fully gone, then re-fire number animations
     setTimeout(() => {
       document.body.classList.add('dashboard-ready');
-      requestAnimationFrame(() => {
-        document.querySelectorAll('.hero-num, .hero-kpi-val, .fc-big').forEach(el => {
-          el.style.animation = 'none';
-          void el.offsetHeight;
-          el.style.animation = '';
-        });
-      });
     }, 920);
   }, 2050);
 }
