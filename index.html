@@ -2504,13 +2504,13 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 /* Light mode: deeper gold for contrast on cream */
 [data-theme="light"] #map-reveal { background: var(--bg, #f4f1e8); }
 [data-theme="light"] .mr-region {
-  stroke: #b6862c; filter: drop-shadow(0 0 4px rgba(182,134,44,.35));
-  fill: rgba(46,107,69,.04);
+  stroke: #2e6b45; filter: drop-shadow(0 0 4px rgba(46,107,69,.32));
+  fill: rgba(46,107,69,.05);
 }
-[data-theme="light"] .mr-region[data-region="selatan"] { fill: rgba(201,138,46,.08); }
+[data-theme="light"] .mr-region[data-region="selatan"] { fill: rgba(46,107,69,.10); }
 [data-theme="light"] .mr-labels text { fill: #6b5a32; }
 [data-theme="light"] .mr-hint { color: #3d4a3c; }
-[data-theme="light"] .mr-hint .mr-hint-strong { color: #b6862c; }
+[data-theme="light"] .mr-hint .mr-hint-strong { color: #2e6b45; }
 [data-theme="light"] .mr-store .mr-dot {
   fill: #c98a2e; filter: drop-shadow(0 0 7px rgba(201,138,46,.85));
 }
@@ -2540,6 +2540,17 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 #map-reveal.mr-show .mr-store .mr-ring  { animation: mrRing 1.9s ease-out 1.9s infinite; }
 #map-reveal.mr-show .mr-store .mr-label { animation: mrFade .5s ease 1.95s forwards; }
 #map-reveal.mr-show .mr-hint { animation: mrFade .6s ease 2.2s forwards; }
+
+/* Zoom-in + blur when a store is tapped — feels like diving into the store.
+   transform-origin is set inline (per clicked store) to zoom toward that dot. */
+.mr-map {
+  transition: transform .8s cubic-bezier(.5,0,.18,1), filter .8s ease, opacity .55s ease .2s;
+  transform-origin: 50% 50%; will-change: transform, filter;
+}
+.mr-title, .mr-hint { transition: opacity .35s ease; }
+#map-reveal.mr-zoom .mr-map   { transform: scale(4.2); filter: blur(18px); opacity: 0; }
+#map-reveal.mr-zoom .mr-title,
+#map-reveal.mr-zoom .mr-hint   { opacity: 0; }
 
 @keyframes mrDraw { to { stroke-dashoffset: 0; } }
 @keyframes mrFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
@@ -7729,12 +7740,22 @@ function runMapReveal(done){
     _mapPicked = true;
     // store the chosen store for later (data filtering when multi-store)
     try{ if(store) sessionStorage.setItem('foreStore', store.name); }catch(e){}
-    mr.classList.add('mr-out');
-    setTimeout(() => { if(done) done(); }, 260);   // reveal dashboard mid-fade
+
+    // Zoom the map toward the tapped store + blur → feels like diving in.
+    const map = mr.querySelector('.mr-map');
+    if(map && store){
+      const ox = (store.x / 1000 * 100).toFixed(2);   // viewBox 0..1000 wide
+      const oy = (store.y / 979  * 100).toFixed(2);    // viewBox 0..979 tall
+      map.style.transformOrigin = ox + '% ' + oy + '%';
+    }
+    mr.classList.add('mr-zoom');                       // start zoom + blur
+    setTimeout(() => { mr.classList.add('mr-out'); }, 380);  // bg fades after zoom kicks in
+    setTimeout(() => { if(done) done(); }, 520);            // reveal dashboard behind
     setTimeout(() => {
       mr.style.display = 'none';
-      mr.classList.remove('mr-show','mr-out');
-    }, 700);
+      mr.classList.remove('mr-show','mr-out','mr-zoom');
+      if(map){ map.style.transform=''; map.style.filter=''; map.style.opacity=''; map.style.transformOrigin=''; }
+    }, 950);
   };
 
   renderStorePoints(proceed);
