@@ -23,8 +23,8 @@ const CFG = {
   ACCESS_SHEET   : 'access',         // auto-created; stores registrations
 
   // Telegram
-  TG_BOT_TOKEN   : 'PASTE_BOT_TOKEN_HERE',     // from @BotFather
-  TG_OWNER_CHAT  : 'PASTE_YOUR_CHAT_ID_HERE',  // your Telegram numeric chat id
+  TG_BOT_TOKEN   : '8868940589:AAGXIwtUISRupnB5vHtxBtk0I8tvKbLLmHg',  // from @BotFather
+  TG_OWNER_CHAT  : '8868940589',  // your Telegram numeric chat id
 
   // Session
   SESSION_MIN    : 30,               // access duration in minutes
