@@ -346,3 +346,26 @@ function testTelegram(){
     text: 'Bot tersambung. Setup berhasil.' });
   Logger.log(JSON.stringify(r));
 }
+
+// Run once manually to check webhook status.
+function checkWebhook(){
+  const url = 'https://api.telegram.org/bot' + CFG.TG_BOT_TOKEN + '/getWebhookInfo';
+  const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  Logger.log(res.getContentText());
+}
+
+// Simulate a Tolak button press — lets you test reject flow without a real
+// Telegram callback. Paste a real requestId from the "access" sheet.
+function testReject(){
+  const requestId = 'PASTE_REQUEST_ID_HERE';  // from access sheet column A
+  const fakeUpdate = {
+    callback_query: {
+      id: 'fake',
+      from: { id: Number(CFG.TG_OWNER_CHAT) },
+      data: 'reject:' + requestId,
+      message: { message_id: 0, chat: { id: Number(CFG.TG_OWNER_CHAT) } }
+    }
+  };
+  handleTelegramUpdate(fakeUpdate);
+  Logger.log('done');
+}
