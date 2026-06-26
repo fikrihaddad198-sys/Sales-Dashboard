@@ -24,7 +24,7 @@ const CFG = {
 
   // Telegram
   TG_BOT_TOKEN   : '8868940589:AAGXIwtUISRupnB5vHtxBtk0I8tvKbLLmHg',  // from @BotFather
-  TG_OWNER_CHAT  : '8868940589',  // your Telegram numeric chat id
+  TG_OWNER_CHAT  : '7316023785',  // your Telegram numeric chat id
 
   // Session
   SESSION_MIN    : 30,               // access duration in minutes
