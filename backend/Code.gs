@@ -520,3 +520,26 @@ function checkWebhook(){
   const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
   Logger.log(res.getContentText());
 }
+
+// Debug: simulate heartbeat for the first approved token in the sheet.
+// Run this manually to verify column J gets written without needing the frontend.
+function testHeartbeat(){
+  const data = accessSheet().getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][3] === 'approved') {
+      const token = String(data[i][4]);
+      Logger.log('Testing heartbeat for: ' + data[i][2] + ' token=' + token.slice(0,8) + '...');
+      const result = apiHeartbeat(token);
+      Logger.log('Result: ' + JSON.stringify(result));
+      // Verify column J was written.
+      const sh = accessSheet();
+      const written = sh.getRange(i+1, 10).getValue();
+      Logger.log('Column J value after write: ' + written);
+      // Also test getOnlineUsers.
+      const online = getOnlineUsers(3);
+      Logger.log('getOnlineUsers result: ' + JSON.stringify(online));
+      return;
+    }
+  }
+  Logger.log('No approved rows found in access sheet.');
+}
