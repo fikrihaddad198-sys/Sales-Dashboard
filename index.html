@@ -1113,19 +1113,25 @@ body.dr-animating .reveal {
   box-shadow: 0 0 12px rgba(46,107,69,0.4);
 }
 .progress-fill {
-  height: 100%; border-radius: 4px;
+  height: 100%; width: 100%; border-radius: 4px;
   background: linear-gradient(90deg, #c9a84c 0%, #e0c576 60%, #c9a84c 100%) !important;
-  transition: width 1.4s cubic-bezier(0.22,1,0.36,1);
-  position: relative; min-width: 0;
+  /* GPU-composited scaleX instead of animating width (layout) → smooth fill. */
+  transform-origin: left center;
+  transform: scaleX(var(--p, 0));
+  transition: transform 1.2s cubic-bezier(0.22,1,0.36,1);
+  position: relative; min-width: 0; will-change: transform;
   box-shadow: 0 0 12px rgba(201,168,76,0.5);
 }
 .progress-fill::after {
   content: ''; position: absolute; right: -6px; top: 50%;
-  transform: translateY(-50%);
+  /* Counter-scale X so the leading dot stays a perfect circle while the
+     parent is scaled (clamped so a near-empty bar doesn't blow it up). */
+  transform: translateY(-50%) scaleX(calc(1 / max(var(--p, 0.15), 0.15)));
+  transform-origin: center;
   width: 13px; height: 13px; border-radius: 50%;
   background: #fff;
   box-shadow: 0 0 14px rgba(201,168,76,0.8), 0 0 0 3px rgba(201,168,76,0.25);
-  transition: right 1.4s cubic-bezier(0.23,1,0.32,1);
+  transition: transform 1.2s cubic-bezier(0.23,1,0.32,1);
 }
 .progress-meta {
   font-size: 11px; font-family: var(--mono); color: var(--t3); white-space: nowrap;
@@ -2788,22 +2794,25 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   content: '';
   position: absolute;
   top: -60%; left: -40%;
-  width: 60%; height: 220%;
+  width: 95%; height: 220%;
+  /* Softer, wider sheen — a gentle glow passing over the logo rather than a
+     hard bright band that looked like a seam/break crossing it. */
   background: linear-gradient(105deg,
     transparent 0%,
-    rgba(255,255,255,0.0) 35%,
-    rgba(255,255,255,0.55) 50%,
-    rgba(255,255,255,0.0) 65%,
+    rgba(255,255,255,0.0) 38%,
+    rgba(255,255,255,0.22) 50%,
+    rgba(255,255,255,0.0) 62%,
     transparent 100%
   );
   transform: translateX(-100%) skewX(-12deg);
-  animation: splash-shimmer 0.38s ease-out 0.58s forwards;
+  animation: splash-shimmer 0.7s ease-in-out 0.6s forwards;
   will-change: transform;
 }
 @keyframes splash-shimmer {
-  0%   { transform: translateX(-100%) skewX(-12deg); opacity: 0; }
-  10%  { opacity: 1; }
-  100% { transform: translateX(380%) skewX(-12deg); opacity: 0; }
+  0%   { transform: translateX(-110%) skewX(-12deg); opacity: 0; }
+  18%  { opacity: 1; }
+  82%  { opacity: 1; }
+  100% { transform: translateX(320%) skewX(-12deg); opacity: 0; }
 }
 /* Full-screen flash at peak (when logo glow is biggest ~0.55s) */
 #splash-screen::before {
@@ -3843,7 +3852,7 @@ body.dashboard-locking .card {
         </div>
         <div class="progress-wrap">
           <div class="progress-track">
-            <div class="progress-fill" id="h-progress" style="width:0%"></div>
+            <div class="progress-fill" id="h-progress" style="--p:0"></div>
           </div>
           <div class="progress-meta">
             <span id="h-ach-lbl">0%</span>
@@ -4839,20 +4848,21 @@ function calcKpi(skipCharts){
   const gmvEl=document.getElementById('h-gmv');
   animateCounter(gmvEl, data.gmv, v=>fmtRp(v), 1000);
 
-  /* Progress bar */
+  /* Progress bar (driven by --p scaleX, GPU-smooth) */
   const pFill=document.getElementById('h-progress');
-  pFill.style.width='0%';
+  const pTarget=(Math.min(achPct,100)/100);
+  pFill.dataset.target=pTarget.toFixed(4);     // for replayProgressBar on reveal
   const achColor=achPct>=100?'var(--green)':achPct>=80?'var(--amber)':'var(--red)';
   const glowColor=achPct>=100?'rgba(52,211,153,0.4)':achPct>=80?'rgba(251,191,36,0.4)':'rgba(248,113,113,0.4)';
-  setTimeout(()=>{
-    pFill.style.width=Math.min(achPct,100).toFixed(1)+'%';
-    pFill.style.background=achPct>=100
-      ?'linear-gradient(90deg,var(--green),var(--cyan))'
-      :achPct>=80
-      ?'linear-gradient(90deg,var(--amber),var(--cyan))'
-      :'linear-gradient(90deg,var(--red),var(--amber))';
-    pFill.style.boxShadow=`0 0 14px ${glowColor}`;
-  }, 350);
+  pFill.style.background=achPct>=100
+    ?'linear-gradient(90deg,var(--green),var(--cyan))'
+    :achPct>=80
+    ?'linear-gradient(90deg,var(--amber),var(--cyan))'
+    :'linear-gradient(90deg,var(--red),var(--amber))';
+  pFill.style.boxShadow=`0 0 14px ${glowColor}`;
+  // Set the fill; the CSS transition animates from the previous value. On a
+  // re-open with unchanged data it won't move (no re-sweep / no jank).
+  pFill.style.setProperty('--p', pTarget.toFixed(4));
   document.getElementById('h-ach-lbl').textContent=fmtPct(achPct);
   document.getElementById('h-target-lbl').textContent=fmtRp(target);
 
@@ -7602,17 +7612,17 @@ function revealDashboard(){
   setTimeout(() => { document.body.classList.remove('dr-animating'); }, 1500);
 }
 
-/* Re-trigger the KPI progress bar fill (CSS width transition) without
-   rebuilding any DOM — keeps the reveal smooth instead of churning innerHTML. */
+/* Re-trigger the KPI progress bar fill (GPU scaleX transition) on reveal,
+   without rebuilding any DOM — snap to 0, then animate to its target. */
 function replayProgressBar(){
   const pFill = document.getElementById('h-progress');
   if(!pFill) return;
-  const target = pFill.style.width || '0%';
+  const target = pFill.dataset.target || '0';
   pFill.style.transition = 'none';
-  pFill.style.width = '0%';
+  pFill.style.setProperty('--p', '0');
   void pFill.offsetWidth;            // commit the reset
-  pFill.style.transition = '';       // restore the 1.4s CSS transition
-  requestAnimationFrame(() => { pFill.style.width = target; });
+  pFill.style.transition = '';       // restore the CSS transition
+  requestAnimationFrame(() => { pFill.style.setProperty('--p', target); });
 }
 
 /* ── Access granted → splash → dashboard ── */
