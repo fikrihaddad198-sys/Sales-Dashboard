@@ -228,10 +228,13 @@ function handleTelegramUpdate(update){
     ackButton(decision === 'approve' ? 'Disetujui' : 'Ditolak');
     acked = true;
 
-    if (row.tgMsgId) {
+    // Use message_id from the callback itself (always reliable) rather than
+    // the stored tgMsgId which can be empty if the earlier setCell was slow.
+    const editMsgId = (cq.message && cq.message.message_id) ? cq.message.message_id : row.tgMsgId;
+    if (editMsgId) {
       tgApi('editMessageText', {
         chat_id: CFG.TG_OWNER_CHAT,
-        message_id: row.tgMsgId,
+        message_id: editMsgId,
         text: banner,
         parse_mode: 'Markdown'
       });
