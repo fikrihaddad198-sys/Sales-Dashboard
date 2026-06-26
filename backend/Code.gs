@@ -180,28 +180,32 @@ function handleTelegramUpdate(update){
   const cq = update.callback_query;
   if (!cq || !cq.data) return;
 
+  // ALWAYS stop the button spinner first, no matter what happens next.
+  // (A callback query is only "answered" once; this clears the loading state
+  // immediately so the owner never sees an endless spinner.)
+  function ackButton(msg){
+    try { tgApi('answerCallbackQuery', { callback_query_id: cq.id, text: msg || '' }); }
+    catch (e) {}
+  }
+
   // Only the owner may approve/reject.
   if (String(cq.from.id) !== String(CFG.TG_OWNER_CHAT)) {
-    tgApi('answerCallbackQuery', { callback_query_id: cq.id,
-      text: 'Hanya owner yang bisa menyetujui.', show_alert: true });
+    ackButton('Hanya owner yang bisa menyetujui.');
     return;
   }
 
   const parts = cq.data.split(':');
   const decision = parts[0], requestId = parts[1];
+
+  let acked = false;
   const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
+  const gotLock = lock.tryLock(15000);
+  if (!gotLock) { ackButton('Sibuk, coba lagi.'); return; }
   try {
     const sh  = accessSheet();
     const row = findRow(requestId);
-    if (!row) {
-      tgApi('answerCallbackQuery', { callback_query_id: cq.id, text:'Permintaan tak ditemukan.' });
-      return;
-    }
-    if (row.status !== 'pending') {
-      tgApi('answerCallbackQuery', { callback_query_id: cq.id, text:'Sudah diproses.' });
-      return;
-    }
+    if (!row) { ackButton('Permintaan tak ditemukan.'); acked = true; return; }
+    if (row.status !== 'pending') { ackButton('Sudah diproses.'); acked = true; return; }
 
     let banner;
     if (decision === 'approve') {
@@ -220,6 +224,10 @@ function handleTelegramUpdate(update){
       banner = '❌ *DITOLAK* - ' + tgEsc(row.name) + ' (`' + tgEsc(row.idFore) + '`)';
     }
 
+    // Clear the spinner BEFORE the slower editMessageText call.
+    ackButton(decision === 'approve' ? 'Disetujui' : 'Ditolak');
+    acked = true;
+
     if (row.tgMsgId) {
       tgApi('editMessageText', {
         chat_id: CFG.TG_OWNER_CHAT,
@@ -228,8 +236,8 @@ function handleTelegramUpdate(update){
         parse_mode: 'Markdown'
       });
     }
-    tgApi('answerCallbackQuery', { callback_query_id: cq.id,
-      text: decision === 'approve' ? 'Disetujui' : 'Ditolak' });
+  } catch (err) {
+    if (!acked) ackButton('Error, coba lagi.');
   } finally {
     lock.releaseLock();
   }
