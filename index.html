@@ -3519,7 +3519,9 @@ body.dashboard-locking .card {
 .device-opt:hover{ transform:translateY(-3px); border-color:rgba(201,168,76,0.45); background:rgba(201,168,76,0.08); box-shadow:0 8px 24px rgba(0,0,0,0.30); }
 .device-opt:active{ transform:translateY(-1px) scale(0.98); }
 .device-opt.selected{ border-color:rgba(201,168,76,0.6); background:rgba(201,168,76,0.12); }
-.device-ic{ font-size:30px; line-height:1; }
+.device-ic{ line-height:1; color:var(--t2); display:flex; align-items:center; justify-content:center; }
+.device-ic svg{ width:28px; height:28px; }
+.device-opt:hover .device-ic, .device-opt.selected .device-ic{ color:var(--gold); }
 .device-lb{ font-size:14px; font-weight:700; }
 .device-hint{ font-size:11px; color:var(--t3,#8d978c); }
 [data-theme="light"] #device-logo{ background:rgba(46,107,69,0.10); border-color:rgba(46,107,69,0.22); }
@@ -3582,7 +3584,7 @@ body.dashboard-locking .card {
   border:1px solid rgba(255,255,255,0.10); white-space:nowrap;
 }
 #sess-chip.show { display:inline-flex; }
-#sess-chip::before { content:'⏳'; font-size:11px; }
+.sess-ico { width:13px; height:13px; flex:0 0 auto; opacity:0.85; }
 #sess-chip.warn   { color:#e8a03a; border-color:rgba(232,160,58,0.40); }
 #sess-chip.danger { color:#e87373; border-color:rgba(232,115,115,0.55); }
 [data-theme="light"] #sess-chip { background:rgba(46,107,69,0.08); border-color:rgba(46,107,69,0.18); }
@@ -3596,17 +3598,17 @@ body.dashboard-locking .card {
     <div id="device-title">Pilih Perangkat</div>
     <div id="device-sub">Sesuaikan kehalusan animasi dengan perangkat yang Anda gunakan</div>
     <div id="device-grid">
-      <button class="device-opt" onclick="pickDevice('mobile')">
-        <span class="device-ic">📱</span><span class="device-lb">HP</span><span class="device-hint">Paling ringan</span>
+      <button class="device-opt" onclick="pickDevice('mobile')" aria-label="HP — performa paling ringan">
+        <span class="device-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2" width="11" height="20" rx="2.5"/><path d="M11 18h2"/></svg></span><span class="device-lb">HP</span><span class="device-hint">Paling ringan</span>
       </button>
-      <button class="device-opt" onclick="pickDevice('ipad')">
-        <span class="device-ic">📲</span><span class="device-lb">Tablet</span><span class="device-hint">Ringan</span>
+      <button class="device-opt" onclick="pickDevice('ipad')" aria-label="Tablet — performa ringan">
+        <span class="device-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2.5"/><path d="M11 18h2"/></svg></span><span class="device-lb">Tablet</span><span class="device-hint">Ringan</span>
       </button>
-      <button class="device-opt" onclick="pickDevice('laptop')">
-        <span class="device-ic">💻</span><span class="device-lb">Laptop</span><span class="device-hint">Penuh</span>
+      <button class="device-opt" onclick="pickDevice('laptop')" aria-label="Laptop — performa penuh">
+        <span class="device-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v10H4z"/><path d="M2 19h20"/></svg></span><span class="device-lb">Laptop</span><span class="device-hint">Penuh</span>
       </button>
-      <button class="device-opt" onclick="pickDevice('pc')">
-        <span class="device-ic">🖥️</span><span class="device-lb">PC / Mac</span><span class="device-hint">Maksimal</span>
+      <button class="device-opt" onclick="pickDevice('pc')" aria-label="PC atau Mac — performa maksimal">
+        <span class="device-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></span><span class="device-lb">PC / Mac</span><span class="device-hint">Maksimal</span>
       </button>
     </div>
   </div>
@@ -3714,8 +3716,8 @@ body.dashboard-locking .card {
   <div class="drp-header">
     <div class="drp-month-label" id="drp-month-label"></div>
     <div class="drp-navs">
-      <button class="drp-nav" id="drp-prev" onclick="drpNav(-1)">‹</button>
-      <button class="drp-nav" id="drp-next" onclick="drpNav(1)">›</button>
+      <button class="drp-nav" id="drp-prev" onclick="drpNav(-1)" aria-label="Bulan sebelumnya">‹</button>
+      <button class="drp-nav" id="drp-next" onclick="drpNav(1)" aria-label="Bulan berikutnya">›</button>
     </div>
   </div>
   <div class="drp-grid" id="drp-grid"></div>
@@ -3735,7 +3737,7 @@ body.dashboard-locking .card {
   <div class="header-divider"></div>
   <div class="header-store">Kemang Raya</div>
   <div class="header-right">
-    <div id="sess-chip" title="Sisa waktu akses"><span id="sess-time"></span></div>
+    <div id="sess-chip" title="Sisa waktu akses" role="timer" aria-label="Sisa waktu akses"><svg class="sess-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="sess-time"></span></div>
     <button class="lock-btn" id="perf-btn" onclick="openDevicePicker()" title="Perangkat" aria-label="Pilih perangkat">
       <span class="perf-dot"></span>
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
