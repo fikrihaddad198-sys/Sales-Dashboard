@@ -477,8 +477,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   to   { opacity: 1; transform: translateY(0); }
 }
 .page.page-swapping { animation: page-swap-in 0.34s cubic-bezier(0.22,1,0.36,1); }
-[data-perf="ipad"]   .page.page-swapping { animation-duration: 0.28s; }
-[data-perf="mobile"] .page.page-swapping { animation-duration: 0.24s; }
+[data-perf="ipad"]   .page.page-swapping { animation-duration: 0.24s; }
+[data-perf="mobile"] .page.page-swapping { animation: none; } /* HP: instant, no motion */
 @media (prefers-reduced-motion: reduce) { .page.page-swapping { animation: none; } }
 
 /* ─────────────────────────────────────────────────────
@@ -3264,12 +3264,14 @@ body.dashboard-locking .card {
 
 /* ══════════════════════════════════════════════════
    DEVICE PERFORMANCE TIERS  (chosen on pre-PIN picker)
-   pc      → every effect at full strength (default)
-   laptop  → full live blur, lighter brand-mark breathing
-   ipad    → no live backdrop blur, single-shadow breathing
-   mobile  → no live blur, no breathing shadow, shorter motion
-   Live backdrop-filter blur is the single biggest mobile/tablet GPU
-   cost (re-composited every frame), so it is dropped on ipad/mobile. */
+   Keys are internal; UI labels were re-calibrated to match real-world
+   device power (a modern iPad easily runs the "PC" tier).
+   pc     = "PC / Mac" → every effect at full strength (default)
+   laptop = "Laptop"   → full live blur, lighter brand-mark breathing
+   ipad   = "Tablet"   → no live blur, single-shadow breathing, quick swap
+   mobile = "HP"       → no live blur, no breathing, instant page swap
+   Live backdrop-filter blur is the single biggest mobile GPU cost
+   (re-composited every frame), so it is dropped on Tablet + HP. */
 [data-perf="ipad"] *,   [data-perf="ipad"] *::before,   [data-perf="ipad"] *::after,
 [data-perf="mobile"] *, [data-perf="mobile"] *::before, [data-perf="mobile"] *::after {
   backdrop-filter: none !important;
@@ -3357,16 +3359,16 @@ body.dashboard-locking .card {
     <div id="device-sub">Sesuaikan kehalusan animasi dengan perangkat yang Anda gunakan</div>
     <div id="device-grid">
       <button class="device-opt" onclick="pickDevice('mobile')">
-        <span class="device-ic">📱</span><span class="device-lb">Mobile</span><span class="device-hint">Paling ringan</span>
+        <span class="device-ic">📱</span><span class="device-lb">HP</span><span class="device-hint">Paling ringan</span>
       </button>
       <button class="device-opt" onclick="pickDevice('ipad')">
-        <span class="device-ic">📲</span><span class="device-lb">iPad / Tablet</span><span class="device-hint">Ringan</span>
+        <span class="device-ic">📲</span><span class="device-lb">Tablet</span><span class="device-hint">Ringan</span>
       </button>
       <button class="device-opt" onclick="pickDevice('laptop')">
         <span class="device-ic">💻</span><span class="device-lb">Laptop</span><span class="device-hint">Penuh</span>
       </button>
       <button class="device-opt" onclick="pickDevice('pc')">
-        <span class="device-ic">🖥️</span><span class="device-lb">PC</span><span class="device-hint">Maksimal</span>
+        <span class="device-ic">🖥️</span><span class="device-lb">PC / Mac</span><span class="device-hint">Maksimal</span>
       </button>
     </div>
   </div>
