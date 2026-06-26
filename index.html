@@ -2548,14 +2548,15 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
    transform-origin is set inline (per clicked store) to zoom toward that dot. */
 .mr-map {
   /* Accelerating ease-in so it feels like plunging DOWN into the store at
-     speed — slow grip, then a fast rush as the blur ramps up. */
-  transition: transform .6s cubic-bezier(.55,0,.85,.25),
-              filter   .6s cubic-bezier(.55,0,.85,.25),
-              opacity  .42s ease .22s;
+     speed — slow grip, then a hard rush as the blur ramps up. The map stays
+     fully visible through the dive and only dissolves at the very end. */
+  transition: transform .9s cubic-bezier(.5,0,.9,.18),
+              filter   .9s cubic-bezier(.5,0,.9,.18),
+              opacity  .35s ease .58s;
   transform-origin: 50% 50%; will-change: transform, filter;
 }
 .mr-title, .mr-hint { transition: opacity .25s ease; }
-#map-reveal.mr-zoom .mr-map   { transform: scale(11); filter: blur(34px); opacity: 0; }
+#map-reveal.mr-zoom .mr-map   { transform: scale(16); filter: blur(42px); opacity: 0; }
 #map-reveal.mr-zoom .mr-title,
 #map-reveal.mr-zoom .mr-hint   { opacity: 0; }
 
@@ -7764,13 +7765,13 @@ function runMapReveal(done){
       map.style.transformOrigin = ox + '% ' + oy + '%';
     }
     mr.classList.add('mr-zoom');                       // start zoom + blur
-    setTimeout(() => { mr.classList.add('mr-out'); }, 300);  // bg fades as the rush peaks
-    setTimeout(() => { if(done) done(); }, 430);            // reveal dashboard behind
+    setTimeout(() => { mr.classList.add('mr-out'); }, 620);  // bg fades only near the end
+    setTimeout(() => { if(done) done(); }, 720);            // dashboard appears as the dive lands
     setTimeout(() => {
       mr.style.display = 'none';
       mr.classList.remove('mr-show','mr-out','mr-zoom');
       if(map){ map.style.transform=''; map.style.filter=''; map.style.opacity=''; map.style.transformOrigin=''; }
-    }, 820);
+    }, 1150);
   };
 
   renderStorePoints(proceed);
