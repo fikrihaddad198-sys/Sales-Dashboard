@@ -2431,6 +2431,15 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 /* ── SPLASH SCREEN ─────────────────────────────────────── */
 /* ── Splash screen: clip-path applied HERE so ALL children are clipped together.
    Content (logo, text) can never "escape" outside the iris. ── */
+/* ── Screenshot guard overlay (non-owner only) ── */
+#screen-guard {
+  position: fixed; inset: 0; z-index: 99999;
+  background: #000;
+  display: none;
+  pointer-events: none;
+}
+#screen-guard.active { display: block; }
+
 #splash-screen {
   position: fixed; inset: 0; z-index: 10000;
   display: flex; align-items: center; justify-content: center;
@@ -3485,6 +3494,7 @@ body.dashboard-locking .card {
 <!-- ═══ END STANDBY ═══ -->
 
 <!-- ═══ SPLASH SCREEN ═══ -->
+<div id="screen-guard" aria-hidden="true"></div>
 <div id="splash-screen" style="display:none;" aria-hidden="true">
   <div id="splash-inner" style="position:relative;z-index:1;">
     <div id="splash-logo-mark">
@@ -7657,6 +7667,28 @@ async function exportKpiPDF(){
     if(btn) btn.style.pointerEvents = '';
   }
 }
+
+/* ── Screenshot guard: show black overlay when app goes to background ──
+   Works when Android/iOS grabs a preview frame (app switcher, screenshot
+   animation on some devices). Owner sessions are exempt. */
+(function(){
+  const guard = document.getElementById('screen-guard');
+  if (!guard) return;
+
+  function showGuard(){
+    if (!SESS.isOwner && sessionValid()) guard.classList.add('active');
+  }
+  function hideGuard(){
+    guard.classList.remove('active');
+  }
+
+  document.addEventListener('visibilitychange', function(){
+    document.hidden ? showGuard() : hideGuard();
+  });
+  // Also hide if user taps/clicks (returns from switcher)
+  document.addEventListener('focus', hideGuard, true);
+  window.addEventListener('focus', hideGuard);
+})();
 
 /* ── PWA: register service worker (enables install + offline shell) ── */
 if('serviceWorker' in navigator){

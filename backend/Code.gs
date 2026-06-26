@@ -69,10 +69,12 @@ function doGet(e){
 function doPost(e){
   // Telegram webhook updates land here.
   try {
-    const update = JSON.parse(e.postData.contents);
+    const raw = e.postData.contents;
+    Logger.log('doPost raw: ' + raw.slice(0, 500));
+    const update = JSON.parse(raw);
     handleTelegramUpdate(update);
   } catch (err) {
-    // swallow - Telegram only needs a 200
+    Logger.log('doPost error: ' + err);
   }
   return ContentService.createTextOutput('ok');
 }
@@ -102,14 +104,21 @@ function apiRegister(idFore, name){
                idFore:idFore, isOwner:true, expiresAt:far.getTime() };
     }
 
-    // Normal user -> pending, notify owner.
+    // Normal user -> pending. Release lock BEFORE notifyOwner (HTTP to Telegram)
+    // so the lock isn't held during a potentially slow network call.
     sh.appendRow([requestId, idFore, name, 'pending', '', now, '', '', '']);
+    lock.releaseLock();
+
     const msgId = notifyOwner(requestId, idFore, name);
-    if (msgId) setCell(sh, requestId, 'tgMsgId', String(msgId));
+    if (msgId) {
+      const sh2 = accessSheet();
+      setCell(sh2, requestId, 'tgMsgId', String(msgId));
+    }
 
     return { ok:true, status:'pending', requestId:requestId };
   } finally {
-    lock.releaseLock();
+    // safe to call even if already released
+    try { lock.releaseLock(); } catch(e) {}
   }
 }
 
@@ -182,56 +191,53 @@ function handleTelegramUpdate(update){
 
   // Only the owner may approve/reject.
   if (String(cq.from.id) !== String(CFG.TG_OWNER_CHAT)) {
-    tgApi('answerCallbackQuery', { callback_query_id: cq.id,
-      text: 'Hanya owner yang bisa menyetujui.', show_alert: true });
+    try { tgApi('answerCallbackQuery', { callback_query_id: cq.id,
+      text: 'Hanya owner yang bisa menyetujui.', show_alert: true }); } catch (e) {}
     return;
   }
 
   const parts = cq.data.split(':');
   const decision = parts[0], requestId = parts[1];
-  const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
-  try {
-    const sh  = accessSheet();
-    const row = findRow(requestId);
-    if (!row) {
-      tgApi('answerCallbackQuery', { callback_query_id: cq.id, text:'Permintaan tak ditemukan.' });
-      return;
-    }
-    if (row.status !== 'pending') {
-      tgApi('answerCallbackQuery', { callback_query_id: cq.id, text:'Sudah diproses.' });
-      return;
-    }
+  const editMsgId = cq.message && cq.message.message_id;
 
-    let banner;
-    if (decision === 'approve') {
-      const token = makeToken();
-      const now   = new Date();
-      const exp   = new Date(now.getTime() + CFG.SESSION_MIN*60000);
-      setCell(sh, requestId, 'status', 'approved');
-      setCell(sh, requestId, 'token', token);
-      setCell(sh, requestId, 'approvedAt', now);
-      setCell(sh, requestId, 'expiresAt', exp);
-      banner = '✅ *DISETUJUI* - ' + tgEsc(row.name) + ' (`' + tgEsc(row.idFore) + '`)\n' +
-               'Akses ' + CFG.SESSION_MIN + ' menit, sampai ' +
-               Utilities.formatDate(exp, 'Asia/Jakarta', 'HH:mm');
-    } else {
-      setCell(sh, requestId, 'status', 'rejected');
-      banner = '❌ *DITOLAK* - ' + tgEsc(row.name) + ' (`' + tgEsc(row.idFore) + '`)';
-    }
+  // NO LockService here. Holding a lock while doing HTTP calls back to Telegram
+  // made the handler slow; Telegram then timed out the webhook, marked the
+  // update failed, and — because it delivers updates strictly IN ORDER — every
+  // following callback got stuck behind the retrying one. A single owner
+  // tapping buttons doesn't need a lock; the status re-check below is enough.
+  const row = findRow(requestId);
 
-    if (row.tgMsgId) {
-      tgApi('editMessageText', {
-        chat_id: CFG.TG_OWNER_CHAT,
-        message_id: row.tgMsgId,
-        text: banner,
-        parse_mode: 'Markdown'
-      });
-    }
-    tgApi('answerCallbackQuery', { callback_query_id: cq.id,
-      text: decision === 'approve' ? 'Disetujui' : 'Ditolak' });
-  } finally {
-    lock.releaseLock();
+  // Fast path for retries / stale taps: do ZERO outbound HTTP so Telegram gets
+  // an instant 200 and the update queue never jams.
+  if (!row || row.status !== 'pending') {
+    try { tgApi('answerCallbackQuery', { callback_query_id: cq.id,
+      text: row ? 'Sudah diproses.' : 'Tak ditemukan.' }); } catch (e) {}
+    return;
+  }
+
+  const sh = accessSheet();
+  let banner;
+  if (decision === 'approve') {
+    const token = makeToken();
+    const now   = new Date();
+    const exp   = new Date(now.getTime() + CFG.SESSION_MIN*60000);
+    // One setValues write for status..expiresAt (cols 4-8) instead of 4 ops.
+    sh.getRange(row.rowIndex, 4, 1, 5)
+      .setValues([['approved', token, row.createdAt, now, exp]]);
+    banner = '✅ *DISETUJUI* - ' + tgEsc(row.name) + ' (`' + tgEsc(row.idFore) + '`)\n' +
+             'Akses ' + CFG.SESSION_MIN + ' menit, sampai ' +
+             Utilities.formatDate(exp, 'Asia/Jakarta', 'HH:mm');
+  } else {
+    sh.getRange(row.rowIndex, 4).setValue('rejected');
+    banner = '❌ *DITOLAK* - ' + tgEsc(row.name) + ' (`' + tgEsc(row.idFore) + '`)';
+  }
+
+  // Stop the spinner, then update the message. Two quick calls, once only.
+  try { tgApi('answerCallbackQuery', { callback_query_id: cq.id,
+    text: decision === 'approve' ? 'Disetujui' : 'Ditolak' }); } catch (e) {}
+  if (editMsgId) {
+    try { tgApi('editMessageText', { chat_id: CFG.TG_OWNER_CHAT,
+      message_id: editMsgId, text: banner, parse_mode: 'Markdown' }); } catch (e) {}
   }
 }
 
@@ -340,9 +346,67 @@ function jsonp(obj, cb){
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+// Run ONCE after first deploy to authorize all permissions (Spreadsheet +
+// UrlFetch + LockService). Must complete without error before webhook works.
+function initSetup(){
+  // 1. Touch spreadsheet (creates "access" sheet if missing)
+  const sh = accessSheet();
+  Logger.log('Sheet rows: ' + sh.getLastRow());
+
+  // 2. Touch LockService
+  const lock = LockService.getScriptLock();
+  lock.waitLock(3000);
+  lock.releaseLock();
+  Logger.log('LockService OK');
+
+  // 3. Touch UrlFetchApp via Telegram
+  const r = tgApi('sendMessage', {
+    chat_id: CFG.TG_OWNER_CHAT,
+    text: '✅ initSetup selesai — semua permission aktif, webhook siap dipakai.'
+  });
+  Logger.log('Telegram: ' + JSON.stringify(r));
+}
+
 // Run once manually to verify the bot token + chat id are correct.
 function testTelegram(){
   const r = tgApi('sendMessage', { chat_id: CFG.TG_OWNER_CHAT,
     text: 'Bot tersambung. Setup berhasil.' });
   Logger.log(JSON.stringify(r));
+}
+
+// Run once manually to check webhook status.
+function checkWebhook(){
+  const url = 'https://api.telegram.org/bot' + CFG.TG_BOT_TOKEN + '/getWebhookInfo';
+  const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  Logger.log(res.getContentText());
+}
+
+// Run this whenever the queue jams (pending_update_count keeps growing or
+// last_error mentions 302). Re-points the webhook to THIS deployment's /exec
+// URL and DROPS all stuck pending updates so delivery resumes cleanly.
+// IMPORTANT: deploy as Web App first, then paste the /exec URL below.
+function resetWebhook(){
+  const EXEC_URL = 'https://script.google.com/macros/s/AKfycbwyGkd-mZSYW924JyEqPAk_8rUP6DTJ7HcTFEqH8nOtKoLQp32x-hWXG5OstJQjOvTS/exec';
+  const url = 'https://api.telegram.org/bot' + CFG.TG_BOT_TOKEN +
+    '/setWebhook?url=' + encodeURIComponent(EXEC_URL) +
+    '&drop_pending_updates=true' +
+    '&allowed_updates=' + encodeURIComponent(JSON.stringify(['message','callback_query']));
+  const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  Logger.log(res.getContentText());
+}
+
+// Simulate a Tolak button press — lets you test reject flow without a real
+// Telegram callback. Paste a real requestId from the "access" sheet.
+function testReject(){
+  const requestId = 'PASTE_REQUEST_ID_HERE';  // from access sheet column A
+  const fakeUpdate = {
+    callback_query: {
+      id: 'fake',
+      from: { id: Number(CFG.TG_OWNER_CHAT) },
+      data: 'reject:' + requestId,
+      message: { message_id: 0, chat: { id: Number(CFG.TG_OWNER_CHAT) } }
+    }
+  };
+  handleTelegramUpdate(fakeUpdate);
+  Logger.log('done');
 }
