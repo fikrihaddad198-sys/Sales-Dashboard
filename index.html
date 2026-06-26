@@ -1125,29 +1125,53 @@ body.dr-animating .reveal {
 }
 [data-theme="light"] .progress-track { background: rgba(27,42,31,0.08); }
 [data-theme="light"] .progress-fill {
-  background: linear-gradient(90deg, #2e6b45 0%, #4a8f63 60%, #2e6b45 100%) !important;
-  box-shadow: 0 0 12px rgba(46,107,69,0.4);
+  background: linear-gradient(90deg, #2e6b45 0%, #57a574 55%, #2e6b45 100%) !important;
+  box-shadow: 0 0 12px rgba(46,107,69,0.35);
 }
+[data-theme="light"] .progress-fill::after { animation-name: prog-dot-pulse-green; }
+@keyframes prog-dot-pulse-green {
+  0%,100% { box-shadow: 0 0 12px rgba(46,107,69,0.6),  0 0 0 3px rgba(46,107,69,0.18); }
+  50%     { box-shadow: 0 0 22px rgba(46,107,69,0.95), 0 0 0 5px rgba(46,107,69,0.10); }
+}
+/* Registering --p as a real <number> makes it animatable, so transitioning it
+   reliably drives BOTH the fill scaleX and the dot counter-scale together. */
+@property --p { syntax: '<number>'; inherits: false; initial-value: 0; }
+
 .progress-fill {
   height: 100%; width: 100%; border-radius: 4px;
-  background: linear-gradient(90deg, #c9a84c 0%, #e0c576 60%, #c9a84c 100%) !important;
-  /* GPU-composited scaleX instead of animating width (layout) → smooth fill. */
+  background: linear-gradient(90deg, #b8923a 0%, #e6cd80 55%, #c9a84c 100%) !important;
   transform-origin: left center;
   transform: scaleX(var(--p, 0));
-  transition: transform 1.2s cubic-bezier(0.22,1,0.36,1);
+  transition: --p 1.3s cubic-bezier(0.22,1,0.36,1);
   position: relative; min-width: 0; will-change: transform;
-  box-shadow: 0 0 12px rgba(201,168,76,0.5);
+  box-shadow: 0 0 14px rgba(201,168,76,0.45);
 }
+/* Premium moving sheen riding the filled bar (subtle, GPU). */
+.progress-fill::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(100deg, transparent 38%, rgba(255,255,255,0.45) 50%, transparent 62%);
+  background-size: 220% 100%;
+  animation: prog-sheen 2.4s linear infinite;
+  pointer-events: none;
+}
+@keyframes prog-sheen { from { background-position: 200% 0; } to { background-position: -120% 0; } }
 .progress-fill::after {
-  content: ''; position: absolute; right: -6px; top: 50%;
+  content: ''; position: absolute; right: -7px; top: 50%;
   /* Counter-scale X so the leading dot stays a perfect circle while the
      parent is scaled (clamped so a near-empty bar doesn't blow it up). */
   transform: translateY(-50%) scaleX(calc(1 / max(var(--p, 0.15), 0.15)));
   transform-origin: center;
   width: 13px; height: 13px; border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 14px rgba(201,168,76,0.8), 0 0 0 3px rgba(201,168,76,0.25);
-  transition: transform 1.2s cubic-bezier(0.23,1,0.32,1);
+  box-shadow: 0 0 14px rgba(201,168,76,0.85), 0 0 0 3px rgba(201,168,76,0.22);
+  animation: prog-dot-pulse 2s ease-in-out infinite;
+}
+@keyframes prog-dot-pulse {
+  0%,100% { box-shadow: 0 0 12px rgba(201,168,76,0.7),  0 0 0 3px rgba(201,168,76,0.20); }
+  50%     { box-shadow: 0 0 22px rgba(201,168,76,1.0),  0 0 0 5px rgba(201,168,76,0.10); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progress-fill::before, .progress-fill::after { animation: none; }
 }
 .progress-meta {
   font-size: 11px; font-family: var(--mono); color: var(--t3); white-space: nowrap;
@@ -2299,11 +2323,10 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 }
 #page-kpi .hero-banner .orb1,
 #page-kpi .hero-banner .orb2 { display: none; }      /* remove ambient orbs */
-/* flat progress knob — no white glow */
+/* Premium glowing knob (inherits the pulse from the base rule). */
 #page-kpi .progress-fill::after {
-  background: var(--cyan);
-  width: 11px; height: 11px;
-  box-shadow: 0 0 0 3px var(--bg2);
+  background: #fff;
+  width: 12px; height: 12px;
 }
 
 /* solid button — no gradient, no glow, no sheen */
