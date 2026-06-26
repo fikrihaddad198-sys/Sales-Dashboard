@@ -69,10 +69,12 @@ function doGet(e){
 function doPost(e){
   // Telegram webhook updates land here.
   try {
-    const update = JSON.parse(e.postData.contents);
+    const raw = e.postData.contents;
+    Logger.log('doPost raw: ' + raw.slice(0, 500));
+    const update = JSON.parse(raw);
     handleTelegramUpdate(update);
   } catch (err) {
-    // swallow - Telegram only needs a 200
+    Logger.log('doPost error: ' + err);
   }
   return ContentService.createTextOutput('ok');
 }
@@ -188,14 +190,18 @@ function handleTelegramUpdate(update){
     catch (e) {}
   }
 
+  Logger.log('cq.from.id=' + cq.from.id + ' CFG.TG_OWNER_CHAT=' + CFG.TG_OWNER_CHAT + ' data=' + cq.data);
+
   // Only the owner may approve/reject.
   if (String(cq.from.id) !== String(CFG.TG_OWNER_CHAT)) {
+    Logger.log('BLOCKED: not owner');
     ackButton('Hanya owner yang bisa menyetujui.');
     return;
   }
 
   const parts = cq.data.split(':');
   const decision = parts[0], requestId = parts[1];
+  Logger.log('decision=' + decision + ' requestId=' + requestId);
 
   let acked = false;
   const lock = LockService.getScriptLock();
