@@ -505,11 +505,11 @@ body.dr-animating .reveal {
   to   { opacity: 1; }
 }
 .page.page-swapping {
-  animation: page-swap-in 0.28s ease;
+  animation: page-swap-in 0.36s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: opacity;
 }
-[data-perf="ipad"]   .page.page-swapping { animation-duration: 0.22s; }
-[data-perf="mobile"] .page.page-swapping { animation: none; will-change: auto; } /* HP: instant, no motion */
+[data-perf="ipad"]   .page.page-swapping { animation-duration: 0.30s; }
+[data-perf="mobile"] .page.page-swapping { animation-duration: 0.24s; } /* HP: light fade */
 @media (prefers-reduced-motion: reduce) { .page.page-swapping { animation: none; } }
 
 /* ─────────────────────────────────────────────────────
@@ -4417,8 +4417,9 @@ const SESS = {
 function sessionValid(){ const t=SESS.token, e=SESS.exp; return !!t && (!e || e>Date.now()); }
 
 let allData=[], charts={}, periodData={}, customPeriodData={}, fldtData={}, summData={};
-/* Charts always animate their draw (premium). The page-switch jitter was the
-   per-card .reveal cascade, not the chart draw — that's fixed separately. */
+/* Chart draw animation plays ONLY on the first dashboard entrance. On tab
+   switches charts paint instantly (already-formed), so page switches stay
+   fluid — no 800ms redraw fighting the page fade. Flipped off after entrance. */
 let _chartAnim = true;
 let _kpiRows=[];  /* stored after calcKpi for popup use */
 let _weeklyChan='gmv', _customChan='gmv', _fldtChan='cup_total', _chTrendKey='offline';
@@ -7702,7 +7703,10 @@ function revealDashboard(){
   // Re-place the nav pill now the dashboard is laid out & visible (instant).
   const a=document.querySelector('.nav-btn.active'); if(a) moveNavPill(a, true);
   // Longest stagger: 0.54s delay + 0.6s duration = 1.14s → clear at 1500ms.
-  setTimeout(() => { document.body.classList.remove('dr-animating'); }, 1500);
+  setTimeout(() => {
+    document.body.classList.remove('dr-animating');
+    _chartAnim = false;   // tab switches now paint charts instantly (fluid)
+  }, 1500);
 }
 
 /* Re-trigger the KPI progress bar fill (GPU scaleX transition) on reveal,
@@ -7969,6 +7973,7 @@ function openDevicePicker(){
     document.body.classList.add('dashboard-ready');
     if(SESS.exp) startSessionTimer(SESS.exp, SESS.isOwner);
     startHeartbeat();
+    setTimeout(() => { _chartAnim = false; }, 1600);  // then switches are instant
     document.dispatchEvent(new Event('fore-session-change'));
     return;
   }
