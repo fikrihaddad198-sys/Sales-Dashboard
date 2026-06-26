@@ -4347,19 +4347,25 @@ function gasCall(action, params){
 }
 
 /* Session token store (localStorage). Token + expiry are issued server-side. */
+/* Session lives in sessionStorage (NOT localStorage) so it is cleared the
+   moment the browser/tab/PWA is fully closed — reopening always requires a
+   fresh login, matching the per-visit access policy. */
 const SESS = {
-  get token(){ try{ return localStorage.getItem('foreToken'); }catch(e){ return null; } },
-  get exp(){   try{ return +localStorage.getItem('foreExp')||0; }catch(e){ return 0; } },
-  get name(){  try{ return localStorage.getItem('foreName')||''; }catch(e){ return ''; } },
-  get isOwner(){ try{ return localStorage.getItem('foreOwner')==='1'; }catch(e){ return false; } },
+  get token(){ try{ return sessionStorage.getItem('foreToken'); }catch(e){ return null; } },
+  get exp(){   try{ return +sessionStorage.getItem('foreExp')||0; }catch(e){ return 0; } },
+  get name(){  try{ return sessionStorage.getItem('foreName')||''; }catch(e){ return ''; } },
+  get isOwner(){ try{ return sessionStorage.getItem('foreOwner')==='1'; }catch(e){ return false; } },
   set(token, exp, name, isOwner){ try{
-    localStorage.setItem('foreToken', token);
-    localStorage.setItem('foreExp', String(exp||0));
-    localStorage.setItem('foreName', name||'');
-    localStorage.setItem('foreOwner', isOwner?'1':'0');
+    sessionStorage.setItem('foreToken', token);
+    sessionStorage.setItem('foreExp', String(exp||0));
+    sessionStorage.setItem('foreName', name||'');
+    sessionStorage.setItem('foreOwner', isOwner?'1':'0');
   }catch(e){} },
   clear(){ try{ ['foreToken','foreExp','foreName','foreOwner']
-    .forEach(k=>localStorage.removeItem(k)); }catch(e){} }
+    .forEach(k=>sessionStorage.removeItem(k)); }catch(e){}
+    // also purge any legacy localStorage tokens from older versions
+    try{ ['foreToken','foreExp','foreName','foreOwner']
+      .forEach(k=>localStorage.removeItem(k)); }catch(e){} }
 };
 function sessionValid(){ const t=SESS.token, e=SESS.exp; return !!t && (!e || e>Date.now()); }
 
