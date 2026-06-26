@@ -189,88 +189,55 @@ function handleTelegramUpdate(update){
   const cq = update.callback_query;
   if (!cq || !cq.data) return;
 
-  // ALWAYS stop the button spinner first, no matter what happens next.
-  // (A callback query is only "answered" once; this clears the loading state
-  // immediately so the owner never sees an endless spinner.)
-  function ackButton(msg){
-    try { tgApi('answerCallbackQuery', { callback_query_id: cq.id, text: msg || '' }); }
-    catch (e) {}
-  }
-
-  Logger.log('cq.from.id=' + cq.from.id + ' CFG.TG_OWNER_CHAT=' + CFG.TG_OWNER_CHAT + ' data=' + cq.data);
-
   // Only the owner may approve/reject.
   if (String(cq.from.id) !== String(CFG.TG_OWNER_CHAT)) {
-    Logger.log('BLOCKED: not owner');
-    ackButton('Hanya owner yang bisa menyetujui.');
+    try { tgApi('answerCallbackQuery', { callback_query_id: cq.id,
+      text: 'Hanya owner yang bisa menyetujui.', show_alert: true }); } catch (e) {}
     return;
   }
 
   const parts = cq.data.split(':');
   const decision = parts[0], requestId = parts[1];
-  Logger.log('decision=' + decision + ' requestId=' + requestId);
+  const editMsgId = cq.message && cq.message.message_id;
 
-  // Acknowledge FIRST so spinner ALWAYS stops, even if lock is contended.
-  ackButton(decision === 'approve' ? 'Memproses…' : 'Memproses…');
+  // NO LockService here. Holding a lock while doing HTTP calls back to Telegram
+  // made the handler slow; Telegram then timed out the webhook, marked the
+  // update failed, and — because it delivers updates strictly IN ORDER — every
+  // following callback got stuck behind the retrying one. A single owner
+  // tapping buttons doesn't need a lock; the status re-check below is enough.
+  const row = findRow(requestId);
 
-  const lock = LockService.getScriptLock();
-  const gotLock = lock.tryLock(10000);
-  if (!gotLock) {
-    Logger.log('lock timeout');
-    // Edit the message to inform owner the request is still being processed.
-    const msgId = cq.message && cq.message.message_id;
-    if (msgId) tgApi('editMessageText', { chat_id: CFG.TG_OWNER_CHAT, message_id: msgId,
-      text: '⏳ Masih diproses, coba tap lagi.' });
+  // Fast path for retries / stale taps: do ZERO outbound HTTP so Telegram gets
+  // an instant 200 and the update queue never jams.
+  if (!row || row.status !== 'pending') {
+    try { tgApi('answerCallbackQuery', { callback_query_id: cq.id,
+      text: row ? 'Sudah diproses.' : 'Tak ditemukan.' }); } catch (e) {}
     return;
   }
-  try {
-    const sh  = accessSheet();
-    const row = findRow(requestId);
-    const editMsgId = (cq.message && cq.message.message_id) ? cq.message.message_id : (row && row.tgMsgId);
 
-    if (!row) {
-      Logger.log('row not found for requestId=' + requestId);
-      if (editMsgId) tgApi('editMessageText', { chat_id: CFG.TG_OWNER_CHAT,
-        message_id: editMsgId, text: '⚠️ Permintaan tidak ditemukan.' });
-      return;
-    }
-    if (row.status !== 'pending') {
-      Logger.log('already processed, status=' + row.status);
-      if (editMsgId) tgApi('editMessageText', { chat_id: CFG.TG_OWNER_CHAT,
-        message_id: editMsgId, text: (row.status === 'approved' ? '✅' : '❌') + ' Sudah diproses.' });
-      return;
-    }
+  const sh = accessSheet();
+  let banner;
+  if (decision === 'approve') {
+    const token = makeToken();
+    const now   = new Date();
+    const exp   = new Date(now.getTime() + CFG.SESSION_MIN*60000);
+    // One setValues write for status..expiresAt (cols 4-8) instead of 4 ops.
+    sh.getRange(row.rowIndex, 4, 1, 5)
+      .setValues([['approved', token, row.createdAt, now, exp]]);
+    banner = '✅ *DISETUJUI* - ' + tgEsc(row.name) + ' (`' + tgEsc(row.idFore) + '`)\n' +
+             'Akses ' + CFG.SESSION_MIN + ' menit, sampai ' +
+             Utilities.formatDate(exp, 'Asia/Jakarta', 'HH:mm');
+  } else {
+    sh.getRange(row.rowIndex, 4).setValue('rejected');
+    banner = '❌ *DITOLAK* - ' + tgEsc(row.name) + ' (`' + tgEsc(row.idFore) + '`)';
+  }
 
-    let banner;
-    if (decision === 'approve') {
-      const token = makeToken();
-      const now   = new Date();
-      const exp   = new Date(now.getTime() + CFG.SESSION_MIN*60000);
-      setCell(sh, requestId, 'status', 'approved');
-      setCell(sh, requestId, 'token', token);
-      setCell(sh, requestId, 'approvedAt', now);
-      setCell(sh, requestId, 'expiresAt', exp);
-      banner = '✅ *DISETUJUI* - ' + tgEsc(row.name) + ' (`' + tgEsc(row.idFore) + '`)\n' +
-               'Akses ' + CFG.SESSION_MIN + ' menit, sampai ' +
-               Utilities.formatDate(exp, 'Asia/Jakarta', 'HH:mm');
-    } else {
-      setCell(sh, requestId, 'status', 'rejected');
-      banner = '❌ *DITOLAK* - ' + tgEsc(row.name) + ' (`' + tgEsc(row.idFore) + '`)';
-    }
-
-    if (editMsgId) {
-      tgApi('editMessageText', {
-        chat_id: CFG.TG_OWNER_CHAT,
-        message_id: editMsgId,
-        text: banner,
-        parse_mode: 'Markdown'
-      });
-    }
-    Logger.log('done: ' + decision + ' for ' + row.name);
-  } catch (err) {
-    Logger.log('handler error: ' + err);
-  } finally {
-    lock.releaseLock();
+  // Stop the spinner, then update the message. Two quick calls, once only.
+  try { tgApi('answerCallbackQuery', { callback_query_id: cq.id,
+    text: decision === 'approve' ? 'Disetujui' : 'Ditolak' }); } catch (e) {}
+  if (editMsgId) {
+    try { tgApi('editMessageText', { chat_id: CFG.TG_OWNER_CHAT,
+      message_id: editMsgId, text: banner, parse_mode: 'Markdown' }); } catch (e) {}
   }
 }
 
@@ -410,6 +377,20 @@ function testTelegram(){
 // Run once manually to check webhook status.
 function checkWebhook(){
   const url = 'https://api.telegram.org/bot' + CFG.TG_BOT_TOKEN + '/getWebhookInfo';
+  const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+  Logger.log(res.getContentText());
+}
+
+// Run this whenever the queue jams (pending_update_count keeps growing or
+// last_error mentions 302). Re-points the webhook to THIS deployment's /exec
+// URL and DROPS all stuck pending updates so delivery resumes cleanly.
+// IMPORTANT: deploy as Web App first, then paste the /exec URL below.
+function resetWebhook(){
+  const EXEC_URL = 'https://script.google.com/macros/s/AKfycbwyGkd-mZSYW924JyEqPAk_8rUP6DTJ7HcTFEqH8nOtKoLQp32x-hWXG5OstJQjOvTS/exec';
+  const url = 'https://api.telegram.org/bot' + CFG.TG_BOT_TOKEN +
+    '/setWebhook?url=' + encodeURIComponent(EXEC_URL) +
+    '&drop_pending_updates=true' +
+    '&allowed_updates=' + encodeURIComponent(JSON.stringify(['message','callback_query']));
   const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
   Logger.log(res.getContentText());
 }
