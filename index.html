@@ -476,9 +476,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.page.page-swapping { animation: page-swap-in 0.34s cubic-bezier(0.22,1,0.36,1); }
+.page.page-swapping {
+  animation: page-swap-in 0.34s cubic-bezier(0.22,1,0.36,1);
+  /* Composite the whole page as ONE GPU layer during the swap so the glass
+     blur + shadows aren't re-rasterised every frame (that caused the jitter). */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-style: flat;
+}
 [data-perf="ipad"]   .page.page-swapping { animation-duration: 0.24s; }
-[data-perf="mobile"] .page.page-swapping { animation: none; } /* HP: instant, no motion */
+[data-perf="mobile"] .page.page-swapping { animation: none; will-change: auto; } /* HP: instant, no motion */
 @media (prefers-reduced-motion: reduce) { .page.page-swapping { animation: none; } }
 
 /* ─────────────────────────────────────────────────────
@@ -4704,6 +4711,12 @@ function showPage(p,btn,skipHash){
     pageEl.classList.remove('page-swapping');
     void pageEl.offsetWidth;            // restart the animation
     pageEl.classList.add('page-swapping');
+    // Drop the page-swapping class (and its will-change layer) once the swap
+    // finishes, so the glass returns to its normal, crisp rendering.
+    pageEl.addEventListener('animationend', function _done(){
+      pageEl.classList.remove('page-swapping');
+      pageEl.removeEventListener('animationend', _done);
+    });
   }
   setTimeout(()=>{ if(window.attachReveal){ window.attachReveal(pageEl); window.attachReveal(); } }, 50);
 }
