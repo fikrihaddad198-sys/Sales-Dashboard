@@ -757,6 +757,28 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 .nav::-webkit-scrollbar { display: none; }
 
+/* ── Sliding pill indicator: floating active background ──
+   Position (left/width) is set by JS and animates with a spring curve so the
+   pill glides from the old tab to the new one. Accent color (bg/border/glow)
+   is also set by JS from the active page's accent — premium "magic move". */
+#nav-pill {
+  position: absolute;
+  top: 50%; left: 0; width: 0; height: 32px;
+  transform: translateY(-50%);
+  border-radius: var(--r3);
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.24);
+  box-shadow: 0 0 16px rgba(201,168,76,0.18), 0 1px 0 rgba(255,255,255,0.06) inset;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+  transition:
+    left  0.42s cubic-bezier(0.34,1.25,0.5,1),
+    width 0.42s cubic-bezier(0.34,1.25,0.5,1),
+    background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+}
+#nav-pill.instant { transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease; }
+
 .nav-btn {
   background: none; border: none; color: var(--t3);
   padding: 0 14px; height: 32px;
@@ -764,7 +786,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   font-family: var(--font); letter-spacing: 0.15px;
   cursor: pointer; white-space: nowrap; user-select: none;
   display: flex; align-items: center; gap: 6px;
-  position: relative;
+  position: relative; z-index: 1;       /* above the sliding pill */
   border-radius: var(--r3);
   transition: color 0.18s, background 0.18s;
 }
@@ -778,54 +800,29 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   color: var(--t1);
   background: var(--surface);
 }
+.nav-btn.active:hover { background: none; }   /* pill is the active fill */
 .nav-btn:hover .ni { opacity: 1; }
 .nav-btn.active {
   color: var(--t1);
-  background: var(--surface-hover);
 }
 .nav-btn.active .ni {
   opacity: 1;
-  transform: scale(1.2);
+  transform: scale(1.15);
 }
-/* Active underline per button — accent-colored per page */
-.nav-btn::after {
-  content:''; position:absolute;
-  bottom: -6px; left: 14px; right: 14px; height: 2px;
-  background: var(--acc, var(--cyan));
-  border-radius: 2px 2px 0 0;
-  transform: scaleX(0); transform-origin: center;
-  transition: transform 0.28s cubic-bezier(0.34,1.4,0.64,1);
-  box-shadow: 0 0 8px var(--acc, var(--cyan));
-}
-.nav-btn.active::after { transform: scaleX(1); }
 
 [data-theme="light"] .nav-btn { color: var(--t2); }
 [data-theme="light"] .nav-btn:hover { color: var(--t1); background: rgba(27,42,31,0.045); }
-[data-theme="light"] .nav-btn.active { color: #2e6b45; background: rgba(46,107,69,0.10); }
-.nav-btn[data-page="race"]:hover { background: var(--amber-10); color: var(--amber); }
-.nav-btn[data-page="race"].active {
-  color: var(--amber);
-  background: var(--amber-10);
-}
-.nav-btn[data-page="race"].active::after {
-  background: linear-gradient(90deg, var(--amber), var(--orange));
-  box-shadow: 0 0 8px var(--amber);
-}
+[data-theme="light"] .nav-btn.active { color: #2e6b45; }
+.nav-btn[data-page="race"]:hover { color: var(--amber); }
 
-/* Page accent on nav active state */
-.nav-btn[data-page="kpi"].active     { color: var(--cyan);   background: var(--cyan-05); }
-.nav-btn[data-page="channel"].active  { color: var(--blue);   background: var(--blue-05); }
-.nav-btn[data-page="period"].active   { color: var(--amber);  background: var(--amber-05); }
-.nav-btn[data-page="fldt"].active     { color: var(--green);  background: var(--green-05); }
-.nav-btn[data-page="allsumm"].active  { color: var(--violet); background: var(--violet-05); }
-.nav-btn[data-page="d2d"].active      { color: var(--pink);   background: var(--pink-05); }
-
-.nav-btn[data-page="kpi"].active::after     { background: var(--cyan);   box-shadow: 0 0 8px var(--cyan); }
-.nav-btn[data-page="channel"].active::after  { background: var(--blue);   box-shadow: 0 0 8px var(--blue); }
-.nav-btn[data-page="period"].active::after   { background: var(--amber);  box-shadow: 0 0 8px var(--amber); }
-.nav-btn[data-page="fldt"].active::after     { background: var(--green);  box-shadow: 0 0 8px var(--green); }
-.nav-btn[data-page="allsumm"].active::after  { background: var(--violet); box-shadow: 0 0 8px var(--violet); }
-.nav-btn[data-page="d2d"].active::after      { background: var(--pink);   box-shadow: 0 0 8px var(--pink); }
+/* Page accent on nav active TEXT only — the pill provides the fill+glow */
+.nav-btn[data-page="kpi"].active     { color: var(--cyan);   }
+.nav-btn[data-page="channel"].active  { color: var(--blue);   }
+.nav-btn[data-page="period"].active   { color: var(--amber);  }
+.nav-btn[data-page="fldt"].active     { color: var(--green);  }
+.nav-btn[data-page="allsumm"].active  { color: var(--violet); }
+.nav-btn[data-page="d2d"].active      { color: var(--pink);   }
+.nav-btn[data-page="race"].active     { color: var(--amber);  }
 
 /* ─────────────────────────────────────────────────────
    PAGE ACCENT SCOPING
@@ -3353,6 +3350,8 @@ body.dashboard-locking .card {
 
 <!-- NAV -->
 <nav class="nav" id="main-nav">
+  <!-- Sliding pill: floating active background that glides between tabs -->
+  <span id="nav-pill" aria-hidden="true"></span>
   <button class="nav-btn active" data-page="kpi" onclick="showPage('kpi',this)" aria-label="KPI Summary">
     <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>KPI Summary
   </button>
@@ -4233,13 +4232,39 @@ function getVal(id){ return document.getElementById(id)?.value||''; }
    NAVIGATION
 ═══════════════════════════════════════════════════ */
 let currentPage='kpi';
+/* Slide the nav pill to the active button. Reads the button's resolved accent
+   color (set by the per-page .active rules) and tints the pill bg/border/glow
+   to match — so the floating indicator adopts each page's accent. `instant`
+   skips the slide animation (used for first paint and resize). */
+function moveNavPill(btn, instant){
+  const nav  = document.getElementById('main-nav');
+  const pill = document.getElementById('nav-pill');
+  if(!nav || !pill || !btn) return;
+  if(instant) pill.classList.add('instant');
+  pill.style.left  = btn.offsetLeft  + 'px';
+  pill.style.width = btn.offsetWidth + 'px';
+  pill.style.opacity = '1';
+  const col = getComputedStyle(btn).color;             // rgb(r, g, b)
+  const rgba = (a) => col.replace('rgb(', 'rgba(').replace(')', ', ' + a + ')');
+  pill.style.background  = rgba(0.13);
+  pill.style.borderColor = rgba(0.32);
+  pill.style.boxShadow   = '0 0 16px ' + rgba(0.22) + ', 0 1px 0 rgba(255,255,255,0.06) inset';
+  if(instant) requestAnimationFrame(() => requestAnimationFrame(() => pill.classList.remove('instant')));
+}
+
 function showPage(p,btn,skipHash){
   document.querySelectorAll('.page').forEach(el=>{ el.classList.remove('active'); el.scrollTop=0; });
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const pageEl=document.getElementById('page-'+p);
   if(pageEl) pageEl.classList.add('active');
+  let activeBtn = btn;
   if(btn) btn.classList.add('active');
-  else { const nb=document.querySelector('.nav-btn[data-page="'+p+'"]'); if(nb) nb.classList.add('active'); }
+  else { const nb=document.querySelector('.nav-btn[data-page="'+p+'"]'); if(nb){ nb.classList.add('active'); activeBtn=nb; } }
+  if(activeBtn){
+    moveNavPill(activeBtn);
+    // keep the active tab in view on narrow screens
+    activeBtn.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
+  }
   currentPage=p;
   if(!skipHash) history.replaceState(null,'','#'+p);
   if(allData.length) renderPage(p);
@@ -4250,6 +4275,11 @@ window.addEventListener('DOMContentLoaded',()=>{
   const hash=location.hash.replace('#','');
   const valid=['kpi','channel','period','fldt','allsumm','d2d','race'];
   if(hash && valid.includes(hash)) showPage(hash,null,true);
+  // Place the nav pill under whichever tab is active (no slide on first paint).
+  const place = () => { const a=document.querySelector('.nav-btn.active'); if(a) moveNavPill(a, true); };
+  requestAnimationFrame(() => requestAnimationFrame(place));
+  // Re-position instantly when the layout changes (resize / orientation).
+  let rT; window.addEventListener('resize', () => { clearTimeout(rT); rT=setTimeout(place, 80); });
 });
 function renderCurrentPage(){ renderPage(currentPage); }
 function renderPage(p){
@@ -7018,6 +7048,8 @@ function standbyToPin(){
 function revealDashboard(){
   document.body.classList.add('dr-animating');
   document.body.classList.add('dashboard-ready');
+  // Re-place the nav pill now the dashboard is laid out & visible (instant).
+  const a=document.querySelector('.nav-btn.active'); if(a) moveNavPill(a, true);
   // Longest stagger: 0.54s delay + 0.6s duration = 1.14s → clear at 1500ms.
   setTimeout(() => { document.body.classList.remove('dr-animating'); }, 1500);
 }
