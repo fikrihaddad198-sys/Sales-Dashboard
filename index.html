@@ -2433,32 +2433,15 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
    Content (logo, text) can never "escape" outside the iris. ── */
 /* ── Screenshot guard overlay (non-owner only) ── */
 /* ── Screenshot guard ──
-   Layer 1 (always on for non-owner): rapid opacity flicker via CSS animation.
-   At ≥120fps the frame is invisible half the time → screenshots on most
-   Android/iOS devices catch a black frame. Not perceptible to the human eye.
-   Layer 2: solid black overlay on visibilitychange (app switcher / background). */
-@keyframes _sg-flicker {
-  0%,49%  { opacity: 1; }
-  50%,100%{ opacity: 0; }
-}
+   Solid black overlay shown when app goes to background (app switcher,
+   screen-off, blur). Activated for non-owner sessions only. */
 #screen-guard {
   position: fixed; inset: 0; z-index: 99999;
   background: #000;
   display: none;
   pointer-events: none;
 }
-/* Flicker layer — always present for non-owners, imperceptible but
-   makes screenshot frames black on devices that render at 60fps+ */
-#screen-guard.guard-on {
-  display: block;
-  opacity: 0;  /* invisible by default */
-  animation: _sg-flicker 8ms steps(1) infinite;
-}
-/* Full blackout when app goes to background */
-#screen-guard.guard-on.active {
-  opacity: 1 !important;
-  animation: none;
-}
+#screen-guard.guard-on.active { display: block; }
 
 #splash-screen {
   position: fixed; inset: 0; z-index: 10000;
