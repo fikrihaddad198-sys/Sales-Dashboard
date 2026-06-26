@@ -2447,10 +2447,13 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 #map-reveal {
   position: fixed; inset: 0; z-index: 10050;
   display: none; align-items: center; justify-content: center;
+  /* Transparent background that fades up gently so the Fore logo behind
+     blends THROUGH instead of being hard-covered (no flicker). */
   background: var(--bg, #0f0d0b);
-  opacity: 1; transition: opacity .55s ease;
+  opacity: 0; transition: opacity .7s ease;
 }
-#map-reveal.mr-out { opacity: 0; }
+#map-reveal.mr-show { opacity: 1; }
+#map-reveal.mr-out  { opacity: 0 !important; }
 .mr-frame { position: relative; width: min(88vw, 720px); text-align: center; }
 .mr-title {
   font-size: 12px; letter-spacing: .44em; font-weight: 700;
