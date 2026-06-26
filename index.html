@@ -467,6 +467,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .reveal-delay-5  { transition-delay: 0.20s; }
 .reveal-delay-6  { transition-delay: 0.24s; }
 
+/* ── Page switch: reveal the new page as ONE smooth unit ──
+   On tab change renderPage() rebuilds the DOM, which would otherwise
+   replay the per-card .reveal cascade every single time (felt jittery /
+   too fast). Instead cards are shown instantly and the whole page does
+   a single gentle fade+rise. */
+@keyframes page-swap-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page.page-swapping { animation: page-swap-in 0.34s cubic-bezier(0.22,1,0.36,1); }
+[data-perf="ipad"]   .page.page-swapping { animation-duration: 0.24s; }
+[data-perf="mobile"] .page.page-swapping { animation: none; } /* HP: instant, no motion */
+@media (prefers-reduced-motion: reduce) { .page.page-swapping { animation: none; } }
+
 /* ─────────────────────────────────────────────────────
    SKELETON LOADING
 ───────────────────────────────────────────────────── */
@@ -3250,12 +3264,14 @@ body.dashboard-locking .card {
 
 /* ══════════════════════════════════════════════════
    DEVICE PERFORMANCE TIERS  (chosen on pre-PIN picker)
-   pc      → every effect at full strength (default)
-   laptop  → full live blur, lighter brand-mark breathing
-   ipad    → no live backdrop blur, single-shadow breathing
-   mobile  → no live blur, no breathing shadow, shorter motion
-   Live backdrop-filter blur is the single biggest mobile/tablet GPU
-   cost (re-composited every frame), so it is dropped on ipad/mobile. */
+   Keys are internal; UI labels were re-calibrated to match real-world
+   device power (a modern iPad easily runs the "PC" tier).
+   pc     = "PC / Mac" → every effect at full strength (default)
+   laptop = "Laptop"   → full live blur, lighter brand-mark breathing
+   ipad   = "Tablet"   → no live blur, single-shadow breathing, quick swap
+   mobile = "HP"       → no live blur, no breathing, instant page swap
+   Live backdrop-filter blur is the single biggest mobile GPU cost
+   (re-composited every frame), so it is dropped on Tablet + HP. */
 [data-perf="ipad"] *,   [data-perf="ipad"] *::before,   [data-perf="ipad"] *::after,
 [data-perf="mobile"] *, [data-perf="mobile"] *::before, [data-perf="mobile"] *::after {
   backdrop-filter: none !important;
@@ -3332,6 +3348,63 @@ body.dashboard-locking .card {
 [data-theme="light"] .device-opt.selected{ border-color:rgba(46,107,69,0.6); background:rgba(46,107,69,0.12); }
 [data-theme="light"] .device-hint{ color:#5c554b; }
 @media (prefers-reduced-motion: reduce){ #device-box{ animation:none; } }
+
+/* ══════════════════════════════════════════════════
+   REGISTRATION / ACCESS REQUEST UI  (replaces PIN numpad)
+══════════════════════════════════════════════════ */
+#reg-form, #reg-wait { display:flex; flex-direction:column; gap:14px; text-align:center; }
+.reg-field { display:flex; flex-direction:column; gap:6px; text-align:left; }
+.reg-label { font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--t3,#8d978c); }
+.reg-input {
+  width:100%; box-sizing:border-box; padding:13px 14px; border-radius:13px;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12);
+  color:var(--t1,#f5f0e6); font-size:16px; font-family:inherit; outline:none;
+  transition:border-color .2s, background .2s, box-shadow .2s;
+}
+.reg-input::placeholder { color:rgba(255,255,255,0.28); }
+.reg-input:focus { border-color:rgba(201,168,76,0.6); background:rgba(201,168,76,0.06); box-shadow:0 0 0 3px rgba(201,168,76,0.14); }
+.reg-btn {
+  margin-top:4px; padding:13px 16px; border-radius:13px; border:none; cursor:pointer;
+  font-size:14px; font-weight:800; letter-spacing:0.3px; font-family:inherit;
+  background:linear-gradient(135deg,#d8b75a,#c9a84c); color:#1a1407;
+  box-shadow:0 6px 18px rgba(201,168,76,0.28);
+  transition:transform .15s, box-shadow .2s, opacity .2s;
+}
+.reg-btn:hover { transform:translateY(-2px); box-shadow:0 10px 26px rgba(201,168,76,0.38); }
+.reg-btn:active { transform:translateY(0) scale(0.98); }
+.reg-btn:disabled { opacity:0.6; cursor:default; transform:none; box-shadow:none; }
+.reg-btn-ghost { background:transparent; color:var(--t2,#998f82); box-shadow:none; border:1px solid rgba(255,255,255,0.14); }
+.reg-btn-ghost:hover { background:rgba(255,255,255,0.06); box-shadow:none; transform:none; }
+.reg-msg { font-size:12.5px; font-weight:600; color:#e87373; transition:opacity .2s; }
+.reg-msg:empty { display:none; }
+.reg-msg.ok { color:#5ec97c; }
+.reg-spinner {
+  width:40px; height:40px; margin:6px auto 2px; border-radius:50%;
+  border:3px solid rgba(201,168,76,0.18); border-top-color:#c9a84c;
+  animation:reg-spin 0.9s linear infinite;
+}
+@keyframes reg-spin { to { transform:rotate(360deg); } }
+.reg-wait-title { font-size:15px; font-weight:800; color:var(--t1,#f5f0e6); }
+.reg-wait-sub { font-size:12.5px; color:var(--t3,#8d978c); line-height:1.5; }
+[data-theme="light"] .reg-input { background:rgba(255,255,255,0.6); border-color:rgba(46,107,69,0.18); color:#26302a; }
+[data-theme="light"] .reg-input::placeholder { color:rgba(38,48,42,0.4); }
+[data-theme="light"] .reg-input:focus { border-color:rgba(46,107,69,0.6); background:rgba(46,107,69,0.05); box-shadow:0 0 0 3px rgba(46,107,69,0.12); }
+[data-theme="light"] .reg-btn { background:linear-gradient(135deg,#3d8f5f,#2e6b45); color:#fff; box-shadow:0 6px 18px rgba(46,107,69,0.25); }
+[data-theme="light"] .reg-btn-ghost { background:transparent; color:#5c554b; border-color:rgba(46,107,69,0.2); }
+[data-theme="light"] .reg-spinner { border-color:rgba(46,107,69,0.18); border-top-color:#2e6b45; }
+
+/* ── Session countdown chip in header ── */
+#sess-chip {
+  display:none; align-items:center; gap:5px; height:32px; padding:0 10px;
+  border-radius:8px; font-family:var(--mono); font-size:11px; font-weight:700;
+  letter-spacing:0.5px; color:var(--t2); background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.10); white-space:nowrap;
+}
+#sess-chip.show { display:inline-flex; }
+#sess-chip::before { content:'⏳'; font-size:11px; }
+#sess-chip.warn   { color:#e8a03a; border-color:rgba(232,160,58,0.40); }
+#sess-chip.danger { color:#e87373; border-color:rgba(232,115,115,0.55); }
+[data-theme="light"] #sess-chip { background:rgba(46,107,69,0.08); border-color:rgba(46,107,69,0.18); }
 </style>
 </head>
 <body>
@@ -3343,16 +3416,16 @@ body.dashboard-locking .card {
     <div id="device-sub">Sesuaikan kehalusan animasi dengan perangkat yang Anda gunakan</div>
     <div id="device-grid">
       <button class="device-opt" onclick="pickDevice('mobile')">
-        <span class="device-ic">📱</span><span class="device-lb">Mobile</span><span class="device-hint">Paling ringan</span>
+        <span class="device-ic">📱</span><span class="device-lb">HP</span><span class="device-hint">Paling ringan</span>
       </button>
       <button class="device-opt" onclick="pickDevice('ipad')">
-        <span class="device-ic">📲</span><span class="device-lb">iPad / Tablet</span><span class="device-hint">Ringan</span>
+        <span class="device-ic">📲</span><span class="device-lb">Tablet</span><span class="device-hint">Ringan</span>
       </button>
       <button class="device-opt" onclick="pickDevice('laptop')">
         <span class="device-ic">💻</span><span class="device-lb">Laptop</span><span class="device-hint">Penuh</span>
       </button>
       <button class="device-opt" onclick="pickDevice('pc')">
-        <span class="device-ic">🖥️</span><span class="device-lb">PC</span><span class="device-hint">Maksimal</span>
+        <span class="device-ic">🖥️</span><span class="device-lb">PC / Mac</span><span class="device-hint">Maksimal</span>
       </button>
     </div>
   </div>
@@ -3370,34 +3443,31 @@ body.dashboard-locking .card {
       <div class="pin-logo-mark"><span class="header-logo-icon" style="width:22px;height:28px;display:block;"></span></div>
       <div class="pin-logo-text">Fore Coffee</div>
     </div>
-    <div id="pin-title">Masukkan PIN</div>
-    <div id="pin-subtitle">Dashboard Sales Intelligence</div>
-    <div id="pin-dots">
-      <span class="pin-dot"></span>
-      <span class="pin-dot"></span>
-      <span class="pin-dot"></span>
-      <span class="pin-dot"></span>
-      <span class="pin-dot"></span>
-      <span class="pin-dot"></span>
-    </div>
-    <!-- Glass panel: frosted surface that numpad floats on -->
+    <div id="pin-title">Daftar Akses</div>
+    <div id="pin-subtitle">Masukkan ID Fore &amp; nama untuk meminta akses</div>
+    <!-- Glass panel: frosted surface the form floats on -->
     <div id="pin-glass">
-      <div id="pin-error"></div>
-      <div id="pin-numpad">
-        <button class="pin-key" onclick="pinKey('1')">1</button>
-        <button class="pin-key" onclick="pinKey('2')">2</button>
-        <button class="pin-key" onclick="pinKey('3')">3</button>
-        <button class="pin-key" onclick="pinKey('4')">4</button>
-        <button class="pin-key" onclick="pinKey('5')">5</button>
-        <button class="pin-key" onclick="pinKey('6')">6</button>
-        <button class="pin-key" onclick="pinKey('7')">7</button>
-        <button class="pin-key" onclick="pinKey('8')">8</button>
-        <button class="pin-key" onclick="pinKey('9')">9</button>
-        <button class="pin-key pin-key-empty"></button>
-        <button class="pin-key" onclick="pinKey('0')">0</button>
-        <button class="pin-key pin-key-del" onclick="pinDel()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
-        </button>
+      <!-- STATE: registration form -->
+      <div id="reg-form">
+        <div id="reg-error" class="reg-msg"></div>
+        <label class="reg-field">
+          <span class="reg-label">ID Fore</span>
+          <input id="reg-id" class="reg-input" type="tel" inputmode="numeric"
+                 pattern="[0-9]*" maxlength="8" placeholder="contoh: 5857" autocomplete="off">
+        </label>
+        <label class="reg-field">
+          <span class="reg-label">Nama Lengkap</span>
+          <input id="reg-name" class="reg-input" type="text" maxlength="60"
+                 placeholder="Nama lengkap" autocomplete="off">
+        </label>
+        <button id="reg-submit" class="reg-btn" onclick="submitRegister()">Minta Akses</button>
+      </div>
+      <!-- STATE: waiting for approval -->
+      <div id="reg-wait" style="display:none;">
+        <div class="reg-spinner"></div>
+        <div id="reg-wait-title" class="reg-wait-title">Menunggu persetujuan…</div>
+        <div id="reg-wait-sub" class="reg-wait-sub">Permintaanmu sudah dikirim ke owner. Mohon tunggu sebentar.</div>
+        <button id="reg-cancel" class="reg-btn reg-btn-ghost" onclick="cancelRegister()">Batal</button>
       </div>
     </div>
   </div>
@@ -3456,6 +3526,7 @@ body.dashboard-locking .card {
   <div class="header-divider"></div>
   <div class="header-store">Kemang Raya</div>
   <div class="header-right">
+    <div id="sess-chip" title="Sisa waktu akses"><span id="sess-time"></span></div>
     <button class="lock-btn" id="perf-btn" onclick="openDevicePicker()" title="Perangkat" aria-label="Pilih perangkat">
       <span class="perf-dot"></span>
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -4084,6 +4155,50 @@ const SHEET_ID   = '1Y49X7Gj2Zy8XaX85ONHQTXnd3ItrmwPZHA2MXlRy4gU';
 const SHEET_NAME = 'bacot';
 const CSV_URL    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
+/* ═══ ACCESS GATEKEEPER (Apps Script) ═══
+   Paste the deployed Web App URL (ending in /exec) here after running the
+   backend/SETUP.md steps. While empty, the app shows a "belum dikonfigurasi"
+   message instead of letting anyone in. All data flows through this URL and
+   only returns when a valid 30-min token is presented. */
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwyGkd-mZSYW924JyEqPAk_8rUP6DTJ7HcTFEqH8nOtKoLQp32x-hWXG5OstJQjOvTS/exec';
+
+/* JSONP call to Apps Script (avoids all CORS issues with static hosting). */
+function gasCall(action, params){
+  return new Promise((resolve, reject)=>{
+    if(!GAS_URL){ reject(new Error('not_configured')); return; }
+    const cb = 'fcb_' + Math.random().toString(36).slice(2) + Date.now();
+    let s, t;
+    const cleanup = ()=>{ try{ delete window[cb]; }catch(e){ window[cb]=undefined; }
+      if(s && s.parentNode) s.parentNode.removeChild(s); clearTimeout(t); };
+    t = setTimeout(()=>{ cleanup(); reject(new Error('timeout')); }, 20000);
+    window[cb] = (data)=>{ cleanup(); resolve(data); };
+    const qs = Object.keys(params||{})
+      .map(k=>encodeURIComponent(k)+'='+encodeURIComponent(params[k])).join('&');
+    s = document.createElement('script');
+    s.src = GAS_URL + '?action=' + encodeURIComponent(action) +
+            (qs?'&'+qs:'') + '&callback=' + cb + '&t=' + Date.now();
+    s.onerror = ()=>{ cleanup(); reject(new Error('network')); };
+    document.head.appendChild(s);
+  });
+}
+
+/* Session token store (localStorage). Token + expiry are issued server-side. */
+const SESS = {
+  get token(){ try{ return localStorage.getItem('foreToken'); }catch(e){ return null; } },
+  get exp(){   try{ return +localStorage.getItem('foreExp')||0; }catch(e){ return 0; } },
+  get name(){  try{ return localStorage.getItem('foreName')||''; }catch(e){ return ''; } },
+  get isOwner(){ try{ return localStorage.getItem('foreOwner')==='1'; }catch(e){ return false; } },
+  set(token, exp, name, isOwner){ try{
+    localStorage.setItem('foreToken', token);
+    localStorage.setItem('foreExp', String(exp||0));
+    localStorage.setItem('foreName', name||'');
+    localStorage.setItem('foreOwner', isOwner?'1':'0');
+  }catch(e){} },
+  clear(){ try{ ['foreToken','foreExp','foreName','foreOwner']
+    .forEach(k=>localStorage.removeItem(k)); }catch(e){} }
+};
+function sessionValid(){ const t=SESS.token, e=SESS.exp; return !!t && (!e || e>Date.now()); }
+
 let allData=[], charts={}, periodData={}, customPeriodData={}, fldtData={}, summData={};
 let _kpiRows=[];  /* stored after calcKpi for popup use */
 let _weeklyChan='gmv', _customChan='gmv', _fldtChan='cup_total', _chTrendKey='offline';
@@ -4252,18 +4367,26 @@ async function loadData(){
   const firstLoad=!allData||!allData.length;
   if(skel && firstLoad) skel.classList.add('show');
   try{
-    const ctrl=new AbortController();
-    const tid=setTimeout(()=>ctrl.abort(),15000);
-    const res=await fetch(CSV_URL+'&t='+Date.now(),{signal:ctrl.signal});
-    clearTimeout(tid);
-    const text=await res.text();
-    allData=parseCSV(text);
+    // Data is served by the gatekeeper and only returned for a valid token.
+    const res=await gasCall('data',{ token: SESS.token||'' });
+    if(!res || !res.ok){
+      const err = res ? res.error : 'no_response';
+      if(err==='expired' || err==='revoked' || err==='invalid_token' || err==='no_token'){
+        if(skel) skel.classList.remove('show');
+        endSession(err==='expired' ? 'expired' : 'revoked');
+        return;
+      }
+      throw new Error(err);
+    }
+    allData=parseCSV(res.csv||'');
+    if(res.expiresAt) startSessionTimer(res.expiresAt, res.isOwner);
     if(el) el.textContent=new Date().toLocaleTimeString('id-ID');
     if(skel) skel.classList.remove('show');
     initDefaults(); renderCurrentPage();
   }catch(e){
     if(skel) skel.classList.remove('show');
-    if(el) el.textContent=e.name==='AbortError'?'TIMEOUT':'ERROR';
+    if(el) el.textContent = e.message==='timeout' ? 'TIMEOUT' :
+                            e.message==='not_configured' ? 'BELUM SETUP' : 'ERROR';
     console.error('loadData:',e);
   }
 }
@@ -4397,6 +4520,15 @@ function showPage(p,btn,skipHash){
   currentPage=p;
   if(!skipHash) history.replaceState(null,'','#'+p);
   if(allData.length) renderPage(p);
+  // Show the freshly-rendered cards instantly (no per-card cascade) and
+  // play one smooth page-level fade+rise instead — replaying the reveal
+  // cascade on every tab switch felt jittery/abrupt.
+  if(pageEl){
+    pageEl.querySelectorAll('.reveal').forEach(el=>{ el.classList.add('visible','_obs'); });
+    pageEl.classList.remove('page-swapping');
+    void pageEl.offsetWidth;            // restart the animation
+    pageEl.classList.add('page-swapping');
+  }
   setTimeout(()=>{ if(window.attachReveal){ window.attachReveal(pageEl); window.attachReveal(); } }, 50);
 }
 /* Restore page from URL hash on load */
@@ -5733,8 +5865,8 @@ function renderRaceDetail(slice, gmvTotal, achPct, idealAch, dailyTarget, avgDai
 
 // Data is loaded ONLY after successful PIN authentication.
 // If session is already valid (sessionStorage), load immediately.
-// Otherwise, pinUnlock() will call loadData() after auth.
-if(sessionStorage.getItem('fc_unlocked')==='1'){
+// Otherwise, grantAccess() will call loadData() after approval.
+if(sessionValid()){
   loadData();
 }
 
@@ -7050,72 +7182,142 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(
 </div>
 
 <script>
-/* ══ PIN AUTH ══ */
-// ┌─────────────────────────────────────────────────────────┐
-// │  GANTI PIN: ubah nilai FORE_PIN di bawah ini           │
-// └─────────────────────────────────────────────────────────┘
-const FORE_PIN = '103007';
-
-const PIN_SESSION = 'fc_unlocked';
-const PIN_LEN = FORE_PIN.length;
-let _pinBuf = '';
+/* ══ ACCESS AUTH (register → owner approval → 30-min token) ══ */
+let _pollTimer = null, _pollReqId = null, _sessTimer = null;
 
 async function sha256(str){
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-function pinRender(){
-  document.querySelectorAll('.pin-dot').forEach((d,i)=>{
-    d.classList.toggle('filled', i < _pinBuf.length);
-  });
+/* ── Registration form helpers ── */
+function regMsg(msg, ok){
+  const el = document.getElementById('reg-error');
+  if(!el) return;
+  el.textContent = msg || '';
+  el.classList.toggle('ok', !!ok);
+}
+function showRegState(state){   // 'form' | 'wait'
+  const f = document.getElementById('reg-form');
+  const w = document.getElementById('reg-wait');
+  if(f) f.style.display = state==='form' ? 'flex' : 'none';
+  if(w) w.style.display = state==='wait' ? 'flex' : 'none';
 }
 
-function pinKey(k){
-  if(_pinBuf.length >= PIN_LEN) return;
-  _pinBuf += k;
-  pinRender();
-  if(_pinBuf.length === PIN_LEN) setTimeout(pinSubmit, 120);
-}
-
-function pinDel(){
-  _pinBuf = _pinBuf.slice(0,-1);
-  pinRender();
-}
-
-function pinError(msg){
-  const el = document.getElementById('pin-error');
-  const dots = document.getElementById('pin-dots');
-  el.textContent = msg; el.classList.add('show');
-  dots.classList.add('shake');
-  setTimeout(()=>{ dots.classList.remove('shake'); }, 400);
-  setTimeout(()=>{ el.classList.remove('show'); }, 2500);
-  _pinBuf = ''; pinRender();
-}
-
-async function pinSubmit(){
-  const hash = await sha256(_pinBuf);
-  if(hash === _PIN_CORRECT){
-    sessionStorage.setItem(PIN_SESSION,'1');
-    pinUnlock();
-  } else {
-    pinError('PIN salah');
+/* User submits ID Fore + Nama → ask the gatekeeper. */
+async function submitRegister(){
+  const idEl = document.getElementById('reg-id');
+  const nmEl = document.getElementById('reg-name');
+  const btn  = document.getElementById('reg-submit');
+  const idFore = (idEl.value||'').trim();
+  const name   = (nmEl.value||'').trim();
+  if(!/^\d{1,8}$/.test(idFore)){ regMsg('ID Fore harus berupa angka.'); idEl.focus(); return; }
+  if(name.length < 2){ regMsg('Nama lengkap belum diisi.'); nmEl.focus(); return; }
+  regMsg('');
+  btn.disabled = true; btn.textContent = 'Mengirim…';
+  try{
+    const res = await gasCall('register', { idFore: idFore, name: name });
+    if(!res || !res.ok){
+      regMsg(res && res.error==='invalid_id'   ? 'ID Fore tidak valid.'
+           : res && res.error==='invalid_name' ? 'Nama tidak valid.'
+           : 'Gagal mengirim. Coba lagi.');
+      return;
+    }
+    if(res.status === 'approved'){       // owner → instant access
+      SESS.set(res.token, res.expiresAt, res.name, res.isOwner);
+      grantAccess();
+      return;
+    }
+    _pollReqId = res.requestId;          // pending → wait for approval
+    showRegState('wait');
+    startPolling();
+  }catch(e){
+    regMsg(e.message==='not_configured'
+      ? 'Sistem akses belum dikonfigurasi.'
+      : 'Tidak bisa terhubung ke server.');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Minta Akses';
   }
 }
 
-// Precompute correct PIN hash once at startup
-let _PIN_CORRECT = '';
-sha256(FORE_PIN).then(h => { _PIN_CORRECT = h; });
+function startPolling(){
+  stopPolling();
+  _pollTimer = setInterval(async ()=>{
+    if(!_pollReqId) return;
+    try{
+      const res = await gasCall('poll', { requestId: _pollReqId });
+      if(!res || !res.ok) return;
+      if(res.status === 'approved'){
+        stopPolling();
+        SESS.set(res.token, res.expiresAt, res.name, false);
+        grantAccess();
+      } else if(res.status === 'rejected'){
+        stopPolling(); showRegState('form');
+        regMsg('Permintaan ditolak oleh owner.');
+      } else if(res.status === 'expired'){
+        stopPolling(); showRegState('form');
+        regMsg('Akses kedaluwarsa. Silakan daftar lagi.');
+      }
+    }catch(e){ /* keep polling */ }
+  }, 3000);
+}
+function stopPolling(){ if(_pollTimer){ clearInterval(_pollTimer); _pollTimer=null; } }
 
-/* ── Lock dashboard with exit animation ── */
+function cancelRegister(){
+  stopPolling(); _pollReqId = null;
+  showRegState('form'); regMsg('');
+}
+
+/* ── Session countdown chip ── */
+function fmtRemain(ms){
+  if(ms < 0) ms = 0;
+  const m = Math.floor(ms/60000), s = Math.floor((ms%60000)/1000);
+  return (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+}
+function startSessionTimer(expiresAt, isOwner){
+  const chip = document.getElementById('sess-chip');
+  const tEl  = document.getElementById('sess-time');
+  if(_sessTimer){ clearInterval(_sessTimer); _sessTimer=null; }
+  if(isOwner || !expiresAt){ if(chip) chip.classList.remove('show'); return; } // owner = unlimited
+  if(chip) chip.classList.add('show');
+  const tick = ()=>{
+    const rem = expiresAt - Date.now();
+    if(tEl) tEl.textContent = fmtRemain(rem);
+    if(chip){
+      chip.classList.toggle('warn',   rem <= 5*60000 && rem > 60000);
+      chip.classList.toggle('danger', rem <= 60000);
+    }
+    if(rem <= 0){ clearInterval(_sessTimer); _sessTimer=null; endSession('expired'); }
+  };
+  tick();
+  _sessTimer = setInterval(tick, 1000);
+}
+
+/* ── End session → back to the registration screen ── */
+function endSession(reason){
+  stopPolling(); _pollReqId = null;
+  if(_sessTimer){ clearInterval(_sessTimer); _sessTimer=null; }
+  SESS.clear();
+  const chip = document.getElementById('sess-chip'); if(chip) chip.classList.remove('show');
+  document.body.classList.remove('dashboard-ready','dr-animating');
+  const idEl=document.getElementById('reg-id'); if(idEl) idEl.value='';
+  showRegState('form');
+  regMsg(reason==='expired' ? 'Sesi 30 menit habis. Silakan daftar lagi.'
+       : reason==='revoked' ? 'Akses dicabut. Silakan daftar lagi.' : '');
+  const pin = document.getElementById('pin-screen');
+  if(pin){
+    pin.classList.remove('unlocked');
+    pin.style.display='flex'; pin.style.opacity='1';
+    playPinEntrance();
+  }
+}
+
+/* ── Lock = end session (logout) → registration screen ── */
 function lockDashboard(){
-  sessionStorage.removeItem(PIN_SESSION);
   document.body.classList.add('dashboard-locking');
   setTimeout(() => {
-    document.body.classList.remove('dashboard-ready', 'dashboard-locking');
-    const sb = document.getElementById('standby-screen');
-    sb.style.display = 'flex';
-    requestAnimationFrame(() => requestAnimationFrame(() => sb.classList.add('standby-in')));
+    document.body.classList.remove('dashboard-locking');
+    endSession('manual');
   }, 350);
 }
 
@@ -7152,21 +7354,18 @@ function playPinEntrance(){
   setTimeout(() => { pin.classList.remove('pin-entering'); }, 1350);
 }
 
-/* ── Standby logo click → PIN screen ── */
+/* ── Standby logo click → registration screen ── */
 function standbyToPin(){
   const sb  = document.getElementById('standby-screen');
   const pin = document.getElementById('pin-screen');
-  _pinBuf = ''; pinRender();
-  const errEl = document.getElementById('pin-error');
-  errEl.textContent = ''; errEl.classList.remove('show');
+  showRegState('form'); regMsg('');
   pin.style.display = 'flex'; pin.style.opacity = '0';
   pin.classList.remove('unlocked');
   playPinEntrance();
   requestAnimationFrame(() => requestAnimationFrame(() => {
     pin.style.transition = 'opacity 0.28s ease';
     pin.style.opacity = '1';
-    sb.classList.remove('standby-in');
-    setTimeout(() => { sb.style.display = 'none'; }, 320);
+    if(sb){ sb.classList.remove('standby-in'); setTimeout(() => { sb.style.display = 'none'; }, 320); }
   }));
 }
 
@@ -7196,8 +7395,9 @@ function replayProgressBar(){
   requestAnimationFrame(() => { pFill.style.width = target; });
 }
 
-/* ── Correct PIN → splash → dashboard ── */
-function pinUnlock(){
+/* ── Access granted → splash → dashboard ── */
+function grantAccess(){
+  stopPolling();
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const sb = document.getElementById('standby-screen');
@@ -7358,28 +7558,29 @@ function openDevicePicker(){
 (function(){
   const ds = document.getElementById('device-screen');
   const saved = getSavedPerfMode();
-  if(sessionStorage.getItem(PIN_SESSION)==='1'){
+  // Returning user with a still-valid token → straight to dashboard.
+  if(sessionValid()){
     applyPerfMode(saved || 'pc');
     if(ds) ds.style.display='none';
     document.getElementById('pin-screen').style.display='none';
     document.body.classList.add('dashboard-ready');
+    if(SESS.exp) startSessionTimer(SESS.exp, SESS.isOwner);
     return;
   }
-  // First open: show the device picker, then PIN. Apply the remembered tier
-  // up front (so even the picker itself renders at the right effect level)
-  // and pre-highlight the last choice.
+  SESS.clear();
+  // First open / expired: device picker first, then the registration form.
   applyPerfMode(saved || 'pc');
   if(saved && ds){
     const sel = ds.querySelector('.device-opt[onclick*="\'' + saved + '\'"]');
     if(sel) sel.classList.add('selected');
   }
-  // keyboard support
+  showRegState('form');
+  // Enter submits the registration form.
   document.addEventListener('keydown', e=>{
     if(document.getElementById('pin-screen').style.display==='none') return;
     const dsEl=document.getElementById('device-screen');
     if(dsEl && dsEl.style.display!=='none' && !dsEl.classList.contains('device-hide')) return;
-    if(e.key>='0'&&e.key<='9') pinKey(e.key);
-    else if(e.key==='Backspace') pinDel();
+    if(e.key==='Enter') submitRegister();
   });
   // Apply logo mask same as header
   const icon = document.querySelector('.pin-logo-mark .header-logo-icon');
