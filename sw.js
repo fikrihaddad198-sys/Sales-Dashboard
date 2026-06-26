@@ -6,7 +6,7 @@
    - Cross-origin (Google Sheets data, fonts, Chart.js CDN) → straight to
      network, never cached here (data must always be fresh).
    Bump CACHE_VERSION to invalidate old caches on the next deploy. */
-const CACHE_VERSION = 'fore-v8';
+const CACHE_VERSION = 'fore-v9';
 const CORE_ASSETS = [
   './index.html',
   './manifest.json',
