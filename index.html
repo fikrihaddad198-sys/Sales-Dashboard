@@ -6995,7 +6995,10 @@ function pinUnlock(){
     setTimeout(() => {
       if(bm){
         bm.classList.remove('hero-in');
-        bm.style.animationDelay = '-3.5s';
+        // Resume breathing from its TROUGH (0% = scale 1.0, dim) — the exact
+        // state the kempes settled at — so there is NO sudden swell. The
+        // breathing then expands gradually over 3.5s, imperceptibly.
+        bm.style.animationDelay = '0s';
       }
     }, 2500);
 
