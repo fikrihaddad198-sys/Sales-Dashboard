@@ -7599,6 +7599,8 @@ function openDevicePicker(){
     document.getElementById('pin-screen').style.display='none';
     document.body.classList.add('dashboard-ready');
     if(SESS.exp) startSessionTimer(SESS.exp, SESS.isOwner);
+    startHeartbeat();
+    document.dispatchEvent(new Event('fore-session-change'));
     return;
   }
   SESS.clear();
