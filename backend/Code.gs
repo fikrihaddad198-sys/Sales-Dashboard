@@ -340,6 +340,27 @@ function jsonp(obj, cb){
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+// Run ONCE after first deploy to authorize all permissions (Spreadsheet +
+// UrlFetch + LockService). Must complete without error before webhook works.
+function initSetup(){
+  // 1. Touch spreadsheet (creates "access" sheet if missing)
+  const sh = accessSheet();
+  Logger.log('Sheet rows: ' + sh.getLastRow());
+
+  // 2. Touch LockService
+  const lock = LockService.getScriptLock();
+  lock.waitLock(3000);
+  lock.releaseLock();
+  Logger.log('LockService OK');
+
+  // 3. Touch UrlFetchApp via Telegram
+  const r = tgApi('sendMessage', {
+    chat_id: CFG.TG_OWNER_CHAT,
+    text: '✅ initSetup selesai — semua permission aktif, webhook siap dipakai.'
+  });
+  Logger.log('Telegram: ' + JSON.stringify(r));
+}
+
 // Run once manually to verify the bot token + chat id are correct.
 function testTelegram(){
   const r = tgApi('sendMessage', { chat_id: CFG.TG_OWNER_CHAT,
