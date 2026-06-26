@@ -3092,28 +3092,73 @@ body.dashboard-locking .card {
 .pin-key-del { font-size: 14px; }
 .pin-key-del:active { box-shadow: 0 0 14px rgba(248,113,113,0.20) !important; }
 
+/* ── Greeting ── */
+#pin-greeting {
+  text-align: center;
+  margin-bottom: 28px;
+}
+#pin-greet-salute {
+  font-size: 13px; font-weight: 600; letter-spacing: 0.8px;
+  color: var(--t2, #a09880);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+#pin-greet-date {
+  font-size: 11px; letter-spacing: 0.3px;
+  color: var(--t3, #5c554b);
+}
+[data-theme="light"] #pin-greet-salute { color: var(--t2); }
+[data-theme="light"] #pin-greet-date   { color: var(--t3); }
+
+/* ── Glass panel — numpad floats on a frosted surface ── */
+#pin-glass {
+  margin-top: 6px;
+  padding: 20px 20px 18px;
+  border-radius: 24px;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(18px) saturate(1.6);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  border: 1px solid rgba(255,255,255,0.09);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.18),
+    0 8px 32px rgba(0,0,0,0.28),
+    0 1px 0 rgba(255,255,255,0.07) inset;
+}
+[data-theme="light"] #pin-glass {
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(255,255,255,0.75);
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,0.06),
+    0 8px 32px rgba(0,0,0,0.10),
+    0 1px 0 rgba(255,255,255,0.90) inset;
+}
+
 /* ── PIN entrance: staggered rise+fade (premium reveal on first open) ──
    Elements cascade in from below with spring easing instead of popping in
    flat all at once. The .pin-entering class is added by JS on first load and
    on standby→PIN, then removed after the cascade so hover/active transforms
    on the keys work normally afterward. */
-#pin-screen.pin-entering #pin-logo     { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.05s both; }
-#pin-screen.pin-entering #pin-title    { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.13s both; }
-#pin-screen.pin-entering #pin-subtitle { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.19s both; }
-#pin-screen.pin-entering #pin-dots     { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.25s both; }
+/* greeting comes first, then logo, then the rest, then glass panel last */
+#pin-screen.pin-entering #pin-greeting { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.00s both; }
+#pin-screen.pin-entering #pin-logo     { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.08s both; }
+#pin-screen.pin-entering #pin-title    { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.16s both; }
+#pin-screen.pin-entering #pin-subtitle { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.22s both; }
+#pin-screen.pin-entering #pin-dots     { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.28s both; }
+/* Glass panel rises as a unit from below, keys then pop inside it */
+#pin-screen.pin-entering #pin-glass    { animation: pin-glass-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.32s both; }
 #pin-screen.pin-entering .pin-key      { animation: pin-key-in 0.5s cubic-bezier(0.22,1,0.36,1) both; }
-#pin-screen.pin-entering .pin-key:nth-child(1)  { animation-delay: 0.30s; }
-#pin-screen.pin-entering .pin-key:nth-child(2)  { animation-delay: 0.33s; }
-#pin-screen.pin-entering .pin-key:nth-child(3)  { animation-delay: 0.36s; }
-#pin-screen.pin-entering .pin-key:nth-child(4)  { animation-delay: 0.39s; }
-#pin-screen.pin-entering .pin-key:nth-child(5)  { animation-delay: 0.42s; }
-#pin-screen.pin-entering .pin-key:nth-child(6)  { animation-delay: 0.45s; }
-#pin-screen.pin-entering .pin-key:nth-child(7)  { animation-delay: 0.48s; }
-#pin-screen.pin-entering .pin-key:nth-child(8)  { animation-delay: 0.51s; }
-#pin-screen.pin-entering .pin-key:nth-child(9)  { animation-delay: 0.54s; }
-#pin-screen.pin-entering .pin-key:nth-child(10) { animation-delay: 0.57s; }
-#pin-screen.pin-entering .pin-key:nth-child(11) { animation-delay: 0.60s; }
-#pin-screen.pin-entering .pin-key:nth-child(12) { animation-delay: 0.63s; }
+#pin-screen.pin-entering .pin-key:nth-child(1)  { animation-delay: 0.36s; }
+#pin-screen.pin-entering .pin-key:nth-child(2)  { animation-delay: 0.39s; }
+#pin-screen.pin-entering .pin-key:nth-child(3)  { animation-delay: 0.42s; }
+#pin-screen.pin-entering .pin-key:nth-child(4)  { animation-delay: 0.45s; }
+#pin-screen.pin-entering .pin-key:nth-child(5)  { animation-delay: 0.48s; }
+#pin-screen.pin-entering .pin-key:nth-child(6)  { animation-delay: 0.51s; }
+#pin-screen.pin-entering .pin-key:nth-child(7)  { animation-delay: 0.54s; }
+#pin-screen.pin-entering .pin-key:nth-child(8)  { animation-delay: 0.57s; }
+#pin-screen.pin-entering .pin-key:nth-child(9)  { animation-delay: 0.60s; }
+#pin-screen.pin-entering .pin-key:nth-child(10) { animation-delay: 0.63s; }
+#pin-screen.pin-entering .pin-key:nth-child(11) { animation-delay: 0.66s; }
+#pin-screen.pin-entering .pin-key:nth-child(12) { animation-delay: 0.69s; }
 @keyframes pin-rise {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -3122,12 +3167,18 @@ body.dashboard-locking .card {
   from { opacity: 0; transform: translateY(14px) scale(0.92); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
+@keyframes pin-glass-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 @media (prefers-reduced-motion: reduce) {
+  #pin-screen.pin-entering #pin-greeting,
   #pin-screen.pin-entering #pin-logo,
   #pin-screen.pin-entering #pin-title,
   #pin-screen.pin-entering #pin-subtitle,
   #pin-screen.pin-entering #pin-dots,
-  #pin-screen.pin-entering .pin-key { animation: none !important; }
+  #pin-screen.pin-entering #pin-glass,
+  #pin-screen.pin-entering .pin-key { animation: none !important; opacity: 1; }
 }
 </style>
 <style id="brand-mark-style">
@@ -3190,6 +3241,11 @@ body.dashboard-locking .card {
 <!-- ════ PIN AUTH SCREEN ════ -->
 <div id="pin-screen">
   <div id="pin-box">
+    <!-- Contextual greeting: time-of-day salutation + date, filled by JS -->
+    <div id="pin-greeting">
+      <div id="pin-greet-salute"></div>
+      <div id="pin-greet-date"></div>
+    </div>
     <div id="pin-logo">
       <div class="pin-logo-mark"><span class="header-logo-icon" style="width:22px;height:28px;display:block;"></span></div>
       <div class="pin-logo-text">Fore Coffee</div>
@@ -3204,22 +3260,25 @@ body.dashboard-locking .card {
       <span class="pin-dot"></span>
       <span class="pin-dot"></span>
     </div>
-    <div id="pin-error"></div>
-    <div id="pin-numpad">
-      <button class="pin-key" onclick="pinKey('1')">1</button>
-      <button class="pin-key" onclick="pinKey('2')">2</button>
-      <button class="pin-key" onclick="pinKey('3')">3</button>
-      <button class="pin-key" onclick="pinKey('4')">4</button>
-      <button class="pin-key" onclick="pinKey('5')">5</button>
-      <button class="pin-key" onclick="pinKey('6')">6</button>
-      <button class="pin-key" onclick="pinKey('7')">7</button>
-      <button class="pin-key" onclick="pinKey('8')">8</button>
-      <button class="pin-key" onclick="pinKey('9')">9</button>
-      <button class="pin-key pin-key-empty"></button>
-      <button class="pin-key" onclick="pinKey('0')">0</button>
-      <button class="pin-key pin-key-del" onclick="pinDel()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
-      </button>
+    <!-- Glass panel: frosted surface that numpad floats on -->
+    <div id="pin-glass">
+      <div id="pin-error"></div>
+      <div id="pin-numpad">
+        <button class="pin-key" onclick="pinKey('1')">1</button>
+        <button class="pin-key" onclick="pinKey('2')">2</button>
+        <button class="pin-key" onclick="pinKey('3')">3</button>
+        <button class="pin-key" onclick="pinKey('4')">4</button>
+        <button class="pin-key" onclick="pinKey('5')">5</button>
+        <button class="pin-key" onclick="pinKey('6')">6</button>
+        <button class="pin-key" onclick="pinKey('7')">7</button>
+        <button class="pin-key" onclick="pinKey('8')">8</button>
+        <button class="pin-key" onclick="pinKey('9')">9</button>
+        <button class="pin-key pin-key-empty"></button>
+        <button class="pin-key" onclick="pinKey('0')">0</button>
+        <button class="pin-key pin-key-del" onclick="pinDel()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -6905,15 +6964,33 @@ function lockDashboard(){
    to drive the keyframes, then removes it after the longest item finishes so
    the keys' hover/active transforms work normally afterward. Skipped when the
    user prefers reduced motion. */
+function fillPinGreeting(){
+  const salEl   = document.getElementById('pin-greet-salute');
+  const dateEl  = document.getElementById('pin-greet-date');
+  if(!salEl || !dateEl) return;
+  const now  = new Date();
+  const hour = now.getHours();
+  const sal  = hour < 11 ? 'Selamat Pagi'
+             : hour < 15 ? 'Selamat Siang'
+             : hour < 18 ? 'Selamat Sore'
+             :              'Selamat Malam';
+  const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const dateStr = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+  salEl.textContent  = sal;
+  dateEl.textContent = dateStr;
+}
+
 function playPinEntrance(){
   const pin = document.getElementById('pin-screen');
   if(!pin) return;
+  fillPinGreeting();
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   pin.classList.remove('pin-entering');
   void pin.offsetWidth;                 // restart the animation
   pin.classList.add('pin-entering');
-  // Longest key: 0.63s delay + 0.5s dur = 1.13s → clear at 1250ms.
-  setTimeout(() => { pin.classList.remove('pin-entering'); }, 1250);
+  // Longest key: 0.69s delay + 0.5s dur = 1.19s → clear at 1350ms.
+  setTimeout(() => { pin.classList.remove('pin-entering'); }, 1350);
 }
 
 /* ── Standby logo click → PIN screen ── */
