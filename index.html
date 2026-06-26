@@ -3091,6 +3091,44 @@ body.dashboard-locking .card {
 .pin-key-empty { background: transparent !important; border-color: transparent !important; box-shadow: none !important; cursor: default; }
 .pin-key-del { font-size: 14px; }
 .pin-key-del:active { box-shadow: 0 0 14px rgba(248,113,113,0.20) !important; }
+
+/* ── PIN entrance: staggered rise+fade (premium reveal on first open) ──
+   Elements cascade in from below with spring easing instead of popping in
+   flat all at once. The .pin-entering class is added by JS on first load and
+   on standby→PIN, then removed after the cascade so hover/active transforms
+   on the keys work normally afterward. */
+#pin-screen.pin-entering #pin-logo     { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.05s both; }
+#pin-screen.pin-entering #pin-title    { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.13s both; }
+#pin-screen.pin-entering #pin-subtitle { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.19s both; }
+#pin-screen.pin-entering #pin-dots     { animation: pin-rise 0.55s cubic-bezier(0.22,1,0.36,1) 0.25s both; }
+#pin-screen.pin-entering .pin-key      { animation: pin-key-in 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+#pin-screen.pin-entering .pin-key:nth-child(1)  { animation-delay: 0.30s; }
+#pin-screen.pin-entering .pin-key:nth-child(2)  { animation-delay: 0.33s; }
+#pin-screen.pin-entering .pin-key:nth-child(3)  { animation-delay: 0.36s; }
+#pin-screen.pin-entering .pin-key:nth-child(4)  { animation-delay: 0.39s; }
+#pin-screen.pin-entering .pin-key:nth-child(5)  { animation-delay: 0.42s; }
+#pin-screen.pin-entering .pin-key:nth-child(6)  { animation-delay: 0.45s; }
+#pin-screen.pin-entering .pin-key:nth-child(7)  { animation-delay: 0.48s; }
+#pin-screen.pin-entering .pin-key:nth-child(8)  { animation-delay: 0.51s; }
+#pin-screen.pin-entering .pin-key:nth-child(9)  { animation-delay: 0.54s; }
+#pin-screen.pin-entering .pin-key:nth-child(10) { animation-delay: 0.57s; }
+#pin-screen.pin-entering .pin-key:nth-child(11) { animation-delay: 0.60s; }
+#pin-screen.pin-entering .pin-key:nth-child(12) { animation-delay: 0.63s; }
+@keyframes pin-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pin-key-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #pin-screen.pin-entering #pin-logo,
+  #pin-screen.pin-entering #pin-title,
+  #pin-screen.pin-entering #pin-subtitle,
+  #pin-screen.pin-entering #pin-dots,
+  #pin-screen.pin-entering .pin-key { animation: none !important; }
+}
 </style>
 <style id="brand-mark-style">
 /* Fore logo watermark — masked shape, color follows theme.
@@ -6863,6 +6901,21 @@ function lockDashboard(){
   }, 350);
 }
 
+/* Play the staggered entrance cascade on the PIN screen. Adds .pin-entering
+   to drive the keyframes, then removes it after the longest item finishes so
+   the keys' hover/active transforms work normally afterward. Skipped when the
+   user prefers reduced motion. */
+function playPinEntrance(){
+  const pin = document.getElementById('pin-screen');
+  if(!pin) return;
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  pin.classList.remove('pin-entering');
+  void pin.offsetWidth;                 // restart the animation
+  pin.classList.add('pin-entering');
+  // Longest key: 0.63s delay + 0.5s dur = 1.13s → clear at 1250ms.
+  setTimeout(() => { pin.classList.remove('pin-entering'); }, 1250);
+}
+
 /* ── Standby logo click → PIN screen ── */
 function standbyToPin(){
   const sb  = document.getElementById('standby-screen');
@@ -6872,6 +6925,7 @@ function standbyToPin(){
   errEl.textContent = ''; errEl.classList.remove('show');
   pin.style.display = 'flex'; pin.style.opacity = '0';
   pin.classList.remove('unlocked');
+  playPinEntrance();
   requestAnimationFrame(() => requestAnimationFrame(() => {
     pin.style.transition = 'opacity 0.28s ease';
     pin.style.opacity = '1';
@@ -7022,6 +7076,8 @@ function pinUnlock(){
     document.body.classList.add('dashboard-ready');
     return;
   }
+  // First open: play the staggered entrance instead of a flat instant PIN.
+  requestAnimationFrame(() => requestAnimationFrame(playPinEntrance));
   // keyboard support
   document.addEventListener('keydown', e=>{
     if(document.getElementById('pin-screen').style.display==='none') return;
