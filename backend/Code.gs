@@ -104,14 +104,21 @@ function apiRegister(idFore, name){
                idFore:idFore, isOwner:true, expiresAt:far.getTime() };
     }
 
-    // Normal user -> pending, notify owner.
+    // Normal user -> pending. Release lock BEFORE notifyOwner (HTTP to Telegram)
+    // so the lock isn't held during a potentially slow network call.
     sh.appendRow([requestId, idFore, name, 'pending', '', now, '', '', '']);
+    lock.releaseLock();
+
     const msgId = notifyOwner(requestId, idFore, name);
-    if (msgId) setCell(sh, requestId, 'tgMsgId', String(msgId));
+    if (msgId) {
+      const sh2 = accessSheet();
+      setCell(sh2, requestId, 'tgMsgId', String(msgId));
+    }
 
     return { ok:true, status:'pending', requestId:requestId };
   } finally {
-    lock.releaseLock();
+    // safe to call even if already released
+    try { lock.releaseLock(); } catch(e) {}
   }
 }
 
@@ -203,15 +210,36 @@ function handleTelegramUpdate(update){
   const decision = parts[0], requestId = parts[1];
   Logger.log('decision=' + decision + ' requestId=' + requestId);
 
-  let acked = false;
+  // Acknowledge FIRST so spinner ALWAYS stops, even if lock is contended.
+  ackButton(decision === 'approve' ? 'Memproses…' : 'Memproses…');
+
   const lock = LockService.getScriptLock();
-  const gotLock = lock.tryLock(15000);
-  if (!gotLock) { ackButton('Sibuk, coba lagi.'); return; }
+  const gotLock = lock.tryLock(10000);
+  if (!gotLock) {
+    Logger.log('lock timeout');
+    // Edit the message to inform owner the request is still being processed.
+    const msgId = cq.message && cq.message.message_id;
+    if (msgId) tgApi('editMessageText', { chat_id: CFG.TG_OWNER_CHAT, message_id: msgId,
+      text: '⏳ Masih diproses, coba tap lagi.' });
+    return;
+  }
   try {
     const sh  = accessSheet();
     const row = findRow(requestId);
-    if (!row) { ackButton('Permintaan tak ditemukan.'); acked = true; return; }
-    if (row.status !== 'pending') { ackButton('Sudah diproses.'); acked = true; return; }
+    const editMsgId = (cq.message && cq.message.message_id) ? cq.message.message_id : (row && row.tgMsgId);
+
+    if (!row) {
+      Logger.log('row not found for requestId=' + requestId);
+      if (editMsgId) tgApi('editMessageText', { chat_id: CFG.TG_OWNER_CHAT,
+        message_id: editMsgId, text: '⚠️ Permintaan tidak ditemukan.' });
+      return;
+    }
+    if (row.status !== 'pending') {
+      Logger.log('already processed, status=' + row.status);
+      if (editMsgId) tgApi('editMessageText', { chat_id: CFG.TG_OWNER_CHAT,
+        message_id: editMsgId, text: (row.status === 'approved' ? '✅' : '❌') + ' Sudah diproses.' });
+      return;
+    }
 
     let banner;
     if (decision === 'approve') {
@@ -230,13 +258,6 @@ function handleTelegramUpdate(update){
       banner = '❌ *DITOLAK* - ' + tgEsc(row.name) + ' (`' + tgEsc(row.idFore) + '`)';
     }
 
-    // Clear the spinner BEFORE the slower editMessageText call.
-    ackButton(decision === 'approve' ? 'Disetujui' : 'Ditolak');
-    acked = true;
-
-    // Use message_id from the callback itself (always reliable) rather than
-    // the stored tgMsgId which can be empty if the earlier setCell was slow.
-    const editMsgId = (cq.message && cq.message.message_id) ? cq.message.message_id : row.tgMsgId;
     if (editMsgId) {
       tgApi('editMessageText', {
         chat_id: CFG.TG_OWNER_CHAT,
@@ -245,8 +266,9 @@ function handleTelegramUpdate(update){
         parse_mode: 'Markdown'
       });
     }
+    Logger.log('done: ' + decision + ' for ' + row.name);
   } catch (err) {
-    if (!acked) ackButton('Error, coba lagi.');
+    Logger.log('handler error: ' + err);
   } finally {
     lock.releaseLock();
   }
