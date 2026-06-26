@@ -2794,22 +2794,25 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   content: '';
   position: absolute;
   top: -60%; left: -40%;
-  width: 60%; height: 220%;
+  width: 95%; height: 220%;
+  /* Softer, wider sheen — a gentle glow passing over the logo rather than a
+     hard bright band that looked like a seam/break crossing it. */
   background: linear-gradient(105deg,
     transparent 0%,
-    rgba(255,255,255,0.0) 35%,
-    rgba(255,255,255,0.55) 50%,
-    rgba(255,255,255,0.0) 65%,
+    rgba(255,255,255,0.0) 38%,
+    rgba(255,255,255,0.22) 50%,
+    rgba(255,255,255,0.0) 62%,
     transparent 100%
   );
   transform: translateX(-100%) skewX(-12deg);
-  animation: splash-shimmer 0.38s ease-out 0.58s forwards;
+  animation: splash-shimmer 0.7s ease-in-out 0.6s forwards;
   will-change: transform;
 }
 @keyframes splash-shimmer {
-  0%   { transform: translateX(-100%) skewX(-12deg); opacity: 0; }
-  10%  { opacity: 1; }
-  100% { transform: translateX(380%) skewX(-12deg); opacity: 0; }
+  0%   { transform: translateX(-110%) skewX(-12deg); opacity: 0; }
+  18%  { opacity: 1; }
+  82%  { opacity: 1; }
+  100% { transform: translateX(320%) skewX(-12deg); opacity: 0; }
 }
 /* Full-screen flash at peak (when logo glow is biggest ~0.55s) */
 #splash-screen::before {
