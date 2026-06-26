@@ -27,22 +27,23 @@
    DESIGN TOKENS
 ───────────────────────────────────────────────────── */
 :root {
-  /* Background — pure OLED deep, Liquid Glass system */
-  --bg:   #050404;
-  --bg1:  #0c0a08;
-  --bg2:  #13110d;
-  --bg3:  #1b1813;
-  --bg4:  #232019;
+  /* Background — neutral Zinc chrome (Liquid Glass). Gold is reserved for
+     accents/key data only, not the frame. */
+  --bg:   #0a0a0b;
+  --bg1:  #101012;
+  --bg2:  #161618;
+  --bg3:  #1e1e21;
+  --bg4:  #27272a;
 
   /* Surfaces */
-  --surface:       rgba(255,255,255,0.028);
-  --surface-hover: rgba(255,255,255,0.052);
-  --surface-active:rgba(255,255,255,0.08);
+  --surface:       rgba(255,255,255,0.024);
+  --surface-hover: rgba(255,255,255,0.045);
+  --surface-active:rgba(255,255,255,0.072);
 
-  /* Borders */
-  --border:      rgba(255,255,255,0.055);
-  --border-md:   rgba(255,255,255,0.09);
-  --border-hi:   rgba(255,255,255,0.15);
+  /* Borders — very subtle (Linear/Vercel) */
+  --border:      rgba(255,255,255,0.06);
+  --border-md:   rgba(255,255,255,0.10);
+  --border-hi:   rgba(255,255,255,0.16);
 
   /* Gold accent — premium secondary (skill: gold CTA #CA8A04) */
   --gold:        #c9a84c;
@@ -95,30 +96,35 @@
   --acc-d2d:     var(--cyan);
   --acc-race:    var(--cyan);
 
-  /* Text — warm-neutral stack */
-  --t1: #f2efe9;
-  --t2: #998f82;
-  --t3: #5c554b;
-  --t4: #2e2a23;
+  /* Text — neutral Zinc stack */
+  --t1: #fafafa;
+  --t2: #a1a1aa;
+  --t3: #71717a;
+  --t4: #3f3f46;
 
   /* Typography */
-  --font: 'Fira Sans', 'Inter', system-ui, sans-serif;
-  --mono: 'Fira Code', 'JetBrains Mono', monospace;
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
 
-  /* Radius system — slightly rounder = more modern */
+  /* Radius system */
   --r2: 6px;
   --r3: 10px;
   --r4: 14px;
   --r5: 18px;
   --r6: 22px;
   --r7: 28px;
+  /* Semantic radius aliases (consistent scale, Linear/Vercel) */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
 
-  /* Elevation system — deeper shadows */
+  /* Elevation — layered shadows (Linear/Vercel), softer & more diffuse */
   --e0: none;
-  --e1: 0 1px 4px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.45);
-  --e2: 0 4px 20px rgba(0,0,0,0.55), 0 1px 5px rgba(0,0,0,0.4);
-  --e3: 0 8px 36px rgba(0,0,0,0.60), 0 2px 10px rgba(0,0,0,0.4);
-  --e4: 0 20px 56px rgba(0,0,0,0.65), 0 4px 18px rgba(0,0,0,0.45);
+  --e1: 0 1px 2px rgba(0,0,0,0.40);
+  --e2: 0 2px 8px rgba(0,0,0,0.40), 0 1px 2px rgba(0,0,0,0.30);
+  --e3: 0 8px 24px rgba(0,0,0,0.46), 0 2px 6px rgba(0,0,0,0.30);
+  --e4: 0 24px 60px rgba(0,0,0,0.52), 0 8px 20px rgba(0,0,0,0.34);
 
   /* Spacing system */
   --sp1: 4px;  --sp2: 8px;  --sp3: 12px;  --sp4: 16px;
@@ -128,21 +134,21 @@
   /* ── LIGHT MODE: Cream + Forest Green (Fore = Forest) ──
      Dark mode = Deep Black + Gold (malam, biji kopi sangrai)
      Light mode = Cream + Forest Green (pagi, kebun kopi) */
-  --bg:   #f4f1e8;
-  --bg1:  #fbf9f2;
-  --bg2:  #f3efe4;
-  --bg3:  #ece7d8;
-  --bg4:  #e0dac9;
-  --surface:       rgba(27,42,31,0.018);
-  --surface-hover: rgba(27,42,31,0.04);
-  --surface-active:rgba(27,42,31,0.07);
-  --border:      rgba(30,45,32,0.08);
-  --border-md:   rgba(30,45,32,0.12);
-  --border-hi:   rgba(30,45,32,0.20);
-  --t1: #1b2a1f;
-  --t2: #3d4a3c;
-  --t3: #5f6d50;
-  --t4: #b9c0ac;
+  --bg:   #fafafa;
+  --bg1:  #ffffff;
+  --bg2:  #f4f4f5;
+  --bg3:  #e9e9ec;
+  --bg4:  #dcdce0;
+  --surface:       rgba(9,9,11,0.015);
+  --surface-hover: rgba(9,9,11,0.035);
+  --surface-active:rgba(9,9,11,0.06);
+  --border:      rgba(9,9,11,0.08);
+  --border-md:   rgba(9,9,11,0.12);
+  --border-hi:   rgba(9,9,11,0.18);
+  --t1: #18181b;
+  --t2: #52525b;
+  --t3: #71717a;
+  --t4: #c4c4c8;
 
   /* Forest green replaces gold as the single chrome accent */
   --gold:    #2e6b45;  --gold-20: rgba(46,107,69,0.20);  --gold-10: rgba(46,107,69,0.10);  --gold-05: rgba(46,107,69,0.05);
@@ -157,10 +163,10 @@
   --orange:  #6f4e37;  --orange-20: rgba(111,78,55,0.20); --orange-05: rgba(111,78,55,0.05);
   --red:     #c0392b;  --red-20: rgba(192,57,43,0.18);   --red-10: rgba(192,57,43,0.10);
 
-  --e1: 0 1px 4px rgba(27,42,31,0.07), 0 1px 2px rgba(27,42,31,0.05);
-  --e2: 0 4px 18px rgba(27,42,31,0.08), 0 1px 5px rgba(27,42,31,0.04);
-  --e3: 0 8px 36px rgba(27,42,31,0.10), 0 2px 10px rgba(27,42,31,0.05);
-  --e4: 0 20px 56px rgba(27,42,31,0.12), 0 4px 18px rgba(27,42,31,0.07);
+  --e1: 0 1px 2px rgba(0,0,0,0.05);
+  --e2: 0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --e3: 0 8px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.05);
+  --e4: 0 24px 60px rgba(0,0,0,0.10), 0 8px 20px rgba(0,0,0,0.06);
 }
 
 /* ─────────────────────────────────────────────────────
@@ -177,6 +183,8 @@ body {
   display: flex;
   flex-direction: column;
   line-height: 1.5;
+  /* All sales numbers align in columns (tabular figures). */
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
