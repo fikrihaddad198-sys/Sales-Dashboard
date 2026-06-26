@@ -4160,7 +4160,7 @@ const CSV_URL    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?t
    backend/SETUP.md steps. While empty, the app shows a "belum dikonfigurasi"
    message instead of letting anyone in. All data flows through this URL and
    only returns when a valid 30-min token is presented. */
-const GAS_URL = '';   // e.g. 'https://script.google.com/macros/s/AKfy.../exec'
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwyGkd-mZSYW924JyEqPAk_8rUP6DTJ7HcTFEqH8nOtKoLQp32x-hWXG5OstJQjOvTS/exec';
 
 /* JSONP call to Apps Script (avoids all CORS issues with static hosting). */
 function gasCall(action, params){
