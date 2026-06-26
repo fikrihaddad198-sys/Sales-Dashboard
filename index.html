@@ -467,6 +467,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .reveal-delay-5  { transition-delay: 0.20s; }
 .reveal-delay-6  { transition-delay: 0.24s; }
 
+/* ── Page switch: reveal the new page as ONE smooth unit ──
+   On tab change renderPage() rebuilds the DOM, which would otherwise
+   replay the per-card .reveal cascade every single time (felt jittery /
+   too fast). Instead cards are shown instantly and the whole page does
+   a single gentle fade+rise. */
+@keyframes page-swap-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page.page-swapping { animation: page-swap-in 0.34s cubic-bezier(0.22,1,0.36,1); }
+[data-perf="ipad"]   .page.page-swapping { animation-duration: 0.28s; }
+[data-perf="mobile"] .page.page-swapping { animation-duration: 0.24s; }
+@media (prefers-reduced-motion: reduce) { .page.page-swapping { animation: none; } }
+
 /* ─────────────────────────────────────────────────────
    SKELETON LOADING
 ───────────────────────────────────────────────────── */
@@ -4397,6 +4411,15 @@ function showPage(p,btn,skipHash){
   currentPage=p;
   if(!skipHash) history.replaceState(null,'','#'+p);
   if(allData.length) renderPage(p);
+  // Show the freshly-rendered cards instantly (no per-card cascade) and
+  // play one smooth page-level fade+rise instead — replaying the reveal
+  // cascade on every tab switch felt jittery/abrupt.
+  if(pageEl){
+    pageEl.querySelectorAll('.reveal').forEach(el=>{ el.classList.add('visible','_obs'); });
+    pageEl.classList.remove('page-swapping');
+    void pageEl.offsetWidth;            // restart the animation
+    pageEl.classList.add('page-swapping');
+  }
   setTimeout(()=>{ if(window.attachReveal){ window.attachReveal(pageEl); window.attachReveal(); } }, 50);
 }
 /* Restore page from URL hash on load */
