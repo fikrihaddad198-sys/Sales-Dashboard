@@ -2443,6 +2443,105 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 }
 #screen-guard.guard-on.active { display: block; }
 
+/* ═══ MAP REVEAL — neon Jakarta network intro ═══ */
+#map-reveal {
+  position: fixed; inset: 0; z-index: 10050;
+  display: none; align-items: center; justify-content: center;
+  background: var(--bg, #0f0d0b);
+  opacity: 1; transition: opacity .55s ease;
+}
+#map-reveal.mr-out { opacity: 0; }
+.mr-frame { position: relative; width: min(88vw, 720px); text-align: center; }
+.mr-title {
+  font-size: 12px; letter-spacing: .44em; font-weight: 700;
+  color: var(--t3, #5c554b); text-indent: .44em;
+  margin-bottom: 20px; opacity: 0;
+}
+.mr-map { width: 100%; height: auto; overflow: visible; }
+
+.mr-region { fill: rgba(201,168,76,.035); stroke: none; }
+
+.mr-outline {
+  fill: none; stroke: var(--gold, #c9a84c); stroke-width: 2.4;
+  stroke-linejoin: round; stroke-linecap: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 6px rgba(201,168,76,.55));
+}
+.mr-dividers path {
+  fill: none; stroke: #f4dfa0; stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 5px rgba(244,223,160,.6));
+}
+.mr-labels text {
+  fill: var(--t2, #998f82); font-size: 17px; font-weight: 600;
+  letter-spacing: .2em; text-anchor: middle; opacity: 0;
+  filter: drop-shadow(0 0 4px rgba(201,168,76,.22));
+}
+.mr-store .mr-glow { fill: rgba(255,210,120,.16); opacity: 0; }
+.mr-store .mr-ring {
+  fill: none; stroke: #ffd98a; stroke-width: 2; opacity: 0;
+  transform-box: fill-box; transform-origin: center;
+}
+.mr-store .mr-dot {
+  fill: #ffe9a8; opacity: 0;
+  transform-box: fill-box; transform-origin: center;
+  filter: drop-shadow(0 0 6px rgba(255,210,120,.95));
+}
+.mr-store .mr-label {
+  fill: var(--t1, #f2efe9); font-size: 13px; font-weight: 600;
+  letter-spacing: .04em; text-anchor: middle; opacity: 0;
+}
+
+/* Light mode: deeper gold so it reads on the cream background */
+[data-theme="light"] #map-reveal { background: var(--bg, #f4f1e8); }
+[data-theme="light"] .mr-outline {
+  stroke: #b6862c; filter: drop-shadow(0 0 5px rgba(182,134,44,.4));
+}
+[data-theme="light"] .mr-dividers path {
+  stroke: #c99a30; filter: drop-shadow(0 0 4px rgba(201,154,48,.45));
+}
+[data-theme="light"] .mr-labels text { fill: #6b5a32; }
+[data-theme="light"] .mr-store .mr-dot {
+  fill: #c98a2e; filter: drop-shadow(0 0 6px rgba(201,138,46,.85));
+}
+[data-theme="light"] .mr-store .mr-ring { stroke: #c98a2e; }
+[data-theme="light"] .mr-store .mr-glow { fill: rgba(201,138,46,.14); }
+[data-theme="light"] .mr-store .mr-label { fill: #1b2a1f; }
+[data-theme="light"] .mr-region { fill: rgba(46,107,69,.04); }
+
+/* Choreography — only runs while .mr-show is present (restarts each login) */
+#map-reveal.mr-show .mr-title   { animation: mrFade .6s ease .15s forwards; }
+#map-reveal.mr-show .mr-outline { animation: mrDraw 1s cubic-bezier(.6,.05,.2,1) .15s forwards; }
+#map-reveal.mr-show .mr-dividers path { animation: mrDraw .7s ease forwards; }
+#map-reveal.mr-show .mr-dividers path:nth-child(1){ animation-delay:.6s; }
+#map-reveal.mr-show .mr-dividers path:nth-child(2){ animation-delay:.7s; }
+#map-reveal.mr-show .mr-dividers path:nth-child(3){ animation-delay:.8s; }
+#map-reveal.mr-show .mr-dividers path:nth-child(4){ animation-delay:.9s; }
+#map-reveal.mr-show .mr-labels text { animation: mrFade .5s ease forwards; }
+#map-reveal.mr-show .mr-labels text:nth-child(1){ animation-delay:1.05s; }
+#map-reveal.mr-show .mr-labels text:nth-child(2){ animation-delay:1.15s; }
+#map-reveal.mr-show .mr-labels text:nth-child(3){ animation-delay:1.25s; }
+#map-reveal.mr-show .mr-labels text:nth-child(4){ animation-delay:1.35s; }
+#map-reveal.mr-show .mr-store .mr-glow { animation: mrFade .6s ease 1.35s forwards; }
+#map-reveal.mr-show .mr-store .mr-dot  {
+  animation: mrPop .45s cubic-bezier(.34,1.56,.64,1) 1.35s forwards,
+             mrPulse 1.9s ease-in-out 1.85s infinite;
+}
+#map-reveal.mr-show .mr-store .mr-ring { animation: mrRing 1.9s ease-out 1.55s infinite; }
+#map-reveal.mr-show .mr-store .mr-label{ animation: mrFade .5s ease 1.6s forwards; }
+
+@keyframes mrDraw { to { stroke-dashoffset: 0; } }
+@keyframes mrFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes mrPop  { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+@keyframes mrPulse{ 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+@keyframes mrRing { 0% { opacity: .8; transform: scale(.4); } 80%,100% { opacity: 0; transform: scale(2); } }
+
+@media (prefers-reduced-motion: reduce) {
+  #map-reveal { transition: none; }
+  #map-reveal * { animation: none !important; }
+}
+
 #splash-screen {
   position: fixed; inset: 0; z-index: 10000;
   display: flex; align-items: center; justify-content: center;
@@ -3510,6 +3609,46 @@ body.dashboard-locking .card {
   </div>
 </div>
 <!-- ═══ END SPLASH ═══ -->
+
+<!-- ═══ MAP REVEAL (post-login intro: neon Jakarta network) ═══ -->
+<div id="map-reveal" style="display:none;" aria-hidden="true">
+  <div class="mr-frame">
+    <div class="mr-title">JARINGAN TOKO</div>
+    <svg class="mr-map" viewBox="0 0 1000 760" fill="none"
+         xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <!-- Region hit/fill areas (kept faint; used later for interactivity) -->
+      <g class="mr-regions">
+        <path class="mr-region" data-region="utara"   d="M515,455 L165,265 L515,212 L872,275 Z"/>
+        <path class="mr-region" data-region="timur"   d="M515,455 L872,275 L800,648 Z"/>
+        <path class="mr-region" data-region="selatan" d="M515,455 L800,648 L286,664 Z"/>
+        <path class="mr-region" data-region="barat"   d="M515,455 L286,664 L165,265 Z"/>
+      </g>
+      <!-- Internal dividing borders (the 'X' that splits the 4 regions) -->
+      <g class="mr-dividers">
+        <path pathLength="1" d="M515,455 L165,265"/>
+        <path pathLength="1" d="M515,455 L872,275"/>
+        <path pathLength="1" d="M515,455 L800,648"/>
+        <path pathLength="1" d="M515,455 L286,664"/>
+      </g>
+      <!-- Outer silhouette of Jakarta (stylized) -->
+      <path class="mr-outline" pathLength="1"
+        d="M165,265 C200,234 250,252 300,234 C360,212 410,238 470,214 C520,196 572,226 632,210
+           C690,194 742,226 808,214 C858,205 886,238 872,288 L884,470
+           C892,548 856,606 800,650 C742,696 660,708 580,702 C470,694 372,708 286,666
+           C214,631 168,556 156,470 C146,398 152,330 165,265 Z"/>
+      <!-- Region labels -->
+      <g class="mr-labels">
+        <text x="515" y="312">UTARA</text>
+        <text x="704" y="452">TIMUR</text>
+        <text x="512" y="612">SELATAN</text>
+        <text x="318" y="452">BARAT</text>
+      </g>
+      <!-- Store points (rendered by JS into this group) -->
+      <g id="map-stores"></g>
+    </svg>
+  </div>
+</div>
+<!-- ═══ END MAP REVEAL ═══ -->
 
 <div id="brand-mark" aria-hidden="true"></div>
 
@@ -7532,12 +7671,61 @@ function grantAccess(){
     // remaining backdrop never pops away mid-fade. The glyph is already
     // invisible (0.28s) and the brand-mark carries the morph above it.
     setTimeout(() => { splash.style.display = 'none'; }, 1000);
-    // Reveal dashboard AFTER the watermark morph + kempes fully completes.
+    // After the watermark morph + kempes settles, play the neon Jakarta map
+    // reveal, THEN enter the dashboard (map fades as the dashboard appears).
     setTimeout(() => {
-      revealDashboard();
-      replayProgressBar();
+      runMapReveal(() => { revealDashboard(); replayProgressBar(); });
     }, 2480);
   }, 2050);
+}
+
+/* ── Store points on the map (add stores here as you expand) ──
+   x,y are in the SVG viewBox (0..1000 wide, 0..760 tall).
+   region: utara | timur | selatan | barat (for later filtering). */
+const STORE_POINTS = [
+  { name: 'Kemang Raya', region: 'selatan', x: 470, y: 560 },
+];
+
+function renderStorePoints(){
+  const g = document.getElementById('map-stores');
+  if(!g) return;
+  const NS = 'http://www.w3.org/2000/svg';
+  g.innerHTML = '';
+  STORE_POINTS.forEach(s => {
+    const wrap = document.createElementNS(NS, 'g');
+    wrap.setAttribute('class', 'mr-store');
+    const glow = document.createElementNS(NS, 'circle');
+    glow.setAttribute('class','mr-glow'); glow.setAttribute('cx',s.x); glow.setAttribute('cy',s.y); glow.setAttribute('r','26');
+    const ring = document.createElementNS(NS, 'circle');
+    ring.setAttribute('class','mr-ring'); ring.setAttribute('cx',s.x); ring.setAttribute('cy',s.y); ring.setAttribute('r','12');
+    const dot = document.createElementNS(NS, 'circle');
+    dot.setAttribute('class','mr-dot'); dot.setAttribute('cx',s.x); dot.setAttribute('cy',s.y); dot.setAttribute('r','6.5');
+    const label = document.createElementNS(NS, 'text');
+    label.setAttribute('class','mr-label'); label.setAttribute('x',s.x); label.setAttribute('y', s.y - 22);
+    label.textContent = s.name;
+    wrap.append(glow, ring, dot, label);
+    g.appendChild(wrap);
+  });
+}
+
+/* Play the map reveal overlay, then call done() (which reveals the dashboard).
+   Honours reduced-motion by skipping straight through. */
+function runMapReveal(done){
+  const mr = document.getElementById('map-reveal');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!mr || reduced){ if(done) done(); return; }
+  renderStorePoints();
+  mr.style.display = 'flex';
+  void mr.offsetHeight;            // commit display before animating
+  mr.classList.add('mr-show');
+
+  const HOLD = 2550;               // time the map is fully on screen
+  setTimeout(() => { mr.classList.add('mr-out'); }, HOLD);          // start fade
+  setTimeout(() => { if(done) done(); }, HOLD + 260);              // reveal dashboard mid-fade
+  setTimeout(() => {
+    mr.style.display = 'none';
+    mr.classList.remove('mr-show','mr-out');
+  }, HOLD + 700);
 }
 
 
