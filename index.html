@@ -4383,6 +4383,9 @@ const SESS = {
 function sessionValid(){ const t=SESS.token, e=SESS.exp; return !!t && (!e || e>Date.now()); }
 
 let allData=[], charts={}, periodData={}, customPeriodData={}, fldtData={}, summData={};
+/* Charts animate their draw only on the first dashboard entrance; tab switches
+   after that paint instantly (no jitter). Flipped off once the dashboard is in. */
+let _chartAnim = true;
 let _kpiRows=[];  /* stored after calcKpi for popup use */
 let _weeklyChan='gmv', _customChan='gmv', _fldtChan='cup_total', _chTrendKey='offline';
 let _racePrevVals = {}; // stores prev frame values for counter animation
@@ -4478,7 +4481,10 @@ function baseOptions(yFmt='rp'){
   const isDark = document.documentElement.getAttribute('data-theme')!=='light';
   return{
     responsive:true, maintainAspectRatio:false,
-    animation:{ duration:800, easing:'easeInOutCubic' },
+    // Animate the draw ONLY on the first dashboard entrance. On later tab
+    // switches charts paint instantly (crisp), and the page fade carries the
+    // premium feel — replaying the 800ms chart draw every switch felt janky.
+    animation: _chartAnim ? { duration:800, easing:'easeInOutCubic' } : false,
     interaction:{ mode:'index', intersect:false },
     plugins:{
       legend:{ display:false },
@@ -4958,7 +4964,7 @@ function buildGauge(pct2){
   charts.gauge=new Chart(gaugeCanvas,{
     type:'doughnut',
     data:{ datasets:[{ data:[clamped,100-clamped], backgroundColor:[color,'rgba(255,255,255,0.04)'], borderWidth:0, circumference:220, rotation:-110 }] },
-    options:{ responsive:true, cutout:'84%', animation:{duration:1200,easing:'easeInOutCubic'}, plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+    options:{ responsive:true, cutout:'84%', animation: _chartAnim ? {duration:1200,easing:'easeInOutCubic'} : false, plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
   });
   const gpct=document.getElementById('gauge-pct');
   if(!gpct) return;
@@ -5068,7 +5074,7 @@ function applyChannelFilter(){
   charts.chPie=new Chart(document.getElementById('ch-pie-chart'),{
     type:'doughnut',
     data:{ labels:channels.map(c=>c.name), datasets:[{ data:channels.map(c=>c.val), backgroundColor:channels.map(c=>c.color+'cc'), borderWidth:0, hoverOffset:6 }] },
-    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', animation:{duration:700}, plugins:{ legend:{position:'right',labels:{color:TC.text2,font:{size:11},padding:14,usePointStyle:true}}, tooltip:{...baseOptions().plugins.tooltip,callbacks:{label:ctx=>' '+ctx.label+': '+fmtRp(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,total))+')'}}} } }
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', animation: _chartAnim ? {duration:700} : false, plugins:{ legend:{position:'right',labels:{color:TC.text2,font:{size:11},padding:14,usePointStyle:true}}, tooltip:{...baseOptions().plugins.tooltip,callbacks:{label:ctx=>' '+ctx.label+': '+fmtRp(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,total))+')'}}} } }
   );
   destroyChart('chBar');
   charts.chBar=new Chart(document.getElementById('ch-bar-chart'),{
@@ -5358,7 +5364,7 @@ function buildFldtDoughnut(id,data){
   charts[key]=new Chart(document.getElementById(id),{
     type:'doughnut',
     data:{ labels:FLDT_LABELS, datasets:[{ data:FLDT_KEYS.map(k=>data[k]||0), backgroundColor:FLDT_COLORS.map(c=>c+'cc'), borderColor:FLDT_COLORS, borderWidth:1.5, hoverOffset:6 }] },
-    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', animation:{duration:700}, plugins:{ legend:{position:'right',labels:{color:TC.text2,font:{size:10},padding:12,usePointStyle:true}}, tooltip:{backgroundColor:'rgba(10,14,22,0.97)',titleColor:TC.text2,bodyColor:'#eef2ee',borderColor:'rgba(201,168,76,0.18)',borderWidth:1,cornerRadius:10,padding:12,callbacks:{label:ctx=>' '+ctx.label+': '+fmtNum(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,data.cup_total||1))+')'}} } }
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', animation: _chartAnim ? {duration:700} : false, plugins:{ legend:{position:'right',labels:{color:TC.text2,font:{size:10},padding:12,usePointStyle:true}}, tooltip:{backgroundColor:'rgba(10,14,22,0.97)',titleColor:TC.text2,bodyColor:'#eef2ee',borderColor:'rgba(201,168,76,0.18)',borderWidth:1,cornerRadius:10,padding:12,callbacks:{label:ctx=>' '+ctx.label+': '+fmtNum(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,data.cup_total||1))+')'}} } }
   });
 }
 function buildFldtMainTable(periods,labels){
@@ -7588,7 +7594,10 @@ function revealDashboard(){
   // Re-place the nav pill now the dashboard is laid out & visible (instant).
   const a=document.querySelector('.nav-btn.active'); if(a) moveNavPill(a, true);
   // Longest stagger: 0.54s delay + 0.6s duration = 1.14s → clear at 1500ms.
-  setTimeout(() => { document.body.classList.remove('dr-animating'); }, 1500);
+  setTimeout(() => {
+    document.body.classList.remove('dr-animating');
+    _chartAnim = false;   // from now on tab switches paint charts instantly
+  }, 1500);
 }
 
 /* Re-trigger the KPI progress bar fill (CSS width transition) without
@@ -7608,6 +7617,7 @@ function replayProgressBar(){
 function grantAccess(){
   stopPolling();
   startHeartbeat();
+  _chartAnim = true;   // animate the chart draw for this fresh entrance
   document.dispatchEvent(new Event('fore-session-change'));
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -7855,6 +7865,8 @@ function openDevicePicker(){
     if(SESS.exp) startSessionTimer(SESS.exp, SESS.isOwner);
     startHeartbeat();
     document.dispatchEvent(new Event('fore-session-change'));
+    // Restored session: let the first render animate, then go instant.
+    setTimeout(() => { _chartAnim = false; }, 1600);
     return;
   }
   SESS.clear();
