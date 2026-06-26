@@ -50,7 +50,7 @@ function isOwner(idFore, name){
 }
 
 const ACCESS_HEADERS =
-  ['requestId','idFore','name','status','token','createdAt','approvedAt','expiresAt','tgMsgId'];
+  ['requestId','idFore','name','status','token','createdAt','approvedAt','expiresAt','tgMsgId','lastSeen'];
 
 // ----------------------- ENTRY POINTS -----------------------
 function doGet(e){
@@ -63,7 +63,8 @@ function doGet(e){
       case 'poll':      out = apiPoll(p.requestId);          break;
       case 'data':      out = apiData(p.token);              break;
       case 'me':        out = apiMe(p.token);                break;
-      case 'heartbeat': out = { ok:true };                   break;
+      case 'heartbeat': out = apiHeartbeat(p.token);          break;
+      case 'kick':      out = apiKick(p.token, p.target);    break;
       default:          out = { ok:false, error:'unknown_action' };
     }
   } catch (err) {
@@ -150,6 +151,59 @@ function apiMe(token){
            expiresAt:v.expiresAt, remainingMs: v.expiresAt - Date.now() };
 }
 
+function apiHeartbeat(token){
+  if (!token) return { ok:false, error:'no_token' };
+  const v = validateToken(token);
+  if (!v.ok) return v;
+  // Update lastSeen (col 10) for this token row.
+  const sh = accessSheet();
+  const data = sh.getDataRange().getValues();
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][4]) === String(token)) {
+      sh.getRange(i+1, 10).setValue(new Date());
+      break;
+    }
+  }
+  return { ok:true };
+}
+
+function apiKick(token, targetIdFore){
+  // Only owner can kick.
+  const v = validateToken(token);
+  if (!v.ok) return v;
+  if (!v.isOwner) return { ok:false, error:'forbidden' };
+  if (!targetIdFore) return { ok:false, error:'no_target' };
+
+  const sh = accessSheet();
+  const data = sh.getDataRange().getValues();
+  var kicked = 0;
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][1]) === String(targetIdFore) && data[i][3] === 'approved') {
+      sh.getRange(i+1, 4).setValue('revoked');
+      kicked++;
+    }
+  }
+  return { ok:true, kicked:kicked };
+}
+
+// Returns users active in the last N minutes (for /siapa command).
+function getOnlineUsers(withinMinutes){
+  withinMinutes = withinMinutes || 3;
+  const cutoff = new Date(Date.now() - withinMinutes*60000);
+  const data = accessSheet().getDataRange().getValues();
+  var users = [];
+  for (var i = 1; i < data.length; i++) {
+    if (data[i][3] !== 'approved') continue;
+    var exp = data[i][7] ? new Date(data[i][7]) : null;
+    if (exp && exp < new Date()) continue;
+    var lastSeen = data[i][9] ? new Date(data[i][9]) : null;
+    if (!lastSeen || lastSeen < cutoff) continue;
+    users.push({ name: data[i][2], idFore: String(data[i][1]),
+                 lastSeen: lastSeen, expiresAt: exp });
+  }
+  return users;
+}
+
 // ----------------------- TELEGRAM -----------------------
 function notifyOwner(requestId, idFore, name){
   if (!CFG.TG_BOT_TOKEN || CFG.TG_BOT_TOKEN.indexOf('PASTE') === 0) return null;
@@ -175,12 +229,36 @@ function notifyOwner(requestId, idFore, name){
 }
 
 function handleTelegramUpdate(update){
-  // /start or /id -> reply with chat id (handy during setup)
   if (update.message && update.message.text) {
-    const t = update.message.text.trim();
+    const chatId = update.message.chat.id;
+    const t = update.message.text.trim().split(' ')[0].toLowerCase();
+
     if (t === '/start' || t === '/id') {
-      tgApi('sendMessage', { chat_id: update.message.chat.id,
-        text: 'Chat ID kamu: ' + update.message.chat.id });
+      tgApi('sendMessage', { chat_id: chatId, text: 'Chat ID kamu: ' + chatId });
+
+    } else if (t === '/siapa') {
+      if (String(chatId) !== String(CFG.TG_OWNER_CHAT)) {
+        tgApi('sendMessage', { chat_id: chatId, text: 'Hanya owner.' });
+        return;
+      }
+      var users = getOnlineUsers(3);
+      if (!users.length) {
+        tgApi('sendMessage', { chat_id: chatId, text: '📭 Tidak ada user yang sedang online.' });
+        return;
+      }
+      var lines = ['👥 *User Online Sekarang* (' + users.length + '):\n'];
+      var buttons = [];
+      users.forEach(function(u, idx){
+        var sisa = u.expiresAt ? Math.max(0, Math.round((u.expiresAt-Date.now())/60000)) : '∞';
+        lines.push((idx+1) + '. *' + tgEsc(u.name) + '* (ID: `' + u.idFore + '`) — sisa ' + sisa + ' mnt');
+        buttons.push([{ text: '🦵 Kick ' + u.name, callback_data: 'kick:' + u.idFore }]);
+      });
+      tgApi('sendMessage', {
+        chat_id: chatId,
+        text: lines.join('\n'),
+        parse_mode: 'Markdown',
+        reply_markup: JSON.stringify({ inline_keyboard: buttons })
+      });
     }
     return;
   }
@@ -199,15 +277,34 @@ function handleTelegramUpdate(update){
   const decision = parts[0], requestId = parts[1];
   const editMsgId = cq.message && cq.message.message_id;
 
-  // NO LockService here. Holding a lock while doing HTTP calls back to Telegram
-  // made the handler slow; Telegram then timed out the webhook, marked the
-  // update failed, and — because it delivers updates strictly IN ORDER — every
-  // following callback got stuck behind the retrying one. A single owner
-  // tapping buttons doesn't need a lock; the status re-check below is enough.
+  // Handle kick button from /siapa.
+  if (decision === 'kick') {
+    const targetId = requestId; // reused field = idFore to kick
+    const sh = accessSheet();
+    const data = sh.getDataRange().getValues();
+    var kickedName = targetId, kickCount = 0;
+    for (var i = 1; i < data.length; i++) {
+      if (String(data[i][1]) === String(targetId) && data[i][3] === 'approved') {
+        sh.getRange(i+1, 4).setValue('revoked');
+        kickedName = data[i][2];
+        kickCount++;
+      }
+    }
+    try { tgApi('answerCallbackQuery', { callback_query_id: cq.id,
+      text: kickCount ? 'Kicked ' + kickedName : 'Tidak ditemukan.', show_alert: true }); } catch(e){}
+    if (editMsgId && kickCount) {
+      try { tgApi('editMessageText', { chat_id: CFG.TG_OWNER_CHAT,
+        message_id: editMsgId,
+        text: '🦵 *' + tgEsc(kickedName) + '* (ID: `' + targetId + '`) sudah di-kick.',
+        parse_mode: 'Markdown' }); } catch(e){}
+    }
+    return;
+  }
+
+  // NO LockService here — see comment in git history.
   const row = findRow(requestId);
 
-  // Fast path for retries / stale taps: do ZERO outbound HTTP so Telegram gets
-  // an instant 200 and the update queue never jams.
+  // Fast path for retries / stale taps.
   if (!row || row.status !== 'pending') {
     try { tgApi('answerCallbackQuery', { callback_query_id: cq.id,
       text: row ? 'Sudah diproses.' : 'Tak ditemukan.' }); } catch (e) {}

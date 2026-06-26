@@ -7324,8 +7324,26 @@ function startSessionTimer(expiresAt, isOwner){
 }
 
 /* ── End session → back to the registration screen ── */
+let _heartTimer = null;
+function startHeartbeat(){
+  stopHeartbeat();
+  // Send immediately, then every 30s.
+  function beat(){
+    if(!sessionValid()) return;
+    gasCall('heartbeat', { token: SESS.token||'' }).then(res=>{
+      if(res && !res.ok && (res.error==='revoked'||res.error==='expired'||res.error==='invalid_token')){
+        endSession('revoked');
+      }
+    }).catch(()=>{});
+  }
+  beat();
+  _heartTimer = setInterval(beat, 30000);
+}
+function stopHeartbeat(){ if(_heartTimer){ clearInterval(_heartTimer); _heartTimer=null; } }
+
 function endSession(reason){
   stopPolling(); _pollReqId = null;
+  stopHeartbeat();
   if(_sessTimer){ clearInterval(_sessTimer); _sessTimer=null; }
   SESS.clear();
   document.dispatchEvent(new Event('fore-session-change'));
@@ -7429,6 +7447,7 @@ function replayProgressBar(){
 /* ── Access granted → splash → dashboard ── */
 function grantAccess(){
   stopPolling();
+  startHeartbeat();
   document.dispatchEvent(new Event('fore-session-change'));
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
