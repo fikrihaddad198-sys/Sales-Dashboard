@@ -3232,9 +3232,117 @@ body.dashboard-locking .card {
 @media (prefers-reduced-motion: reduce) {
   #brand-mark { animation: none; opacity: .04; filter: none; }
 }
+
+/* ══════════════════════════════════════════════════
+   DEVICE PERFORMANCE TIERS  (chosen on pre-PIN picker)
+   pc      → every effect at full strength (default)
+   laptop  → full live blur, lighter brand-mark breathing
+   ipad    → no live backdrop blur, single-shadow breathing
+   mobile  → no live blur, no breathing shadow, shorter motion
+   Live backdrop-filter blur is the single biggest mobile/tablet GPU
+   cost (re-composited every frame), so it is dropped on ipad/mobile. */
+[data-perf="ipad"] *,   [data-perf="ipad"] *::before,   [data-perf="ipad"] *::after,
+[data-perf="mobile"] *, [data-perf="mobile"] *::before, [data-perf="mobile"] *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+/* Restore solid-ish surfaces where the frost was load-bearing */
+[data-perf="ipad"] .nav,
+[data-perf="mobile"] .nav { background: rgba(8,11,9,0.94) !important; }
+[data-theme="light"][data-perf="ipad"] .nav,
+[data-theme="light"][data-perf="mobile"] .nav { background: rgba(251,249,242,0.97) !important; }
+[data-perf="ipad"] #pin-glass,
+[data-perf="mobile"] #pin-glass { background: rgba(20,17,13,0.66) !important; }
+[data-theme="light"][data-perf="ipad"] #pin-glass,
+[data-theme="light"][data-perf="mobile"] #pin-glass { background: rgba(255,255,255,0.82) !important; }
+
+/* Brand-mark breathing: collapse the multi-layer drop-shadow stack */
+[data-perf="laptop"] #brand-mark,
+[data-perf="ipad"]   #brand-mark { animation-name: brand-mark-breathe-lite; }
+[data-theme="light"][data-perf="laptop"] #brand-mark,
+[data-theme="light"][data-perf="ipad"]   #brand-mark { animation-name: brand-mark-breathe-lite-green; }
+[data-perf="mobile"] #brand-mark { animation: none !important; opacity: .05; filter: none !important; }
+@keyframes brand-mark-breathe-lite {
+  0%,100% { opacity:.03; transform:translate(-50%,-50%) scale(1.00); filter:drop-shadow(0 0 4px rgba(201,168,76,0.16)); }
+  50%     { opacity:.08; transform:translate(-50%,-50%) scale(1.05); filter:drop-shadow(0 0 26px rgba(201,168,76,0.55)); }
+}
+@keyframes brand-mark-breathe-lite-green {
+  0%,100% { opacity:.03; transform:translate(-50%,-50%) scale(1.00); filter:drop-shadow(0 0 4px rgba(46,107,69,0.16)); }
+  50%     { opacity:.08; transform:translate(-50%,-50%) scale(1.05); filter:drop-shadow(0 0 26px rgba(46,107,69,0.50)); }
+}
+/* Mobile: tame the reveal cascade so the compositor keeps up */
+[data-perf="mobile"] body.dashboard-ready .hero-banner,
+[data-perf="mobile"] body.dashboard-ready .kpi-card { animation-duration: .42s !important; }
+
+/* ══════════════════════════════════════════════════
+   DEVICE PICKER  (pre-PIN performance selector)
+══════════════════════════════════════════════════ */
+#device-screen{
+  position:fixed; inset:0; z-index:10002;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--bg,#0f0d0b);
+  transition:opacity .4s ease, visibility .4s ease;
+}
+#device-screen.device-hide{ opacity:0; pointer-events:none; visibility:hidden; }
+#device-box{
+  width:min(92vw,420px); padding:0 22px; text-align:center;
+  animation:pin-rise .6s cubic-bezier(0.22,1,0.36,1) both;
+}
+#device-logo{
+  width:54px;height:54px;margin:0 auto 18px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(201,168,76,0.10); border:1px solid rgba(201,168,76,0.22);
+}
+#device-logo .header-logo-icon{ background-color:#c9a84c; }
+#device-title{ font-size:22px; font-weight:800; letter-spacing:-0.4px; color:var(--t1,#f5f0e6); }
+#device-sub{ margin-top:6px; font-size:13px; color:var(--t3,#8d978c); line-height:1.5; }
+#device-grid{ margin-top:26px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.device-opt{
+  display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:20px 12px; border-radius:18px; cursor:pointer;
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09);
+  box-shadow:0 1px 0 rgba(255,255,255,0.05) inset; color:var(--t1,#f5f0e6);
+  transition:transform .18s cubic-bezier(0.22,1,0.36,1), border-color .2s, background .2s, box-shadow .2s;
+}
+.device-opt:hover{ transform:translateY(-3px); border-color:rgba(201,168,76,0.45); background:rgba(201,168,76,0.08); box-shadow:0 8px 24px rgba(0,0,0,0.30); }
+.device-opt:active{ transform:translateY(-1px) scale(0.98); }
+.device-opt.selected{ border-color:rgba(201,168,76,0.6); background:rgba(201,168,76,0.12); }
+.device-ic{ font-size:30px; line-height:1; }
+.device-lb{ font-size:14px; font-weight:700; }
+.device-hint{ font-size:11px; color:var(--t3,#8d978c); }
+[data-theme="light"] #device-logo{ background:rgba(46,107,69,0.10); border-color:rgba(46,107,69,0.22); }
+[data-theme="light"] #device-logo .header-logo-icon{ background-color:#2e6b45; }
+[data-theme="light"] .device-opt{ background:rgba(255,255,255,0.6); border-color:rgba(46,107,69,0.14); color:#26302a; }
+[data-theme="light"] .device-opt:hover{ border-color:rgba(46,107,69,0.45); background:rgba(46,107,69,0.07); }
+[data-theme="light"] .device-opt.selected{ border-color:rgba(46,107,69,0.6); background:rgba(46,107,69,0.12); }
+[data-theme="light"] .device-hint{ color:#5c554b; }
+@media (prefers-reduced-motion: reduce){ #device-box{ animation:none; } }
 </style>
 </head>
 <body>
+<!-- ════ DEVICE PICKER (pre-PIN performance selector) ════ -->
+<div id="device-screen">
+  <div id="device-box">
+    <div id="device-logo"><span class="header-logo-icon" style="width:26px;height:33px;display:block;"></span></div>
+    <div id="device-title">Pilih Perangkat</div>
+    <div id="device-sub">Sesuaikan kehalusan animasi dengan perangkat yang Anda gunakan</div>
+    <div id="device-grid">
+      <button class="device-opt" onclick="pickDevice('mobile')">
+        <span class="device-ic">📱</span><span class="device-lb">Mobile</span><span class="device-hint">Paling ringan</span>
+      </button>
+      <button class="device-opt" onclick="pickDevice('ipad')">
+        <span class="device-ic">📲</span><span class="device-lb">iPad / Tablet</span><span class="device-hint">Ringan</span>
+      </button>
+      <button class="device-opt" onclick="pickDevice('laptop')">
+        <span class="device-ic">💻</span><span class="device-lb">Laptop</span><span class="device-hint">Penuh</span>
+      </button>
+      <button class="device-opt" onclick="pickDevice('pc')">
+        <span class="device-ic">🖥️</span><span class="device-lb">PC</span><span class="device-hint">Maksimal</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- ════ PIN AUTH SCREEN ════ -->
 <div id="pin-screen">
   <div id="pin-box">
@@ -7178,18 +7286,54 @@ function pinUnlock(){
 }
 
 
+/* ── Device performance tier ──
+   Sets data-perf on <html>; CSS dials live blur / drop-shadow / motion
+   up or down per device so page transitions stay smooth. Remembered so
+   the choice is pre-highlighted next time. */
+function applyPerfMode(mode){
+  if(['mobile','ipad','laptop','pc'].indexOf(mode)===-1) mode='pc';
+  document.documentElement.setAttribute('data-perf', mode);
+  try{ localStorage.setItem('forePerfMode', mode); }catch(e){}
+  return mode;
+}
+function getSavedPerfMode(){
+  try{ return localStorage.getItem('forePerfMode'); }catch(e){ return null; }
+}
+/* User tapped a device on the pre-PIN picker → apply, dismiss, reveal PIN. */
+function pickDevice(mode){
+  applyPerfMode(mode);
+  const ds = document.getElementById('device-screen');
+  if(ds){
+    ds.classList.add('device-hide');
+    setTimeout(() => { ds.style.display = 'none'; }, 420);
+  }
+  requestAnimationFrame(() => requestAnimationFrame(playPinEntrance));
+}
+
 // Init
 (function(){
+  const ds = document.getElementById('device-screen');
+  const saved = getSavedPerfMode();
   if(sessionStorage.getItem(PIN_SESSION)==='1'){
+    applyPerfMode(saved || 'pc');
+    if(ds) ds.style.display='none';
     document.getElementById('pin-screen').style.display='none';
     document.body.classList.add('dashboard-ready');
     return;
   }
-  // First open: play the staggered entrance instead of a flat instant PIN.
-  requestAnimationFrame(() => requestAnimationFrame(playPinEntrance));
+  // First open: show the device picker, then PIN. Apply the remembered tier
+  // up front (so even the picker itself renders at the right effect level)
+  // and pre-highlight the last choice.
+  applyPerfMode(saved || 'pc');
+  if(saved && ds){
+    const sel = ds.querySelector('.device-opt[onclick*="\'' + saved + '\'"]');
+    if(sel) sel.classList.add('selected');
+  }
   // keyboard support
   document.addEventListener('keydown', e=>{
     if(document.getElementById('pin-screen').style.display==='none') return;
+    const dsEl=document.getElementById('device-screen');
+    if(dsEl && dsEl.style.display!=='none' && !dsEl.classList.contains('device-hide')) return;
     if(e.key>='0'&&e.key<='9') pinKey(e.key);
     else if(e.key==='Backspace') pinDel();
   });
