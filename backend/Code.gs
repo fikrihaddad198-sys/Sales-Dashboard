@@ -6,13 +6,19 @@
  *  through here and is only returned when a valid, unexpired token is
  *  presented - the raw Google Sheet stays private.
  *
+ *  Architecture: POLLING (not webhook).
+ *    Apps Script /exec always responds to POST with HTTP 302, which Telegram
+ *    treats as a failure and retries indefinitely — jamming the in-order
+ *    delivery queue so only the first callback ever lands. Fix: delete the
+ *    webhook entirely and use a time-driven trigger that calls pollTelegram()
+ *    every minute. notifyOwner() still sends the message instantly; only the
+ *    button-tap processing is polled (≤1 min delay, fine for an approval flow).
+ *
  *  Endpoints:
  *    doGet  -> app calls via JSONP  (?action=register|poll|data|me|heartbeat)
- *    doPost -> Telegram webhook     (approve / reject button callbacks)
+ *    doPost -> unused (kept as no-op so old deploys don't 500)
  *
- *  SETUP: see backend/SETUP.md. Fill the CONFIG block below, deploy as a
- *  Web App (Execute as: Me, Who has access: Anyone), then set the Telegram
- *  webhook to the /exec URL.
+ *  SETUP: see backend/SETUP.md.
  */
 
 // ======================= CONFIG =======================
@@ -67,15 +73,8 @@ function doGet(e){
 }
 
 function doPost(e){
-  // Telegram webhook updates land here.
-  try {
-    const raw = e.postData.contents;
-    Logger.log('doPost raw: ' + raw.slice(0, 500));
-    const update = JSON.parse(raw);
-    handleTelegramUpdate(update);
-  } catch (err) {
-    Logger.log('doPost error: ' + err);
-  }
+  // No-op. We use polling (pollTelegram trigger) instead of webhook because
+  // Apps Script /exec always returns 302, which Telegram treats as failure.
   return ContentService.createTextOutput('ok');
 }
 
@@ -346,6 +345,50 @@ function jsonp(obj, cb){
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+// ----------------------- POLLING ENGINE -----------------------
+// Called by a 1-minute time-driven trigger (set up via setupPollTrigger).
+// Fetches pending Telegram updates and processes approve/reject button taps.
+function pollTelegram(){
+  const props = PropertiesService.getScriptProperties();
+  let offset  = parseInt(props.getProperty('tgOffset') || '0', 10);
+
+  const res = tgApi('getUpdates', {
+    offset           : offset,
+    limit            : 100,
+    timeout          : 0,
+    allowed_updates  : ['callback_query', 'message']
+  });
+
+  if (!res || !res.ok || !res.result || !res.result.length) return;
+
+  res.result.forEach(function(update){
+    try { handleTelegramUpdate(update); } catch(e) {}
+    offset = update.update_id + 1;
+  });
+
+  props.setProperty('tgOffset', String(offset));
+}
+
+// Run ONCE to create the 1-minute polling trigger.
+// Safe to run again — deletes existing fore-poll triggers first.
+function setupPollTrigger(){
+  // Remove stale triggers
+  ScriptApp.getProjectTriggers().forEach(function(t){
+    if (t.getHandlerFunction() === 'pollTelegram') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('pollTelegram')
+    .timeBased().everyMinutes(1).create();
+
+  // Also delete the Telegram webhook so getUpdates works (can't use both).
+  const delRes = UrlFetchApp.fetch(
+    'https://api.telegram.org/bot' + CFG.TG_BOT_TOKEN +
+    '/deleteWebhook?drop_pending_updates=true',
+    { muteHttpExceptions: true }
+  );
+  Logger.log('deleteWebhook: ' + delRes.getContentText());
+  Logger.log('Polling trigger created. pollTelegram runs every 1 minute.');
+}
+
 // Run ONCE after first deploy to authorize all permissions (Spreadsheet +
 // UrlFetch + LockService). Must complete without error before webhook works.
 function initSetup(){
@@ -374,39 +417,9 @@ function testTelegram(){
   Logger.log(JSON.stringify(r));
 }
 
-// Run once manually to check webhook status.
+// Check current Telegram webhook/polling state.
 function checkWebhook(){
   const url = 'https://api.telegram.org/bot' + CFG.TG_BOT_TOKEN + '/getWebhookInfo';
   const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
   Logger.log(res.getContentText());
-}
-
-// Run this whenever the queue jams (pending_update_count keeps growing or
-// last_error mentions 302). Re-points the webhook to THIS deployment's /exec
-// URL and DROPS all stuck pending updates so delivery resumes cleanly.
-// IMPORTANT: deploy as Web App first, then paste the /exec URL below.
-function resetWebhook(){
-  const EXEC_URL = 'https://script.google.com/macros/s/AKfycbwyGkd-mZSYW924JyEqPAk_8rUP6DTJ7HcTFEqH8nOtKoLQp32x-hWXG5OstJQjOvTS/exec';
-  const url = 'https://api.telegram.org/bot' + CFG.TG_BOT_TOKEN +
-    '/setWebhook?url=' + encodeURIComponent(EXEC_URL) +
-    '&drop_pending_updates=true' +
-    '&allowed_updates=' + encodeURIComponent(JSON.stringify(['message','callback_query']));
-  const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-  Logger.log(res.getContentText());
-}
-
-// Simulate a Tolak button press — lets you test reject flow without a real
-// Telegram callback. Paste a real requestId from the "access" sheet.
-function testReject(){
-  const requestId = 'PASTE_REQUEST_ID_HERE';  // from access sheet column A
-  const fakeUpdate = {
-    callback_query: {
-      id: 'fake',
-      from: { id: Number(CFG.TG_OWNER_CHAT) },
-      data: 'reject:' + requestId,
-      message: { message_id: 0, chat: { id: Number(CFG.TG_OWNER_CHAT) } }
-    }
-  };
-  handleTelegramUpdate(fakeUpdate);
-  Logger.log('done');
 }
