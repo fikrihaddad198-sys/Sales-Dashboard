@@ -580,6 +580,21 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .header-right {
   margin-left: auto; display: flex; align-items: center; gap: var(--sp2);
 }
+/* ── Device tier indicator dot on the perf-btn ── */
+#perf-btn { position: relative; }
+#perf-btn .perf-dot {
+  position: absolute; bottom: 5px; right: 5px;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(201,168,76,0.70);
+  box-shadow: 0 0 5px rgba(201,168,76,0.6);
+  pointer-events: none;
+}
+[data-perf="mobile"]  #perf-btn .perf-dot { background: #e87373; box-shadow: 0 0 5px rgba(232,115,115,0.6); }
+[data-perf="ipad"]    #perf-btn .perf-dot { background: #e8a03a; box-shadow: 0 0 5px rgba(232,160,58,0.6); }
+[data-perf="laptop"]  #perf-btn .perf-dot { background: #c9a84c; box-shadow: 0 0 5px rgba(201,168,76,0.6); }
+[data-perf="pc"]      #perf-btn .perf-dot { background: #5ec97c; box-shadow: 0 0 5px rgba(94,201,124,0.6); }
+[data-theme="light"] #perf-btn .perf-dot { border: 1px solid rgba(255,255,255,0.7); }
+
 /* ── Lock button ── */
 .lock-btn {
   width: 32px; height: 32px; border-radius: 8px;
@@ -3441,6 +3456,12 @@ body.dashboard-locking .card {
   <div class="header-divider"></div>
   <div class="header-store">Kemang Raya</div>
   <div class="header-right">
+    <button class="lock-btn" id="perf-btn" onclick="openDevicePicker()" title="Perangkat" aria-label="Pilih perangkat">
+      <span class="perf-dot"></span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/>
+      </svg>
+    </button>
     <button class="lock-btn" id="lock-btn" onclick="lockDashboard()" title="Kunci Dashboard" aria-label="Kunci Dashboard">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
@@ -7299,15 +7320,38 @@ function applyPerfMode(mode){
 function getSavedPerfMode(){
   try{ return localStorage.getItem('forePerfMode'); }catch(e){ return null; }
 }
-/* User tapped a device on the pre-PIN picker → apply, dismiss, reveal PIN. */
+/* User tapped a device on the pre-PIN picker → apply, dismiss, reveal PIN (first open)
+   or just apply + dismiss (from header btn). */
 function pickDevice(mode){
   applyPerfMode(mode);
   const ds = document.getElementById('device-screen');
+  const fromHeader = ds && ds.dataset.fromHeader === '1';
   if(ds){
+    delete ds.dataset.fromHeader;
     ds.classList.add('device-hide');
     setTimeout(() => { ds.style.display = 'none'; }, 420);
   }
-  requestAnimationFrame(() => requestAnimationFrame(playPinEntrance));
+  if(!fromHeader){
+    requestAnimationFrame(() => requestAnimationFrame(playPinEntrance));
+  }
+  // highlight selection
+  document.querySelectorAll('.device-opt').forEach(o => o.classList.remove('selected'));
+  const sel = document.querySelector('.device-opt[onclick*="\'' + mode + '\'"]');
+  if(sel) sel.classList.add('selected');
+}
+
+/* Re-open the device picker from the header icon button. */
+function openDevicePicker(){
+  const ds = document.getElementById('device-screen');
+  if(!ds) return;
+  // highlight current choice
+  const cur = document.documentElement.getAttribute('data-perf') || 'pc';
+  document.querySelectorAll('.device-opt').forEach(o => o.classList.remove('selected'));
+  const sel = document.querySelector('.device-opt[onclick*="\'' + cur + '\'"]');
+  if(sel) sel.classList.add('selected');
+  ds.dataset.fromHeader = '1';
+  ds.style.display = 'flex';
+  ds.classList.remove('device-hide');
 }
 
 // Init
