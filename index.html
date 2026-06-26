@@ -451,15 +451,21 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .reveal {
   opacity: 0;
   transform: translateY(20px);
-  transition:
-    opacity   0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: opacity, transform;
 }
 .reveal.reveal-scale  { transform: scale(0.96); }
 .reveal.reveal-left   { transform: translateX(-24px); }
 .reveal.reveal-right  { transform: translateX(24px); }
 .reveal.visible       { opacity:1 !important; transform:none !important; }
+/* The per-card cascade transition runs ONLY during the first dashboard
+   entrance (body.dr-animating). On tab switches the cards snap straight to
+   their final position — no per-card movement — so they never jitter while
+   the charts render; the page-level fade carries the transition instead. */
+body.dr-animating .reveal {
+  transition:
+    opacity   0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
 .reveal-delay-1  { transition-delay: 0.04s; }
 .reveal-delay-2  { transition-delay: 0.08s; }
 .reveal-delay-3  { transition-delay: 0.12s; }
@@ -4382,8 +4388,8 @@ const SESS = {
 function sessionValid(){ const t=SESS.token, e=SESS.exp; return !!t && (!e || e>Date.now()); }
 
 let allData=[], charts={}, periodData={}, customPeriodData={}, fldtData={}, summData={};
-/* Charts animate their draw only on the first dashboard entrance; tab switches
-   after that paint instantly (no jitter). Flipped off once the dashboard is in. */
+/* Charts always animate their draw (premium). The page-switch jitter was the
+   per-card .reveal cascade, not the chart draw — that's fixed separately. */
 let _chartAnim = true;
 let _kpiRows=[];  /* stored after calcKpi for popup use */
 let _weeklyChan='gmv', _customChan='gmv', _fldtChan='cup_total', _chTrendKey='offline';
@@ -7593,10 +7599,7 @@ function revealDashboard(){
   // Re-place the nav pill now the dashboard is laid out & visible (instant).
   const a=document.querySelector('.nav-btn.active'); if(a) moveNavPill(a, true);
   // Longest stagger: 0.54s delay + 0.6s duration = 1.14s → clear at 1500ms.
-  setTimeout(() => {
-    document.body.classList.remove('dr-animating');
-    _chartAnim = false;   // from now on tab switches paint charts instantly
-  }, 1500);
+  setTimeout(() => { document.body.classList.remove('dr-animating'); }, 1500);
 }
 
 /* Re-trigger the KPI progress bar fill (CSS width transition) without
@@ -7864,8 +7867,6 @@ function openDevicePicker(){
     if(SESS.exp) startSessionTimer(SESS.exp, SESS.isOwner);
     startHeartbeat();
     document.dispatchEvent(new Event('fore-session-change'));
-    // Restored session: let the first render animate, then go instant.
-    setTimeout(() => { _chartAnim = false; }, 1600);
     return;
   }
   SESS.clear();
