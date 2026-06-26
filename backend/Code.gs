@@ -29,11 +29,19 @@ const CFG = {
   // Session
   SESSION_MIN    : 30,               // access duration in minutes
 
-  // Owner(s): auto-approved, never expire. ID Fore numbers only.
-  OWNER_IDS      : ['5857', '1'],
+  // Owner: auto-approved, never expire. Must match BOTH id AND name.
+  OWNER_IDS      : ['1'],
   OWNER_NAME     : 'Fikri',
 };
 // ======================================================
+
+// Owner = ID in OWNER_IDS AND name matches OWNER_NAME (case-insensitive).
+// Anyone who enters an owner ID with a different name is treated as a
+// normal user and must still be approved.
+function isOwner(idFore, name){
+  if (CFG.OWNER_IDS.indexOf(String(idFore)) === -1) return false;
+  return String(name||'').trim().toLowerCase() === CFG.OWNER_NAME.toLowerCase();
+}
 
 const ACCESS_HEADERS =
   ['requestId','idFore','name','status','token','createdAt','approvedAt','expiresAt','tgMsgId'];
@@ -84,8 +92,8 @@ function apiRegister(idFore, name){
     const requestId = Utilities.getUuid();
     const now = new Date();
 
-    // Owner -> auto approve, no expiry.
-    if (CFG.OWNER_IDS.indexOf(idFore) !== -1) {
+    // Owner -> auto approve, no expiry. Requires ID + name match.
+    if (isOwner(idFore, name)) {
       const token = makeToken();
       const far   = new Date(now.getTime() + 1000*60*60*24*365*10); // 10y
       sh.appendRow([requestId, idFore, name || CFG.OWNER_NAME, 'approved',
@@ -270,7 +278,7 @@ function validateToken(token){
       if (exp && exp < Date.now()) return { ok:false, error:'expired' };
       const idFore = String(data[i][1]);
       return { ok:true, name:data[i][2], idFore:idFore,
-               isOwner: CFG.OWNER_IDS.indexOf(idFore) !== -1, expiresAt:exp };
+               isOwner: isOwner(idFore, data[i][2]), expiresAt:exp };
     }
   }
   return { ok:false, error:'invalid_token' };
