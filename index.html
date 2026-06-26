@@ -3007,47 +3007,47 @@ body:not(.dashboard-ready) .fc-big {
    GPU layer composite avoids re-rasterizing the Chart.js canvas. */
 
 /* Header + nav slip in from top (very subtle, just 6px) */
-body.dashboard-ready .header {
+body.dr-animating .header {
   animation: dr-slide-down 0.5s cubic-bezier(0.22,1,0.36,1) 0.00s both;
 }
-body.dashboard-ready .nav {
+body.dr-animating .nav {
   animation: dr-slide-down 0.5s cubic-bezier(0.22,1,0.36,1) 0.06s both;
 }
 /* Filter bar fades in quietly */
-body.dashboard-ready .kpi-filter-bar {
+body.dr-animating .kpi-filter-bar {
   animation: dr-fade-in 0.5s ease 0.10s both;
 }
 /* Whole page wrapper */
-body.dashboard-ready .page {
+body.dr-animating .page {
   animation: dr-fade-in 0.4s ease 0.08s both;
 }
-body.dashboard-ready .kpi-scroll {
+body.dr-animating .kpi-scroll {
   animation: dr-fade-in 0.4s ease 0.08s both;
 }
 
 /* Hero banner: rises first, sets the stage */
-body.dashboard-ready .hero-banner {
+body.dr-animating .hero-banner {
   animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.12s both;
 }
 
 /* KPI summary cards: staggered rise, each 70ms apart */
-body.dashboard-ready .kpi-card:nth-child(1) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.18s both; }
-body.dashboard-ready .kpi-card:nth-child(2) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.25s both; }
-body.dashboard-ready .kpi-card:nth-child(3) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.32s both; }
-body.dashboard-ready .kpi-card:nth-child(4) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.39s both; }
-body.dashboard-ready .kpi-card:nth-child(5) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.46s both; }
-body.dashboard-ready .kpi-card:nth-child(n+6) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.50s both; }
+body.dr-animating .kpi-card:nth-child(1) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.18s both; }
+body.dr-animating .kpi-card:nth-child(2) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.25s both; }
+body.dr-animating .kpi-card:nth-child(3) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.32s both; }
+body.dr-animating .kpi-card:nth-child(4) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.39s both; }
+body.dr-animating .kpi-card:nth-child(5) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.46s both; }
+body.dr-animating .kpi-card:nth-child(n+6) { animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) 0.50s both; }
 
 /* Content cards (charts, tables): staggered rise after KPI cards */
-body.dashboard-ready .card {
+body.dr-animating .card {
   animation: dr-rise-in 0.6s cubic-bezier(0.22,1,0.36,1) both;
 }
-body.dashboard-ready .card:nth-child(1) { animation-delay: 0.20s; }
-body.dashboard-ready .card:nth-child(2) { animation-delay: 0.28s; }
-body.dashboard-ready .card:nth-child(3) { animation-delay: 0.36s; }
-body.dashboard-ready .card:nth-child(4) { animation-delay: 0.44s; }
-body.dashboard-ready .card:nth-child(5) { animation-delay: 0.50s; }
-body.dashboard-ready .card:nth-child(n+6) { animation-delay: 0.54s; }
+body.dr-animating .card:nth-child(1) { animation-delay: 0.20s; }
+body.dr-animating .card:nth-child(2) { animation-delay: 0.28s; }
+body.dr-animating .card:nth-child(3) { animation-delay: 0.36s; }
+body.dr-animating .card:nth-child(4) { animation-delay: 0.44s; }
+body.dr-animating .card:nth-child(5) { animation-delay: 0.50s; }
+body.dr-animating .card:nth-child(n+6) { animation-delay: 0.54s; }
 
 @keyframes dr-slide-down {
   from { opacity: 0; transform: translateY(-6px); }
@@ -3085,14 +3085,14 @@ body.dr-animating .kpi-card {
 
 /* Reduced motion: skip entry animations */
 @media (prefers-reduced-motion: reduce) {
-  body.dashboard-ready .header,
-  body.dashboard-ready .nav,
-  body.dashboard-ready .kpi-filter-bar,
-  body.dashboard-ready .kpi-scroll,
-  body.dashboard-ready .page,
-  body.dashboard-ready .card,
-  body.dashboard-ready .hero-banner,
-  body.dashboard-ready .kpi-card {
+  body.dr-animating .header,
+  body.dr-animating .nav,
+  body.dr-animating .kpi-filter-bar,
+  body.dr-animating .kpi-scroll,
+  body.dr-animating .page,
+  body.dr-animating .card,
+  body.dr-animating .hero-banner,
+  body.dr-animating .kpi-card {
     animation: none !important;
     opacity: 1;
   }
@@ -3455,8 +3455,8 @@ body.dashboard-locking .card {
   50%     { opacity:.08; transform:translate(-50%,-50%) scale(1.05); filter:drop-shadow(0 0 26px rgba(46,107,69,0.50)); }
 }
 /* Mobile: tame the reveal cascade so the compositor keeps up */
-[data-perf="mobile"] body.dashboard-ready .hero-banner,
-[data-perf="mobile"] body.dashboard-ready .kpi-card { animation-duration: .42s !important; }
+[data-perf="mobile"] body.dr-animating .hero-banner,
+[data-perf="mobile"] body.dr-animating .kpi-card { animation-duration: .42s !important; }
 
 /* ══════════════════════════════════════════════════
    DEVICE PICKER  (pre-PIN performance selector)
