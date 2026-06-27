@@ -8087,7 +8087,8 @@ async function exportKpiPDF(){
   const guard = document.getElementById('screen-guard');
   if (!guard) return;
 
-  // Enable flicker layer whenever a non-owner session is active.
+  // Arm the guard for non-owner sessions (no flicker; it only paints black
+  // once the app is actually backgrounded — see showBlackout below).
   function updateGuardMode(){
     if (!SESS.isOwner && sessionValid()){
       guard.classList.add('guard-on');
