@@ -200,7 +200,12 @@ These load automatically in every session (web/iPad included) because they live 
 
 - **`ui-ux-pro-max`** skill (`.claude/skills/ui-ux-pro-max/`) — design intelligence: 67 styles, 96 palettes, 57 font pairings, 99 UX guidelines, 25 chart types, 13 stacks. Use it when designing/reviewing/fixing any UI on the dashboard.
 - **Superpowers** plugin (declared in `.claude/settings.json`, marketplace `obra/superpowers-marketplace`) — structured dev methodology: brainstorm → design → plan → TDD → review. Auto-installed at session start from GitHub (needs network).
-- **Anthropic skills** (`anthropics/skills` marketplace, declared in `.claude/settings.json`): `document-skills` (create/edit Excel, PDF, Word, PowerPoint — use for sales-report exports) + `example-skills`. Auto-installed at session start (needs network).
+- **Anthropic skills** (`anthropics/skills` marketplace, declared in `.claude/settings.json`): `document-skills` (create/edit Excel, PDF, Word, PowerPoint — use for sales-report exports) + `example-skills` (includes `frontend-design`, `theme-factory`, `webapp-testing`, `brand-guidelines`, etc.). Auto-installed at session start (needs network).
+- **`impeccable`** skill (`.claude/skills/impeccable/`) — the most advanced design tool (23 `/impeccable` commands, 44 anti-pattern detectors). Its bundled hook scripts are NOT registered in `settings.json`, so it stays passive (never auto-runs).
+
+### Design-tool precedence (user's rule)
+
+For any UI/design work, **default to `ui-ux-pro-max` + `frontend-design` first**. `impeccable` is the **last resort** — only reach for it when the user explicitly asks for it, when the user asks for "the best / most advanced," or when the first two fall short. **Always confirm with the user before using `impeccable`** (even when they ask for the best). Do not invoke it silently.
 
 ## Branch
 
