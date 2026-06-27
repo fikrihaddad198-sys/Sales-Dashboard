@@ -111,12 +111,14 @@ Never create canvas gradients inside animation callbacks. Always cache per chart
 
 ### Card entrance animation gating (`body.dr-animating`)
 
-Card/KPI entrance animations (`dr-rise-in`) are scoped to `body.dr-animating` only, which is added during the initial dashboard reveal and removed after 1.5s. This prevents card jitter on every page switch.
+Card/KPI entrance animations (`dr-rise-in`) are scoped to `body.dr-animating` only, which is added during the initial dashboard reveal and removed after 1.5s. This prevents card jitter on the *initial* reveal cascade.
 
 ```css
 body.dr-animating .card { animation: dr-rise-in 0.55s ... }
 /* NOT: body.dashboard-ready .card { ... } */
 ```
+
+**Per-page-switch card rise (`card-swap-rise`)**: On every page open, `.card`s do a short transform-only `translateY(12px)→0` rise (the per-page chart entrance, owner request). This is deliberately the **card** transform, not the page — the page keyframe (`page-swap-in`) stays **opacity-only** because translating the whole page re-rasterised its canvas+blur and shook (the old jitter bug; do not re-add translate to `page-swap-in`). Per-card translate is safe: cards already `translateY` on hover, and on iPad/mobile perf tiers ALL `backdrop-filter` is disabled, so a moving card is a cheap GPU texture shift. Opacity is left to the page fade (no double-fade). `showPage`'s `animationend` handler filters on `animationName==='page-swap-in' && target===pageEl` so the bubbling card animations don't end the swap early.
 
 ### Chart draw animation gating (`_chartAnim`)
 
@@ -177,7 +179,7 @@ The indicator dot is counter-scaled: `transform: scaleX(calc(1 / max(var(--p, 0.
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v51`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v55`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -240,7 +242,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v51` → increment to `fore-v52`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v55` → increment to `fore-v56`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
