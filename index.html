@@ -7644,7 +7644,7 @@ async function submitRegister(){
   }catch(e){
     regMsg(e.message==='not_configured'
       ? 'Sistem akses belum dikonfigurasi.'
-      : 'Tidak bisa terhubung ke server.');
+      : 'Tidak bisa terhubung ke server. [' + e.message + ']');
   }finally{
     btn.disabled = false; btn.textContent = 'Minta Akses';
   }
