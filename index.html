@@ -909,13 +909,18 @@ body.dr-animating .reveal {
    Each page gets its own --acc token so sdot, card-hdr-dot,
    active underlines, and metric top bars auto-adapt
 ───────────────────────────────────────────────────── */
-#page-kpi     { --acc: var(--acc-kpi);     --acc-10: var(--cyan-10);   --acc-05: var(--cyan-05); }
-#page-channel { --acc: var(--acc-channel); --acc-10: var(--blue-10);   --acc-05: var(--blue-05); }
-#page-period  { --acc: var(--acc-period);  --acc-10: var(--amber-10);  --acc-05: var(--amber-05); }
-#page-fldt    { --acc: var(--acc-fldt);    --acc-10: var(--green-10);  --acc-05: var(--green-05); }
-#page-allsumm { --acc: var(--acc-allsumm); --acc-10: var(--violet-10); --acc-05: var(--violet-05); }
-#page-d2d     { --acc: var(--acc-d2d);     --acc-10: var(--pink-20);   --acc-05: var(--pink-05); }
-#page-race    { --acc: var(--acc-race);    --acc-10: var(--orange-20); --acc-05: var(--orange-05); }
+/* Single accent across ALL pages (CLAUDE.md rule #8): same gold tint tier
+   everywhere so card accents read as one consistent system. The previous map
+   mixed warm amber/orange (period/race) with gold and inconsistent -10 vs -20
+   opacity tiers, which looked random. --gold-10/-05 are defined in BOTH dark
+   (gold) and light (forest green), so this stays correct in either theme. */
+#page-kpi     { --acc: var(--acc-kpi);     --acc-10: var(--gold-10); --acc-05: var(--gold-05); }
+#page-channel { --acc: var(--acc-channel); --acc-10: var(--gold-10); --acc-05: var(--gold-05); }
+#page-period  { --acc: var(--acc-period);  --acc-10: var(--gold-10); --acc-05: var(--gold-05); }
+#page-fldt    { --acc: var(--acc-fldt);    --acc-10: var(--gold-10); --acc-05: var(--gold-05); }
+#page-allsumm { --acc: var(--acc-allsumm); --acc-10: var(--gold-10); --acc-05: var(--gold-05); }
+#page-d2d     { --acc: var(--acc-d2d);     --acc-10: var(--gold-10); --acc-05: var(--gold-05); }
+#page-race    { --acc: var(--acc-race);    --acc-10: var(--gold-10); --acc-05: var(--gold-05); }
 
 /* ─────────────────────────────────────────────────────
    LAYOUT
@@ -4840,24 +4845,41 @@ function showPage(p,btn,skipHash){
   // just destroys+recreates all the Chart.js instances for nothing — that
   // synchronous work is the main cause of the laggy/janky switch. Skip it when
   // the page is already built; filters/data changes invalidate _renderedPages.
-  if(allData.length && !_renderedPages.has(p)){
-    renderPage(p);
-    _renderedPages.add(p);
-  }
-  // Show the freshly-rendered cards instantly (no per-card cascade) and
-  // play one smooth page-level fade+rise instead — replaying the reveal
-  // cascade on every tab switch felt jittery/abrupt.
+  const needsRender = allData.length && !_renderedPages.has(p);
   if(pageEl){
+    // Show the freshly-rendered cards instantly (no per-card cascade) and
+    // play one smooth page-level fade instead.
     pageEl.querySelectorAll('.reveal').forEach(el=>{ el.classList.add('visible','_obs'); });
     pageEl.classList.remove('page-swapping');
-    void pageEl.offsetWidth;            // restart the animation
-    pageEl.classList.add('page-swapping');
-    // Drop the page-swapping class (and its will-change layer) once the swap
-    // finishes, so the glass returns to its normal, crisp rendering.
-    pageEl.addEventListener('animationend', function _done(){
-      pageEl.classList.remove('page-swapping');
-      pageEl.removeEventListener('animationend', _done);
-    });
+
+    const playFade = ()=>{
+      void pageEl.offsetWidth;          // restart the animation
+      pageEl.classList.add('page-swapping');
+      pageEl.addEventListener('animationend', function _done(){
+        pageEl.classList.remove('page-swapping');
+        pageEl.removeEventListener('animationend', _done);
+      });
+    };
+
+    if(needsRender){
+      // First visit to this page: building it (Chart.js instances + heavy
+      // innerHTML) is synchronous and was running in the SAME frame as the
+      // fade — so the fade's first frames got dropped and it looked choppy.
+      // Fix: keep the page laid out (active, so charts size correctly) but
+      // visually hidden while we build, then start the fade on the next frame
+      // once the main thread is free. The chart draw animation begins during
+      // the hidden build and plays through as the page fades in.
+      pageEl.style.opacity = '0';
+      renderPage(p);
+      _renderedPages.add(p);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        pageEl.style.opacity = '';
+        playFade();
+      }));
+    } else {
+      // Already built → nothing heavy to do, fade immediately (stays smooth).
+      playFade();
+    }
   }
   setTimeout(()=>{ if(window.attachReveal){ window.attachReveal(pageEl); window.attachReveal(); } }, 50);
 }
@@ -7737,7 +7759,11 @@ function revealDashboard(){
   // Longest stagger: 0.54s delay + 0.6s duration = 1.14s → clear at 1500ms.
   setTimeout(() => {
     document.body.classList.remove('dr-animating');
-    _chartAnim = false;   // tab switches now paint charts instantly (fluid)
+    // _chartAnim stays true: charts only ever (re)build on a fresh render
+    // (new page / filter / theme — deduped by _renderedPages), so animating
+    // the draw is always wanted. Cached tab switches do zero chart work and
+    // stay instant. (Previously flipped false here, which raced the network
+    // on owner/resume loads and killed chart animation entirely.)
   }, 1500);
 }
 
@@ -8005,7 +8031,8 @@ function openDevicePicker(){
     document.body.classList.add('dashboard-ready');
     if(SESS.exp) startSessionTimer(SESS.exp, SESS.isOwner);
     startHeartbeat();
-    setTimeout(() => { _chartAnim = false; }, 1600);  // then switches are instant
+    // _chartAnim stays true — see note in revealDashboard(). Charts animate on
+    // fresh build; cached tab switches stay instant via _renderedPages.
     document.dispatchEvent(new Event('fore-session-change'));
     return;
   }

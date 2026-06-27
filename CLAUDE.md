@@ -120,10 +120,31 @@ body.dr-animating .card { animation: dr-rise-in 0.55s ... }
 ### Chart draw animation gating (`_chartAnim`)
 
 ```javascript
-let _chartAnim = true; // true = show entrance animation
-// Set to false after dr-animating ends (1.5s after reveal)
-// Reset to true in grantAccess() so next login gets animation again
+let _chartAnim = true; // true = show chart draw animation on (re)build
+// Stays true for the whole session — DO NOT flip it false on a timer.
 ```
+
+`_chartAnim` stays `true`. Charts only ever (re)build inside `renderPage()`,
+which runs **once per page per dataset** (deduped by `_renderedPages`) — i.e.
+only on a real change: first visit to a page, filter change, or theme change.
+Cached tab switches call no chart code at all and stay instant. So animating
+the draw is always wanted and never fights tab switches.
+
+**History — do not re-add a timed `_chartAnim = false`.** An earlier version
+flipped it false ~1.5–1.6s after load. Owner sessions never expire and always
+take the resume path, where data arrives via JSONP *after* that timer fired —
+so charts built with `_chartAnim` already false and animated **not at all**
+(reported bug). Fixed by leaving it true.
+
+### Page switch build/fade ordering (`showPage`)
+
+First visit to a page builds it (Chart.js + heavy `innerHTML`) synchronously.
+That build must NOT run in the same frame as the `page-swap-in` fade or the
+fade drops frames and looks choppy. `showPage()` keeps the page `active` (so
+charts size correctly) but at inline `opacity:0` during the build, then starts
+the fade on the next `requestAnimationFrame` once the main thread is free.
+Already-built pages fade immediately. Don't move `renderPage()` back to running
+inline right before adding `page-swapping`.
 
 ### Progress bar (`@property --p`)
 
@@ -152,7 +173,7 @@ The indicator dot is counter-scaled: `transform: scaleX(calc(1 / max(var(--p, 0.
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v45`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v47`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -215,7 +236,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v45` → increment to `fore-v46`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v47` → increment to `fore-v48`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
