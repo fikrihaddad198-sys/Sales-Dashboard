@@ -194,6 +194,14 @@ PDF export (`exportKpiPDF`, KPI Summary page) uses html2canvas + jspdf to render
 
 `access` sheet columns (`ACCESS_HEADERS`): `requestId, idFore, name, status, token, createdAt, approvedAt, expiresAt, tgMsgId, lastSeen` (lastSeen = col J / index 10).
 
+## Claude Tooling in this repo (`.claude/`)
+
+These load automatically in every session (web/iPad included) because they live in the repo:
+
+- **`ui-ux-pro-max`** skill (`.claude/skills/ui-ux-pro-max/`) — design intelligence: 67 styles, 96 palettes, 57 font pairings, 99 UX guidelines, 25 chart types, 13 stacks. Use it when designing/reviewing/fixing any UI on the dashboard.
+- **Superpowers** plugin (declared in `.claude/settings.json`, marketplace `obra/superpowers-marketplace`) — structured dev methodology: brainstorm → design → plan → TDD → review. Auto-installed at session start from GitHub (needs network).
+- **Anthropic skills** (`anthropics/skills` marketplace, declared in `.claude/settings.json`): `document-skills` (create/edit Excel, PDF, Word, PowerPoint — use for sales-report exports) + `example-skills`. Auto-installed at session start (needs network).
+
 ## Branch
 
 Active development: `claude/charming-mayer-5l3pru`
@@ -210,3 +218,10 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 6. Never create canvas gradients outside `grad()` caching function
 7. Keep entrance animations scoped to `body.dr-animating`, not `body.dashboard-ready`
 8. Gold (`#c9a84c`) is the single accent — do not introduce new accent colors into chrome/nav
+
+## Coding Discipline (Karpathy principles)
+
+1. **Think before coding** — state assumptions; if multiple interpretations exist, present them (don't pick silently); if a simpler approach exists, say so; if something's unclear, stop and ask.
+2. **Simplicity first** — minimum code that solves the problem, nothing speculative. No unrequested features/abstractions/flexibility, no error handling for impossible cases. If 200 lines could be 50, rewrite.
+3. **Surgical changes** — touch only what's required. Don't "improve" or refactor adjacent code, match existing style, only remove imports/vars your own change orphaned; mention pre-existing dead code instead of deleting it.
+4. **Goal-driven execution** — turn the request into verifiable success criteria, then loop until they're met.
