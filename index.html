@@ -552,24 +552,10 @@ body.dr-animating .reveal {
 [data-perf="mobile"] .page.page-swapping { animation-duration: 0.24s; } /* HP: light fade */
 @media (prefers-reduced-motion: reduce) { .page.page-swapping { animation: none; } }
 
-/* The chart rises as the page cross-fades — plays on EVERY page open (the
-   per-page chart entrance, owner request). We animate .chart-wrap, NOT .card:
-   cards are .reveal elements and `.reveal.visible { transform:none !important }`
-   would beat a card animation (in CSS, !important normal rules override
-   animations). .chart-wrap carries no such rule. We also never translate the
-   whole page — that re-rasterised its canvas+blur and shook (old bug); the page
-   stays opacity-only. Safe perf-wise: on iPad/mobile tiers ALL backdrop-filter
-   is off (see ~L3500) so moving the chart is a cheap GPU shift. Opacity stays
-   with the page fade (no double-fade). Duration ≤ the page fade so the chart
-   settles before the swap class is removed. */
-@keyframes card-swap-rise {
-  from { transform: translateY(12px); }
-  to   { transform: translateY(0); }
-}
-.page.page-swapping .chart-wrap { animation: card-swap-rise 0.36s var(--ease-out) both; will-change: transform; }
-[data-perf="ipad"]   .page.page-swapping .chart-wrap { animation-duration: 0.30s; }
-[data-perf="mobile"] .page.page-swapping .chart-wrap { animation-duration: 0.24s; }
-@media (prefers-reduced-motion: reduce) { .page.page-swapping .chart-wrap { animation: none; } }
+/* Per-page chart entrance now lives in JS (replayPageCharts → reset+update re-runs
+   each chart's draw animation on revisit), NOT CSS. Do NOT add translate to
+   .page / .page-swapping — moving the whole page re-rasterised its canvas+blur
+   every frame and shook (old jitter bug). The page stays opacity-only. */
 
 /* ─────────────────────────────────────────────────────
    SKELETON LOADING
@@ -4902,6 +4888,18 @@ function moveNavPill(btn, instant){
   if(instant) requestAnimationFrame(() => requestAnimationFrame(() => pill.classList.remove('instant')));
 }
 
+/* Replay the entrance DRAW animation for every chart on a page (reset→update)
+   WITHOUT rebuilding — used on tab revisits so charts re-animate each visit.
+   Far lighter than renderPage(): no innerHTML, no new Chart() instances, just
+   re-animates the existing instances. Skipped under reduced-motion. */
+function replayPageCharts(pageEl){
+  if(!pageEl || !window.Chart || !Chart.getChart) return;
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  pageEl.querySelectorAll('canvas').forEach(cv=>{
+    const ch = Chart.getChart(cv);
+    if(ch){ ch.reset(); ch.update(); }
+  });
+}
 function showPage(p,btn,skipHash){
   document.querySelectorAll('.page').forEach(el=>{ el.classList.remove('active'); el.scrollTop=0; });
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -4933,9 +4931,8 @@ function showPage(p,btn,skipHash){
       void pageEl.offsetWidth;          // restart the animation
       pageEl.classList.add('page-swapping');
       pageEl.addEventListener('animationend', function _done(e){
-        // The per-card rises bubble their animationend up to the page too; only
-        // the page's OWN fade should end the swap, otherwise the first card to
-        // finish would strip the class and cut every other card off mid-rise.
+        // Only the page's OWN fade ends the swap (defensive: ignore any
+        // animationend that bubbles up from a child element).
         if(e.target !== pageEl || e.animationName !== 'page-swap-in') return;
         pageEl.classList.remove('page-swapping');
         pageEl.removeEventListener('animationend', _done);
@@ -4958,8 +4955,12 @@ function showPage(p,btn,skipHash){
         playFade();
       }));
     } else {
-      // Already built → nothing heavy to do, fade immediately (stays smooth).
+      // Already built → no rebuild. Cross-fade the page and REPLAY each chart's
+      // draw animation (reset→update), deferred one frame so the heavy synchronous
+      // part never blocks the switch. Replay is far lighter than renderPage()
+      // (no innerHTML, no new Chart()), so charts re-animate AND it stays smooth.
       playFade();
+      requestAnimationFrame(()=>replayPageCharts(pageEl));
     }
   }
   setTimeout(()=>{ if(window.attachReveal){ window.attachReveal(pageEl); window.attachReveal(); } }, 50);
