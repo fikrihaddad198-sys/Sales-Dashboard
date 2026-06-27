@@ -194,6 +194,13 @@ PDF export (`exportKpiPDF`, KPI Summary page) uses html2canvas + jspdf to render
 
 `access` sheet columns (`ACCESS_HEADERS`): `requestId, idFore, name, status, token, createdAt, approvedAt, expiresAt, tgMsgId, lastSeen` (lastSeen = col J / index 10).
 
+## Claude Tooling in this repo (`.claude/`)
+
+These load automatically in every session (web/iPad included) because they live in the repo:
+
+- **`ui-ux-pro-max`** skill (`.claude/skills/ui-ux-pro-max/`) — design intelligence: 67 styles, 96 palettes, 57 font pairings, 99 UX guidelines, 25 chart types, 13 stacks. Use it when designing/reviewing/fixing any UI on the dashboard.
+- **Superpowers** plugin (declared in `.claude/settings.json`, marketplace `obra/superpowers-marketplace`) — structured dev methodology: brainstorm → design → plan → TDD → review. Auto-installed at session start from GitHub (needs network).
+
 ## Branch
 
 Active development: `claude/charming-mayer-5l3pru`
