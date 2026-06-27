@@ -4448,9 +4448,7 @@ async function ensureExportLibs(kind){
 }
 
 /* JSONP call to Apps Script (avoids all CORS issues with static hosting). */
-/* Explicitly on window so all script blocks can reach it regardless of
-   browser hoisting quirks in large HTML files (observed in Safari/iOS). */
-window.gasCall = function gasCall(action, params){
+function gasCall(action, params){
   return new Promise((resolve, reject)=>{
     if(!GAS_URL){ reject(new Error('not_configured')); return; }
     const cb = 'fcb_' + Math.random().toString(36).slice(2) + Date.now();
@@ -5579,7 +5577,7 @@ function buildFldtDoughnut(id,data){
   charts[key]=new Chart(document.getElementById(id),{
     type:'doughnut',
     data:{ labels:FLDT_LABELS, datasets:[{ data:FLDT_KEYS.map(k=>data[k]||0), backgroundColor:FLDT_COLORS.map(c=>c+'cc'), borderColor:FLDT_COLORS, borderWidth:1.5, hoverOffset:6 }] },
-    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', animation: _chartAnim ? {duration:700} : false, plugins:{ legend:{position:'right',labels:{color:TC.text2,font:{size:10},padding:12,usePointStyle:true}}, tooltip:{...baseOptions().plugins.tooltip,callbacks:{label:ctx=>' '+ctx.label+': '+fmtNum(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,data.cup_total||1))+')'}}} } }
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', animation: _chartAnim ? {duration:700} : false, plugins:{ legend:{position:'right',labels:{color:TC.text2,font:{size:10},padding:12,usePointStyle:true}}, tooltip:{...baseOptions().plugins.tooltip,callbacks:{label:ctx=>' '+ctx.label+': '+fmtNum(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,data.cup_total||1))+')'}} } }
   });
 }
 function buildFldtMainTable(periods,labels){
@@ -7646,7 +7644,7 @@ async function submitRegister(){
   }catch(e){
     regMsg(e.message==='not_configured'
       ? 'Sistem akses belum dikonfigurasi.'
-      : 'Tidak bisa terhubung ke server. [' + e.message + ']');
+      : 'Tidak bisa terhubung ke server.');
   }finally{
     btn.disabled = false; btn.textContent = 'Minta Akses';
   }
