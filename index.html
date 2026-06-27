@@ -19,9 +19,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900;1,14..32,400&family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- xlsx / html2canvas / jspdf are export-only — lazy-loaded on demand (see
+     ensureExportLibs()) so they don't block first paint on every visit. -->
 <style>
 /* ─────────────────────────────────────────────────────
    DESIGN TOKENS
@@ -4420,6 +4419,35 @@ const CSV_URL    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?t
    only returns when a valid 30-min token is presented. */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwyGkd-mZSYW924JyEqPAk_8rUP6DTJ7HcTFEqH8nOtKoLQp32x-hWXG5OstJQjOvTS/exec';
 
+/* Lazy-load the export-only CDN libs on first use (PDF / Excel buttons), so
+   they never block first paint. Each src loads at most once (deduped). */
+const _loadedScripts = {};
+function loadScript(src){
+  if(_loadedScripts[src]) return _loadedScripts[src];
+  return _loadedScripts[src] = new Promise((res, rej)=>{
+    const s = document.createElement('script');
+    s.src = src; s.async = true;
+    s.onload = ()=>res();
+    s.onerror = ()=>{ delete _loadedScripts[src]; rej(new Error('script_load_failed')); };
+    document.head.appendChild(s);
+  });
+}
+const _CDN = {
+  xlsx:'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+  html2canvas:'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+  jspdf:'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+};
+async function ensureExportLibs(kind){
+  if(kind==='xlsx'){
+    if(typeof XLSX==='undefined') await loadScript(_CDN.xlsx);
+  } else if(kind==='pdf'){
+    const need = [];
+    if(typeof html2canvas==='undefined') need.push(loadScript(_CDN.html2canvas));
+    if(!window.jspdf) need.push(loadScript(_CDN.jspdf));
+    await Promise.all(need);
+  }
+}
+
 /* JSONP call to Apps Script (avoids all CORS issues with static hosting). */
 function gasCall(action, params){
   return new Promise((resolve, reject)=>{
@@ -5550,7 +5578,7 @@ function buildFldtDoughnut(id,data){
   charts[key]=new Chart(document.getElementById(id),{
     type:'doughnut',
     data:{ labels:FLDT_LABELS, datasets:[{ data:FLDT_KEYS.map(k=>data[k]||0), backgroundColor:FLDT_COLORS.map(c=>c+'cc'), borderColor:FLDT_COLORS, borderWidth:1.5, hoverOffset:6 }] },
-    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', animation: _chartAnim ? {duration:700} : false, plugins:{ legend:{position:'right',labels:{color:TC.text2,font:{size:10},padding:12,usePointStyle:true}}, tooltip:{backgroundColor:'rgba(10,14,22,0.97)',titleColor:TC.text2,bodyColor:'#eef2ee',borderColor:'rgba(201,168,76,0.18)',borderWidth:1,cornerRadius:10,padding:12,callbacks:{label:ctx=>' '+ctx.label+': '+fmtNum(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,data.cup_total||1))+')'}} } }
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%', animation: _chartAnim ? {duration:700} : false, plugins:{ legend:{position:'right',labels:{color:TC.text2,font:{size:10},padding:12,usePointStyle:true}}, tooltip:{...baseOptions().plugins.tooltip,callbacks:{label:ctx=>' '+ctx.label+': '+fmtNum(ctx.parsed)+' ('+fmtPct(pct(ctx.parsed,data.cup_total||1))+')'}}} } }
   });
 }
 function buildFldtMainTable(periods,labels){
@@ -5720,8 +5748,10 @@ function getFldtReportData(){
   return{ periods, wLabels:[fmtR(periods[0].daily)||'P1',fmtR(periods[1].daily)||'P2'], isWeekly };
 }
 function getKontVal(key,val,period){ return key==='food_off'?(period.adt_offline>0?val/period.adt_offline*100:null):(period.cup_total>0?val/period.cup_total*100:null); }
-function downloadFldtExcel(){
+async function downloadFldtExcel(){
   const d=getFldtReportData(); if(!d){ alert('Data belum tersedia.'); return; }
+  try{ await ensureExportLibs('xlsx'); }
+  catch(e){ alert('Gagal memuat library Excel. Cek koneksi lalu coba lagi.'); return; }
   const{periods,wLabels}=d;
   const wb=XLSX.utils.book_new();
   const KONTRIB_KEYS=['food_off','large_off','diary_off','topping_off'];
@@ -8093,15 +8123,13 @@ async function exportKpiPDF(){
     alert('Data belum siap. Tunggu dashboard selesai memuat.');
     return;
   }
-  if(typeof html2canvas==='undefined' || !window.jspdf){
-    alert('Library export belum termuat. Cek koneksi internet lalu coba lagi.');
-    return;
-  }
   const lbl = btn ? btn.querySelector('.drp-btn-text') : null;
   const orig = lbl ? lbl.textContent : '';
   if(lbl) lbl.textContent = 'Menyiapkan…';
   if(btn) btn.style.pointerEvents = 'none';
   try{
+    // Pull the heavy export libs on demand (lazy-loaded, not in <head>).
+    await ensureExportLibs('pdf');
     const bg = getComputedStyle(document.body).backgroundColor || '#0f0d0b';
     const canvas = await html2canvas(node, {
       backgroundColor: bg,

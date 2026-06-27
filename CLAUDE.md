@@ -22,12 +22,13 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbwyGkd-mZSYW924JyEqPAk_
 
 All GAS calls use JSONP (avoids CORS with static hosting). Pattern: append `?action=…&callback=cb` to GAS_URL.
 
-### CDN dependencies (loaded in `<head>`)
+### CDN dependencies
 
-- Chart.js `4.4.1` — all charts
-- xlsx `0.18.5` — Excel parsing
-- html2canvas `1.4.1` + jspdf `2.5.1` — KPI PDF export
-- Fonts: Inter, JetBrains Mono, Fira Code, Fira Sans (Google Fonts)
+- Chart.js `4.4.1` — all charts (loaded in `<head>`, used on every render)
+- Fonts: Inter, JetBrains Mono, Fira Code, Fira Sans (Google Fonts, `<head>`)
+- **Lazy-loaded on demand** (export-only, NOT in `<head>` — see `ensureExportLibs()`):
+  xlsx `0.18.5` (Excel export), html2canvas `1.4.1` + jspdf `2.5.1` (KPI PDF export).
+  Injected via `loadScript()` on first export click so they don't block first paint.
 
 These are cross-origin and never cached by the service worker (network only).
 
@@ -176,7 +177,7 @@ The indicator dot is counter-scaled: `transform: scaleX(calc(1 / max(var(--p, 0.
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v48`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v49`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -239,7 +240,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v48` → increment to `fore-v49`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v49` → increment to `fore-v50`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
