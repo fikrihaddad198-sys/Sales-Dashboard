@@ -1116,43 +1116,42 @@ body.dr-animating .reveal {
   font-variant-numeric: tabular-nums;
 }
 
-/* ── Progress bar — minimal premium (Linear/Stripe) ──
-   Thin inset track, smooth accent fill with a soft glow and a glossy top
-   highlight. No moving sheen, no pulsing dot — restraint reads as premium. */
+/* ── Progress bar — accent fill with a glowing leading dot ── */
 .progress-wrap { display: flex; align-items: center; gap: 12px; }
 .progress-track {
-  flex: 1; height: 7px;
+  flex: 1; height: 8px;
   background: rgba(255,255,255,0.07);
-  border-radius: 999px; position: relative; overflow: visible;
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.28);
+  border-radius: 4px; position: relative; overflow: visible;
 }
-[data-theme="light"] .progress-track {
-  background: rgba(9,9,11,0.07);
-  box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
-}
+[data-theme="light"] .progress-track { background: rgba(9,9,11,0.07); }
 
 /* Registering --p as a real <number> makes the fill transition reliably. */
 @property --p { syntax: '<number>'; inherits: false; initial-value: 0; }
 
 .progress-fill {
-  height: 100%; width: 100%; border-radius: 999px;
-  background: linear-gradient(90deg, #c9a84c 0%, #e6cd80 100%) !important;
+  height: 100%; width: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, #c9a84c 0%, #e6cd80 60%, #c9a84c 100%) !important;
   transform-origin: left center;
   transform: scaleX(var(--p, 0));
   transition: --p 1.1s cubic-bezier(0.22,1,0.36,1);
   position: relative; min-width: 0; will-change: transform;
-  box-shadow: 0 0 16px -3px rgba(201,168,76,0.6);
+  box-shadow: 0 0 12px rgba(201,168,76,0.5);
 }
-/* Glossy top highlight for a refined, glassy edge. */
+/* Glowing leading dot — counter-scaled so it stays a perfect circle. */
 .progress-fill::after {
-  content: ''; position: absolute; inset: 1px 1px auto 1px; height: 45%;
-  border-radius: 999px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0));
-  pointer-events: none;
+  content: ''; position: absolute; right: -6px; top: 50%;
+  transform: translateY(-50%) scaleX(calc(1 / max(var(--p, 0.15), 0.15)));
+  transform-origin: center;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 14px rgba(201,168,76,0.8), 0 0 0 3px rgba(201,168,76,0.25);
 }
 [data-theme="light"] .progress-fill {
-  background: linear-gradient(90deg, #2e6b45 0%, #4f9b6e 100%) !important;
-  box-shadow: 0 0 16px -3px rgba(46,107,69,0.5);
+  background: linear-gradient(90deg, #2e6b45 0%, #4a8f63 60%, #2e6b45 100%) !important;
+  box-shadow: 0 0 12px rgba(46,107,69,0.4);
+}
+[data-theme="light"] .progress-fill::after {
+  box-shadow: 0 0 14px rgba(46,107,69,0.7), 0 0 0 3px rgba(46,107,69,0.22);
 }
 .progress-meta {
   font-size: 11px; font-family: var(--mono); color: var(--t3); white-space: nowrap;
@@ -4421,6 +4420,9 @@ let allData=[], charts={}, periodData={}, customPeriodData={}, fldtData={}, summ
    switches charts paint instantly (already-formed), so page switches stay
    fluid — no 800ms redraw fighting the page fade. Flipped off after entrance. */
 let _chartAnim = true;
+/* Pages already built for the current dataset — skip rebuilding them on tab
+   switch (see showPage). Cleared when data reloads or the theme changes. */
+let _renderedPages = new Set();
 let _kpiRows=[];  /* stored after calcKpi for popup use */
 let _weeklyChan='gmv', _customChan='gmv', _fldtChan='cup_total', _chTrendKey='offline';
 let _racePrevVals = {}; // stores prev frame values for counter animation
@@ -4672,10 +4674,11 @@ async function loadData(){
       throw new Error(err);
     }
     allData=parseCSV(res.csv||'');
+    _renderedPages.clear();                 // new data → all pages must rebuild
     if(res.expiresAt) startSessionTimer(res.expiresAt, res.isOwner);
     if(el) el.textContent=new Date().toLocaleTimeString('id-ID');
     if(skel) skel.classList.remove('show');
-    initDefaults(); renderCurrentPage();
+    initDefaults(); renderCurrentPage(); _renderedPages.add(currentPage);
   }catch(e){
     if(skel) skel.classList.remove('show');
     if(el) el.textContent = e.message==='timeout' ? 'TIMEOUT' :
@@ -4812,7 +4815,15 @@ function showPage(p,btn,skipHash){
   }
   currentPage=p;
   if(!skipHash) history.replaceState(null,'','#'+p);
-  if(allData.length) renderPage(p);
+  // Only (re)build a page the first time it's shown for the current dataset.
+  // Pages stay in the DOM (display:none), so re-rendering on every tab switch
+  // just destroys+recreates all the Chart.js instances for nothing — that
+  // synchronous work is the main cause of the laggy/janky switch. Skip it when
+  // the page is already built; filters/data changes invalidate _renderedPages.
+  if(allData.length && !_renderedPages.has(p)){
+    renderPage(p);
+    _renderedPages.add(p);
+  }
   // Show the freshly-rendered cards instantly (no per-card cascade) and
   // play one smooth page-level fade+rise instead — replaying the reveal
   // cascade on every tab switch felt jittery/abrupt.
@@ -4871,7 +4882,8 @@ function applyThemeSwap(isDark){
   TC.bg3=isDark?'#e9e9ec':'#1e1e21';
   TC.grid=isDark?'rgba(0,0,0,0.06)':'rgba(255,255,255,0.05)';
   Chart.defaults.color=TC.text2;
-  if(allData.length) renderPage(currentPage);
+  _renderedPages.clear();                 // theme colors changed → rebuild on next visit
+  if(allData.length){ renderPage(currentPage); _renderedPages.add(currentPage); }
   // Also rebuild custom period charts if on different page
   if(currentPage!=='period'&&(periodData[1]||periodData[2]||periodData[3])){
     [1,2,3].forEach(n=>{ if(periodData[n]&&getVal('range'+n+'s')&&getVal('range'+n+'e')) destroyChart('period'+n); });
@@ -7782,7 +7794,7 @@ function grantAccess(){
   //    reveal time; otherwise the entrance animates over stale heavy canvases
   //    and jitters.
   if(!allData || !allData.length) loadData();
-  else renderCurrentPage();
+  else { _renderedPages.clear(); renderCurrentPage(); _renderedPages.add(currentPage); }
 
   setTimeout(() => {
     const bm = document.getElementById('brand-mark');
