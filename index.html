@@ -87,6 +87,17 @@
   --orange-05:   rgba(212,160,90,0.05);
   --teal:        #c9a84c;
 
+  /* ── CHANNEL COLORS (data identity — the ONE exception to the gold-only
+     rule, per owner request). Used by tabs, dots, cards, charts. Keep these
+     in sync with the JS `TC` object below. ──
+       offline = blue · online = yellow · grabfood = dark green
+       gofood = light green · shopee = orange */
+  --tc-offline:  #4a90e2;
+  --tc-online:   #eab308;
+  --tc-grabfood: #15803d;
+  --tc-gofood:   #6fcf6f;
+  --tc-shopee:   #f97316;
+
   /* Page accents — all collapse to the single gold */
   --acc-kpi:     var(--cyan);
   --acc-channel: var(--cyan);
@@ -172,6 +183,14 @@
   --amber:   #6f4e37;  --amber-20: rgba(111,78,55,0.20); --amber-10: rgba(111,78,55,0.12); --amber-05: rgba(111,78,55,0.05);
   --orange:  #6f4e37;  --orange-20: rgba(111,78,55,0.20); --orange-05: rgba(111,78,55,0.05);
   --red:     #c0392b;  --red-20: rgba(192,57,43,0.18);   --red-10: rgba(192,57,43,0.10);
+
+  /* Channel colors — same hues, slightly deepened so yellow / light-green
+     stay legible on the cream background. */
+  --tc-offline:  #2f6fc0;
+  --tc-online:   #b8860b;
+  --tc-grabfood: #15803d;
+  --tc-gofood:   #3f9e40;
+  --tc-shopee:   #e0590f;
 
   --e1: 0 1px 2px rgba(0,0,0,0.05);
   --e2: 0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
@@ -1363,10 +1382,11 @@ body.dr-animating .reveal {
 .sl-dot {
   width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
 }
-.sl-pill[data-ch="offline"] .sl-dot  { background: var(--tc-offline, #a78bfa); }
-.sl-pill[data-ch="gofood"] .sl-dot   { background: var(--tc-gofood, #34d399); }
-.sl-pill[data-ch="grabfood"] .sl-dot { background: var(--tc-grabfood, #fb923c); }
-.sl-pill[data-ch="shopee"] .sl-dot   { background: var(--tc-shopee, #f87171); }
+.sl-pill[data-ch="offline"] .sl-dot  { background: var(--tc-offline); }
+.sl-pill[data-ch="online"] .sl-dot   { background: var(--tc-online); }
+.sl-pill[data-ch="gofood"] .sl-dot   { background: var(--tc-gofood); }
+.sl-pill[data-ch="grabfood"] .sl-dot { background: var(--tc-grabfood); }
+.sl-pill[data-ch="shopee"] .sl-dot   { background: var(--tc-shopee); }
 .stacked-total-row {
   display: flex; align-items: baseline; gap: 8px;
   margin-bottom: 14px; padding-bottom: 12px;
@@ -1567,10 +1587,13 @@ body.dr-animating .reveal {
   color: var(--acc-pill-color, var(--gold));
 }
 /* Per-channel tab accent when used inside channel context */
-[data-ch-color="offline"]  .tab-btn.active { --acc-pill-bg: rgba(167,139,250,0.12); --acc-pill-border: rgba(167,139,250,0.30); --acc-pill-color: #a78bfa; }
-[data-ch-color="gofood"]   .tab-btn.active { --acc-pill-bg: rgba(52,211,153,0.12);  --acc-pill-border: rgba(52,211,153,0.30);  --acc-pill-color: #34d399; }
-[data-ch-color="grabfood"] .tab-btn.active { --acc-pill-bg: rgba(251,146,60,0.12);  --acc-pill-border: rgba(251,146,60,0.30);  --acc-pill-color: #fb923c; }
-[data-ch-color="shopee"]   .tab-btn.active { --acc-pill-bg: rgba(248,113,113,0.12); --acc-pill-border: rgba(248,113,113,0.30); --acc-pill-color: #f87171; }
+/* Channel tab pills — tint derived from the single channel-color tokens via
+   color-mix, so each pill stays in sync with its channel everywhere. */
+[data-ch-color="offline"]  .tab-btn.active { --acc-pill-bg: color-mix(in srgb, var(--tc-offline) 14%, transparent);  --acc-pill-border: color-mix(in srgb, var(--tc-offline) 32%, transparent);  --acc-pill-color: var(--tc-offline); }
+[data-ch-color="online"]   .tab-btn.active { --acc-pill-bg: color-mix(in srgb, var(--tc-online) 14%, transparent);   --acc-pill-border: color-mix(in srgb, var(--tc-online) 32%, transparent);   --acc-pill-color: var(--tc-online); }
+[data-ch-color="gofood"]   .tab-btn.active { --acc-pill-bg: color-mix(in srgb, var(--tc-gofood) 14%, transparent);   --acc-pill-border: color-mix(in srgb, var(--tc-gofood) 32%, transparent);   --acc-pill-color: var(--tc-gofood); }
+[data-ch-color="grabfood"] .tab-btn.active { --acc-pill-bg: color-mix(in srgb, var(--tc-grabfood) 14%, transparent); --acc-pill-border: color-mix(in srgb, var(--tc-grabfood) 32%, transparent); --acc-pill-color: var(--tc-grabfood); }
+[data-ch-color="shopee"]   .tab-btn.active { --acc-pill-bg: color-mix(in srgb, var(--tc-shopee) 14%, transparent);   --acc-pill-border: color-mix(in srgb, var(--tc-shopee) 32%, transparent);   --acc-pill-color: var(--tc-shopee); }
 
 /* ─────────────────────────────────────────────────────
    TABLE
@@ -4458,8 +4481,8 @@ const HARI=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
    CHART COLORS
 ═══════════════════════════════════════════════════ */
 const TC = {
-  gmv:'#c9a84c', offline:'#7d9bb5', online:'#6baed4',
-  gofood:'#d4a05a', grabfood:'#7aab6e', shopee:'#c97b6a',
+  gmv:'#c9a84c', offline:'#4a90e2', online:'#eab308',
+  gofood:'#6fcf6f', grabfood:'#15803d', shopee:'#f97316',
   accent:'#c9a84c', accent2:'#9a958c', amber:'#d4a05a',
   /* neutral Zinc axis text + grid (chart chrome) */
   text2:'#a1a1aa', text3:'#71717a',
@@ -5727,10 +5750,10 @@ let _raceCompareRows=[], _raceCompareEnabled=false;
 let _raceGapMs=800; // jeda antar hari (ms) setelah animasi selesai
 let _raceTarget=0, _raceTotalDays=30;
 const RACE_CHANNELS=[
-  {key:'offline',  name:'Offline',  color:'#7d9bb5'},
-  {key:'gofood',   name:'GoFood',   color:'#d4a05a'},
-  {key:'grabfood', name:'GrabFood', color:'#9a958c'},
-  {key:'shopee',   name:'Shopee',   color:'#f87171'},
+  {key:'offline',  name:'Offline',  color:TC.offline},
+  {key:'gofood',   name:'GoFood',   color:TC.gofood},
+  {key:'grabfood', name:'GrabFood', color:TC.grabfood},
+  {key:'shopee',   name:'Shopee',   color:TC.shopee},
 ];
 
 function initRacePage(){
