@@ -549,6 +549,24 @@ body.dr-animating .reveal {
 [data-perf="mobile"] .page.page-swapping { animation-duration: 0.24s; } /* HP: light fade */
 @media (prefers-reduced-motion: reduce) { .page.page-swapping { animation: none; } }
 
+/* Cards rise as the page cross-fades — plays on EVERY page open (the per-page
+   chart entrance, by owner request). This is the *card* transform, NOT the page:
+   the page above stays opacity-only because translating the whole page
+   re-rasterised its canvas+blur and shook (that old bug). Per-card translate is
+   safe because (a) cards already translateY on hover, (b) on iPad/mobile perf
+   tiers ALL backdrop-filter is disabled (see ~L3500), so a moving card is just a
+   cheap GPU texture shift, and (c) desktop has the headroom. Opacity is left to
+   the page fade so cards never double-fade. Duration ≤ the page fade so each card
+   reaches its resting spot before the swap class is removed. */
+@keyframes card-swap-rise {
+  from { transform: translateY(12px); }
+  to   { transform: translateY(0); }
+}
+.page.page-swapping .card { animation: card-swap-rise 0.36s var(--ease-out) both; }
+[data-perf="ipad"]   .page.page-swapping .card { animation-duration: 0.30s; }
+[data-perf="mobile"] .page.page-swapping .card { animation-duration: 0.24s; }
+@media (prefers-reduced-motion: reduce) { .page.page-swapping .card { animation: none; } }
+
 /* ─────────────────────────────────────────────────────
    SKELETON LOADING
 ───────────────────────────────────────────────────── */
@@ -4653,6 +4671,11 @@ function baseOptions(yFmt='rp'){
     // premium feel — replaying the 800ms chart draw every switch felt janky.
     animation: _chartAnim ? { duration:800, easing:'easeInOutCubic' } : false,
     interaction:{ mode:'index', intersect:false },
+    // Hover/active changes apply INSTANTLY (no ~400ms transition) so dragging the
+    // cursor over a chart stops re-rasterising the gradient-filled line every
+    // frame — that frame-by-frame redraw was the hover "stutter". The entrance
+    // draw (base `animation` above) is untouched.
+    transitions:{ active:{ animation:{ duration:0 } } },
     plugins:{
       legend:{ display:false },
       tooltip:{
@@ -4905,7 +4928,11 @@ function showPage(p,btn,skipHash){
     const playFade = ()=>{
       void pageEl.offsetWidth;          // restart the animation
       pageEl.classList.add('page-swapping');
-      pageEl.addEventListener('animationend', function _done(){
+      pageEl.addEventListener('animationend', function _done(e){
+        // The per-card rises bubble their animationend up to the page too; only
+        // the page's OWN fade should end the swap, otherwise the first card to
+        // finish would strip the class and cut every other card off mid-rise.
+        if(e.target !== pageEl || e.animationName !== 'page-swap-in') return;
         pageEl.classList.remove('page-swapping');
         pageEl.removeEventListener('animationend', _done);
       });
