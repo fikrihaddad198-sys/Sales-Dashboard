@@ -22,12 +22,31 @@ const GAS_URL = 'https://script.google.com/macros/s/AKfycbwyGkd-mZSYW924JyEqPAk_
 
 All GAS calls use JSONP (avoids CORS with static hosting). Pattern: append `?action=…&callback=cb` to GAS_URL.
 
+### CDN dependencies (loaded in `<head>`)
+
+- Chart.js `4.4.1` — all charts
+- xlsx `0.18.5` — Excel parsing
+- html2canvas `1.4.1` + jspdf `2.5.1` — KPI PDF export
+- Fonts: Inter, JetBrains Mono, Fira Code, Fira Sans (Google Fonts)
+
+These are cross-origin and never cached by the service worker (network only).
+
 ## Authentication (sessionStorage, NOT localStorage)
 
 - Tokens stored in `sessionStorage` — closing the browser tab/window logs the user out (intentional)
 - Session duration: 30 minutes (set in `CFG.SESSION_MIN` in Code.gs)
 - Owner = ID `1` AND name `Fikri` must BOTH match (case-insensitive). Anyone entering owner ID `1` with a different name is treated as a normal user requiring Telegram approval.
+- **Owner sessions never expire** (unlimited) and show no countdown chip. Normal users get a 30-min countdown chip.
 - On every data request the token is validated server-side
+
+### Client timers (all `setInterval`)
+
+- `_pollTimer` — polls `apiPoll` while waiting for owner approval
+- `_sessTimer` — 1s session countdown tick (drives the expiry chip)
+- `_heartTimer` — 30s heartbeat (`apiHeartbeat`, keeps `lastSeen` fresh)
+- Clock — 30s `updateClock()`
+
+A `fore-session-change` DOM event fires on login/logout; the screenshot guard listens for it.
 
 ```javascript
 const SESS = {
@@ -144,20 +163,34 @@ Strategy:
 
 Real GeoJSON ADM2 boundaries for 5 DKI Jakarta regions rendered inline as SVG. Store dots (`STORE_POINTS`) are positioned with `x/y` pixel coords relative to the 640×520 SVG viewport. Light mode map outline uses `--t3`, not gold.
 
+**Post-login reveal**: after grant, the Fore logo animates for ~2s then "deflates", and the Jakarta map fades in (`opacity:0` → `.mr-show`) with a zoom — tuned so it does not cover the logo background. The user is fond of this; don't shorten or flatten the reveal without asking. Store dots are clickable.
+
 ## Telegram Bot Approval Flow
 
 1. User submits `register` → GAS sends Approve/Reject buttons to owner's Telegram
 2. Owner taps button → `pollTelegram()` (1-min trigger) picks it up → updates access sheet
 3. Frontend polls `apiPoll` → gets approved/rejected → grants or denies dashboard access
-4. `/siapa` command in bot → shows currently online users with Kick buttons
+
+### Bot commands (handled in `pollTelegram`)
+
+- `/start` or `/id` → replies with the sender's chat ID (use this to get `TG_OWNER_CHAT` during setup)
+- `/siapa` → **owner only**; lists users online in the last 3 min with remaining session minutes + a Kick button each
+- Kick button (`kick:<idFore>`) → revokes that user's session
+- Approve/Reject buttons (`<decision>:<requestId>`) → owner only
+
+One-time setup: run `setupPollTrigger()` once to create the 1-min trigger AND delete the Telegram webhook (getUpdates and a webhook cannot both be active).
 
 ## Screenshot Protection
 
-Non-owner users: screenshot/PDF export produces blank black image. Only `isOwner === true` sessions get actual content in exports.
+A full-screen `#screen-guard` overlay blacks out the app whenever a **non-owner** session sends the page to the background — `visibilitychange` (hidden), `blur`, and `pagehide`. This catches the preview frame mobile OSes grab for the app switcher / screenshot animation, so non-owners can't capture content. Owner sessions are exempt (`SESS.isOwner`). Re-evaluated on the `fore-session-change` event.
+
+PDF export (`exportKpiPDF`, KPI Summary page) uses html2canvas + jspdf to render `#kpi-hero` to an A4 PDF, paginating tall images across pages.
 
 ## Online User Monitoring
 
-`apiHeartbeat` called periodically from client, updates col J (`lastSeen`) in the `access` sheet. `apiKick` lets owner revoke any live session by token.
+`apiHeartbeat` is called every 30s from the client (`_heartTimer`), updating col J (`lastSeen`) in the `access` sheet. `getOnlineUsers(N)` returns users seen in the last N minutes (used by `/siapa`, default 3 min). `apiKick` lets the owner revoke any live session by `idFore`/token.
+
+`access` sheet columns (`ACCESS_HEADERS`): `requestId, idFore, name, status, token, createdAt, approvedAt, expiresAt, tgMsgId, lastSeen` (lastSeen = col J / index 10).
 
 ## Branch
 
