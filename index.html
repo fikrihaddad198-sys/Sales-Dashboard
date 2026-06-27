@@ -507,7 +507,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .reveal {
   opacity: 0;
   transform: translateY(20px);
-  will-change: opacity, transform;
 }
 .reveal.reveal-scale  { transform: scale(0.96); }
 .reveal.reveal-left   { transform: translateX(-24px); }
@@ -518,6 +517,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
    their final position — no per-card movement — so they never jitter while
    the charts render; the page-level fade carries the transition instead. */
 body.dr-animating .reveal {
+  /* will-change only while the reveal is actually animating — keeping it on
+     permanently promoted dozens of idle compositor layers (GPU memory pressure
+     on iPad, made everything incl. chart hover feel heavier). */
+  will-change: opacity, transform;
   transition:
     opacity   0.55s var(--ease-out),
     transform 0.55s var(--ease-out);
@@ -549,23 +552,24 @@ body.dr-animating .reveal {
 [data-perf="mobile"] .page.page-swapping { animation-duration: 0.24s; } /* HP: light fade */
 @media (prefers-reduced-motion: reduce) { .page.page-swapping { animation: none; } }
 
-/* Cards rise as the page cross-fades — plays on EVERY page open (the per-page
-   chart entrance, by owner request). This is the *card* transform, NOT the page:
-   the page above stays opacity-only because translating the whole page
-   re-rasterised its canvas+blur and shook (that old bug). Per-card translate is
-   safe because (a) cards already translateY on hover, (b) on iPad/mobile perf
-   tiers ALL backdrop-filter is disabled (see ~L3500), so a moving card is just a
-   cheap GPU texture shift, and (c) desktop has the headroom. Opacity is left to
-   the page fade so cards never double-fade. Duration ≤ the page fade so each card
-   reaches its resting spot before the swap class is removed. */
+/* The chart rises as the page cross-fades — plays on EVERY page open (the
+   per-page chart entrance, owner request). We animate .chart-wrap, NOT .card:
+   cards are .reveal elements and `.reveal.visible { transform:none !important }`
+   would beat a card animation (in CSS, !important normal rules override
+   animations). .chart-wrap carries no such rule. We also never translate the
+   whole page — that re-rasterised its canvas+blur and shook (old bug); the page
+   stays opacity-only. Safe perf-wise: on iPad/mobile tiers ALL backdrop-filter
+   is off (see ~L3500) so moving the chart is a cheap GPU shift. Opacity stays
+   with the page fade (no double-fade). Duration ≤ the page fade so the chart
+   settles before the swap class is removed. */
 @keyframes card-swap-rise {
   from { transform: translateY(12px); }
   to   { transform: translateY(0); }
 }
-.page.page-swapping .card { animation: card-swap-rise 0.36s var(--ease-out) both; }
-[data-perf="ipad"]   .page.page-swapping .card { animation-duration: 0.30s; }
-[data-perf="mobile"] .page.page-swapping .card { animation-duration: 0.24s; }
-@media (prefers-reduced-motion: reduce) { .page.page-swapping .card { animation: none; } }
+.page.page-swapping .chart-wrap { animation: card-swap-rise 0.36s var(--ease-out) both; will-change: transform; }
+[data-perf="ipad"]   .page.page-swapping .chart-wrap { animation-duration: 0.30s; }
+[data-perf="mobile"] .page.page-swapping .chart-wrap { animation-duration: 0.24s; }
+@media (prefers-reduced-motion: reduce) { .page.page-swapping .chart-wrap { animation: none; } }
 
 /* ─────────────────────────────────────────────────────
    SKELETON LOADING
