@@ -118,7 +118,7 @@ body.dr-animating .card { animation: dr-rise-in 0.55s ... }
 /* NOT: body.dashboard-ready .card { ... } */
 ```
 
-**Per-page-switch card rise (`card-swap-rise`)**: On every page open, `.card`s do a short transform-only `translateY(12px)→0` rise (the per-page chart entrance, owner request). This is deliberately the **card** transform, not the page — the page keyframe (`page-swap-in`) stays **opacity-only** because translating the whole page re-rasterised its canvas+blur and shook (the old jitter bug; do not re-add translate to `page-swap-in`). Per-card translate is safe: cards already `translateY` on hover, and on iPad/mobile perf tiers ALL `backdrop-filter` is disabled, so a moving card is a cheap GPU texture shift. Opacity is left to the page fade (no double-fade). `showPage`'s `animationend` handler filters on `animationName==='page-swap-in' && target===pageEl` so the bubbling card animations don't end the swap early.
+**Per-page-switch chart rise (`card-swap-rise`)**: On every page open, **`.chart-wrap`** (the chart container) does a short transform-only `translateY(12px)→0` rise (the per-page chart entrance, owner request). Target `.chart-wrap`, **not `.card`** — cards are `.reveal` and `.reveal.visible { transform:none !important }` beats a card animation (in CSS, `!important` normal rules override animations); `.chart-wrap` has no such rule. The page keyframe (`page-swap-in`) stays **opacity-only** — translating the whole page re-rasterised its canvas+blur and shook (old jitter bug; do not re-add translate to `page-swap-in`). Safe: on iPad/mobile perf tiers ALL `backdrop-filter` is disabled, so moving the chart is a cheap GPU shift. Opacity is left to the page fade (no double-fade). `showPage`'s `animationend` handler filters on `animationName==='page-swap-in' && target===pageEl` so bubbling chart animations don't end the swap early. Note: `will-change` on `.reveal` is now scoped to `body.dr-animating` only (was permanent → idle GPU layers on iPad).
 
 ### Chart draw animation gating (`_chartAnim`)
 
@@ -179,7 +179,7 @@ The indicator dot is counter-scaled: `transform: scaleX(calc(1 / max(var(--p, 0.
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v55`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v56`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -242,7 +242,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v55` → increment to `fore-v56`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v56` → increment to `fore-v57`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
