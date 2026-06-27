@@ -217,3 +217,10 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 6. Never create canvas gradients outside `grad()` caching function
 7. Keep entrance animations scoped to `body.dr-animating`, not `body.dashboard-ready`
 8. Gold (`#c9a84c`) is the single accent — do not introduce new accent colors into chrome/nav
+
+## Coding Discipline (Karpathy principles)
+
+1. **Think before coding** — state assumptions; if multiple interpretations exist, present them (don't pick silently); if a simpler approach exists, say so; if something's unclear, stop and ask.
+2. **Simplicity first** — minimum code that solves the problem, nothing speculative. No unrequested features/abstractions/flexibility, no error handling for impossible cases. If 200 lines could be 50, rewrite.
+3. **Surgical changes** — touch only what's required. Don't "improve" or refactor adjacent code, match existing style, only remove imports/vars your own change orphaned; mention pre-existing dead code instead of deleting it.
+4. **Goal-driven execution** — turn the request into verifiable success criteria, then loop until they're met.
