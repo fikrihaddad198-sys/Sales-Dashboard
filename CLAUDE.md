@@ -180,7 +180,7 @@ The indicator dot is counter-scaled: `transform: scaleX(calc(1 / max(var(--p, 0.
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v60`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v61`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -193,7 +193,9 @@ Real GeoJSON ADM2 boundaries for 5 DKI Jakarta regions rendered inline as SVG (v
 
 **Placing new store dots from lat/lng**: the projection is ~linear over Jakarta, so `x = (lng−106.686)/(106.973−106.686)·1000` and `y = (lat−(−6.089))/((−6.371)−(−6.089))·979`, then offset-calibrated so Kemang (`-6.2605,106.8133`) lands on its known `(449,587)`. Good to ~±10px; nudge `x/y` after. (Don't ask the user for coords — compute them.)
 
-**Locked stores**: each `STORE_POINTS` entry may set `locked: true` (no data yet). Locked dots render grey, no pulse/ring, label hidden (`.mr-locked`). Tapping a locked dot calls `showLockedTease()` — a partial zoom+blur toward it + a random cringe one-liner from `MAP_JOKES` in a `.mr-joke` toast, then it eases back (never enters the dashboard). Unlocked dots (currently only Kemang) dive into the app as before. Flip `locked:false` once a store has data. `_mapAnimating` guards taps mid-tease.
+**Locked stores**: each `STORE_POINTS` entry may set `locked: true` (no data yet). Locked dots render as a small grey dot (`r=4.5`), no pulse/ring/glow (`.mr-locked`); hovering any dot reveals its label. Tapping a locked dot calls `showLockedTease()` — a partial zoom+blur toward it + a random cringe one-liner from `MAP_JOKES` in a `.mr-joke` toast, then it eases back (never enters the dashboard). Unlocked dots (currently only Kemang, `r=7.5`) dive into the app as before. Flip `locked:false` once a store has data. `_mapAnimating` guards taps mid-tease.
+
+**Map zoom/pan (`enableMapZoom`)**: the reveal map supports pinch / drag / wheel zoom+pan (so clustered dots can be spread and tapped). Mutates the SVG `viewBox` (crisp vector zoom, 1×–6×), kept separate from the dive's CSS transform so they don't fight. `.mr-map` needs `touch-action:none`. Resets to full view each reveal. A drag sets `_mapPanned` so the dot click ignores the click that ends a pan; pointer capture is only taken once a real drag/pinch starts, so taps still select dots.
 
 **Post-login reveal**: after grant, the Fore logo animates for ~2s then "deflates", and the Jakarta map fades in (`opacity:0` → `.mr-show`) with a zoom — tuned so it does not cover the logo background. The user is fond of this; don't shorten or flatten the reveal without asking. Store dots are clickable.
 
@@ -247,7 +249,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v60` → increment to `fore-v61`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v61` → increment to `fore-v62`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`

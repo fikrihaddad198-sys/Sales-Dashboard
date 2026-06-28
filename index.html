@@ -2654,11 +2654,16 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
    keeps the full gold dot + label. */
 .mr-store.mr-locked .mr-dot  { fill:#8b8b8b; filter:drop-shadow(0 0 4px rgba(0,0,0,.45)); }
 .mr-store.mr-locked .mr-ring { display:none; }
-.mr-store.mr-locked .mr-glow { fill: rgba(140,140,140,.10); }
+.mr-store.mr-locked .mr-glow { display:none; }          /* no grey transparent halo */
 .mr-store.mr-locked .mr-label{ opacity:0; }
 #map-reveal.mr-show .mr-store.mr-locked .mr-dot   { animation: mrPop .45s var(--ease-out) 1.7s forwards; }
 #map-reveal.mr-show .mr-store.mr-locked .mr-label { animation: none; }
 [data-theme="light"] .mr-store.mr-locked .mr-dot { fill:#9a9a9a; filter:drop-shadow(0 0 4px rgba(0,0,0,.2)); }
+/* Hover/focus any store → reveal its name (incl. locked ones). */
+.mr-store:hover .mr-label, .mr-store:focus .mr-label { opacity:1 !important; }
+.mr-store:hover .mr-dot { filter: drop-shadow(0 0 9px rgba(255,225,150,.9)); }
+/* Map is pan/pinch-zoomable — take touch gestures from the browser. */
+.mr-map { touch-action: none; }
 
 /* Tapping a locked store: partial dive + blur (JS eases it back after). */
 #map-reveal.mr-zoom-locked .mr-map   { transform: scale(3.2); filter: blur(15px); opacity:.5; }
@@ -8066,6 +8071,12 @@ const STORE_POINTS = [
   { name: 'Pulogadung', region: 'timur', x: 751, y: 335, locked: true },
   { name: 'Buaran', region: 'timur', x: 838, y: 481, locked: true },
   { name: 'Cijantung', region: 'timur', x: 640, y: 766, locked: true },
+  { name: 'Mampang', region: 'selatan', x: 472, y: 530, locked: true },
+  { name: 'Pasar Minggu', region: 'selatan', x: 556, y: 669, locked: true },
+  { name: 'Cilandak', region: 'selatan', x: 401, y: 700, locked: true },
+  { name: 'Lenteng Agung', region: 'selatan', x: 559, y: 828, locked: true },
+  { name: 'Condet', region: 'timur', x: 629, y: 682, locked: true },
+  { name: 'Pasar Rebo', region: 'timur', x: 629, y: 776, locked: true },
 ];
 
 function renderStorePoints(onPick){
@@ -8086,13 +8097,16 @@ function renderStorePoints(onPick){
     const ring = document.createElementNS(NS, 'circle');
     ring.setAttribute('class','mr-ring'); ring.setAttribute('cx',s.x); ring.setAttribute('cy',s.y); ring.setAttribute('r','13');
     const dot = document.createElementNS(NS, 'circle');
-    dot.setAttribute('class','mr-dot'); dot.setAttribute('cx',s.x); dot.setAttribute('cy',s.y); dot.setAttribute('r','7.5');
+    dot.setAttribute('class','mr-dot'); dot.setAttribute('cx',s.x); dot.setAttribute('cy',s.y);
+    dot.setAttribute('r', s.locked ? '4.5' : '7.5');   // locked stores: smaller dot
     const label = document.createElementNS(NS, 'text');
     label.setAttribute('class','mr-label'); label.setAttribute('x',s.x); label.setAttribute('y', s.y - 24);
     label.textContent = s.name;
     wrap.append(hit, glow, ring, dot, label);
     const pick = () => { if(onPick) onPick(s); };
-    wrap.addEventListener('click', pick);
+    // Ignore the click that ends a pan/pinch gesture so dragging the map never
+    // accidentally opens a store.
+    wrap.addEventListener('click', () => { if(_mapPanned){ _mapPanned=false; return; } pick(); });
     wrap.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); pick(); } });
     g.appendChild(wrap);
   });
@@ -8138,6 +8152,58 @@ function showLockedTease(mr, store){
   setTimeout(()=>{ if(t.parentNode) t.remove(); if(map) map.style.transformOrigin=''; _mapAnimating=false; }, 2900);
 }
 
+/* Pinch / drag / wheel zoom+pan on the reveal map, so clustered dots can be
+   spread out and tapped. Implemented by mutating the SVG viewBox (crisp vector
+   zoom); the dive animation uses a separate CSS transform so they don't fight.
+   `_mapPanned` lets the dot click ignore the click that ends a drag. */
+let _mapPanned = false;
+function enableMapZoom(svg){
+  if(!svg) return;
+  const VB = svg._vb || (svg._vb = {});
+  VB.x=0; VB.y=0; VB.w=1000; VB.h=979;            // reset to full view each reveal
+  const apply = ()=> svg.setAttribute('viewBox', VB.x+' '+VB.y+' '+VB.w+' '+VB.h);
+  apply();
+  if(svg._zoomBound) return;                       // bind listeners only once
+  svg._zoomBound = true;
+  const MINW = 1000/6, MAXW = 1000, AR = 979/1000; // zoom range 1×..6×
+  const pts = new Map();
+  let lastDist = 0, lastMid = null, moved = 0;
+  const R = ()=> svg.getBoundingClientRect();
+  const clamp = ()=>{ VB.x = Math.max(0, Math.min(VB.x, 1000-VB.w)); VB.y = Math.max(0, Math.min(VB.y, 979-VB.h)); };
+  const zoomTo = (cx, cy, newW)=>{
+    const r = R(); newW = Math.max(MINW, Math.min(MAXW, newW)); const newH = newW*AR;
+    const fx = (cx-r.left)/r.width, fy = (cy-r.top)/r.height;
+    VB.x += fx*(VB.w-newW); VB.y += fy*(VB.h-newH); VB.w = newW; VB.h = newH;
+  };
+  svg.addEventListener('pointerdown', e=>{
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); moved=0; _mapPanned=false;
+    if(pts.size===2){ const [a,b]=[...pts.values()]; lastDist=Math.hypot(a.x-b.x,a.y-b.y); lastMid={x:(a.x+b.x)/2,y:(a.y+b.y)/2}; }
+  });
+  svg.addEventListener('pointermove', e=>{
+    if(!pts.has(e.pointerId)) return;
+    const prev = pts.get(e.pointerId); pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    const r = R();
+    if(pts.size>=2){
+      const [a,b]=[...pts.values()];
+      const dist=Math.hypot(a.x-b.x,a.y-b.y), mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+      if(lastDist){ zoomTo(mid.x, mid.y, VB.w*(lastDist/dist));
+        if(lastMid){ VB.x -= (mid.x-lastMid.x)/r.width*VB.w; VB.y -= (mid.y-lastMid.y)/r.height*VB.h; } }
+      lastDist=dist; lastMid=mid; _mapPanned=true; clamp(); apply();
+      try{ svg.setPointerCapture(e.pointerId); }catch(_){}
+    } else {
+      const dx=e.clientX-prev.x, dy=e.clientY-prev.y; moved += Math.hypot(dx,dy);
+      if(moved>6){ _mapPanned=true; VB.x -= dx/r.width*VB.w; VB.y -= dy/r.height*VB.h; clamp(); apply();
+        try{ svg.setPointerCapture(e.pointerId); }catch(_){} }
+    }
+  });
+  const end = e=>{ pts.delete(e.pointerId); if(pts.size<2){ lastDist=0; lastMid=null; } };
+  svg.addEventListener('pointerup', end);
+  svg.addEventListener('pointercancel', end);
+  svg.addEventListener('wheel', e=>{
+    e.preventDefault(); zoomTo(e.clientX, e.clientY, VB.w*(e.deltaY<0?0.85:1.18)); clamp(); apply();
+  }, {passive:false});
+}
+
 let _mapPicked = false;
 function runMapReveal(done){
   const mr = document.getElementById('map-reveal');
@@ -8171,6 +8237,7 @@ function runMapReveal(done){
   };
 
   renderStorePoints(proceed);
+  enableMapZoom(mr.querySelector('.mr-map'));     // pinch/drag/wheel zoom + pan
   mr.style.display = 'flex';
   void mr.offsetHeight;            // commit display before animating
   mr.classList.add('mr-show');
