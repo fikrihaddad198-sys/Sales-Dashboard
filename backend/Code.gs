@@ -124,6 +124,12 @@ function apiRegister(idFore, name){
 
 function apiPoll(requestId){
   if (!requestId) return { ok:false, error:'no_request' };
+  // Process any pending owner button-taps on-demand. The waiting user's browser
+  // polls this every ~3s, so the approval shows within seconds instead of
+  // waiting up to ~60s for the 1-minute pollTelegram() trigger. The trigger
+  // stays as a fallback for when nobody is actively waiting. pollTelegram() is
+  // lock-guarded, so concurrent waiters can't double-pull getUpdates.
+  try { pollTelegram(); } catch(e) {}
   const row = findRow(requestId);
   if (!row) return { ok:false, error:'not_found' };
 
@@ -446,24 +452,34 @@ function jsonp(obj, cb){
 // Called by a 1-minute time-driven trigger (set up via setupPollTrigger).
 // Fetches pending Telegram updates and processes approve/reject button taps.
 function pollTelegram(){
-  const props = PropertiesService.getScriptProperties();
-  let offset  = parseInt(props.getProperty('tgOffset') || '0', 10);
+  // Lock so concurrent callers (multiple waiting users via apiPoll, plus the
+  // 1-min trigger) can't pull getUpdates at the same time — that would race on
+  // the offset and silently drop approvals. Whoever can't get the lock just
+  // skips; the update is still picked up on the next poll.
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(200)) return;
+  try {
+    const props = PropertiesService.getScriptProperties();
+    let offset  = parseInt(props.getProperty('tgOffset') || '0', 10);
 
-  const res = tgApi('getUpdates', {
-    offset           : offset,
-    limit            : 100,
-    timeout          : 0,
-    allowed_updates  : ['callback_query', 'message']
-  });
+    const res = tgApi('getUpdates', {
+      offset           : offset,
+      limit            : 100,
+      timeout          : 0,
+      allowed_updates  : ['callback_query', 'message']
+    });
 
-  if (!res || !res.ok || !res.result || !res.result.length) return;
+    if (!res || !res.ok || !res.result || !res.result.length) return;
 
-  res.result.forEach(function(update){
-    try { handleTelegramUpdate(update); } catch(e) {}
-    offset = update.update_id + 1;
-  });
+    res.result.forEach(function(update){
+      try { handleTelegramUpdate(update); } catch(e) {}
+      offset = update.update_id + 1;
+    });
 
-  props.setProperty('tgOffset', String(offset));
+    props.setProperty('tgOffset', String(offset));
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // Run ONCE to create the 1-minute polling trigger.
