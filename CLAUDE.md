@@ -180,7 +180,7 @@ The indicator dot is counter-scaled: `transform: scaleX(calc(1 / max(var(--p, 0.
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v62`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v63`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -249,7 +249,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v62` → increment to `fore-v63`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v63` → increment to `fore-v64`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
