@@ -158,6 +158,8 @@ The indicator dot is counter-scaled: `transform: scaleX(calc(1 / max(var(--p, 0.
 
 ## Design System
 
+**Quiet Ledger calm pass (all `.page`s)**: every dashboard page is flattened — data `.card`/`.metric-card` are flat solid surfaces (`--bg2` / `#fff`), hairline borders, calm hover (border-color only, no lift), **NO glass blur, NO glow** (`text-shadow:none` across `.page`, progress bars thin/solid/flat, hero orbs hidden), and `tabular-nums` throughout. Glass identity is **kept only on chrome (nav/header) + the map reveal** (both live outside `.page`). Big value numbers are **neutral**; colour is reserved for genuine status: Achievement/Daily Pace, the metric-card status **sub** (`sc`: green=good, red=warning, grey=neutral — set in `renderKpi`), and channel identity (dot/bar/%). Don't reintroduce glow/glass on data surfaces.
+
 **Dark mode** (default):
 ```css
 --bg: #0a0a0b; --bg1: #101012; --bg2: #161618; --bg3: #1e1e21; --bg4: #27272a;
@@ -180,7 +182,7 @@ The indicator dot is counter-scaled: `transform: scaleX(calc(1 / max(var(--p, 0.
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v63`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v64`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -249,7 +251,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v63` → increment to `fore-v64`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v64` → increment to `fore-v65`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`

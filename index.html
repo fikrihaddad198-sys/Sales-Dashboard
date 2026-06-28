@@ -2302,34 +2302,36 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
    KPI page matches the flat, restrained demo aesthetic.
    No other page is affected.
 ═══════════════════════════════════════════════════════ */
-/* QUIET LEDGER: flat solid surfaces, hairline borders, NO glass, NO glow.
-   Tabular numerals throughout so number columns line up like a ledger. */
-#page-kpi { font-variant-numeric: tabular-nums; }
-#page-kpi .card,
-#page-kpi .metric-card {
+/* QUIET LEDGER — applied to EVERY dashboard page (.page), not just KPI:
+   flat solid surfaces, hairline borders, NO glass, NO glow. Tabular numerals so
+   number columns line up like a ledger. Chrome (nav/header) and the map reveal
+   live OUTSIDE .page, so their glass identity stays. */
+.page { font-variant-numeric: tabular-nums; }
+.page .card,
+.page .metric-card {
   border-radius: 14px;
   background: var(--bg2);
   backdrop-filter: none; -webkit-backdrop-filter: none;
   box-shadow: none;
   border: 1px solid var(--border);
 }
-[data-theme="light"] #page-kpi .card,
-[data-theme="light"] #page-kpi .metric-card { background: #fff; border-color: rgba(9,9,11,0.08); }
-#page-kpi .card:hover,
-#page-kpi .metric-card:hover,
-#page-kpi .card-glow:hover {
+[data-theme="light"] .page .card,
+[data-theme="light"] .page .metric-card { background: #fff; border-color: rgba(9,9,11,0.08); }
+.page .card:hover,
+.page .metric-card:hover,
+.page .card-glow:hover {
   box-shadow: none;
   border-color: var(--border-md);
   transform: none;
 }
 /* flat status dots — no glow */
-#page-kpi .card-hdr-dot,
-#page-kpi .sdot { box-shadow: none; }
+.page .card-hdr-dot,
+.page .sdot { box-shadow: none; }
 /* kill the number entrance GLOW (keep the count-up); ledger numbers stay calm */
-#page-kpi .hero-num,
-#page-kpi .hero-kpi-val,
-#page-kpi .fc-big,
-#page-kpi .mc-val {
+.page .hero-num,
+.page .hero-kpi-val,
+.page .fc-big,
+.page .mc-val {
   animation: number-count 0.4s var(--ease-out) forwards !important;
   text-shadow: none !important;
 }
@@ -2366,39 +2368,39 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   border-color: rgba(9,9,11,0.16) !important;
   box-shadow: none !important;
 }
-/* ── CALM PASS v2 — kill the loud glow + rainbow the first pass missed ── */
+/* ── CALM PASS — kill the loud glow + rainbow across ALL pages ── */
 /* no number glow anywhere (these were set inline via JS textShadow) */
-#page-kpi * { text-shadow: none !important; }
-/* no ambient gold blobs behind the hero (orb3 survived the first pass) */
-#page-kpi .hero-banner .orb1,
-#page-kpi .hero-banner .orb2,
-#page-kpi .hero-banner .orb3 { display: none !important; }
-/* progress bar: thin, solid, flat — no glow bar, no glowing white oval */
-#page-kpi .progress-track { height: 6px; }
-#page-kpi .progress-fill {
+.page * { text-shadow: none !important; }
+/* no ambient gold blobs behind the KPI hero */
+.page .hero-banner .orb1,
+.page .hero-banner .orb2,
+.page .hero-banner .orb3 { display: none !important; }
+/* progress bars: thin, solid, flat — no glow bar, no glowing white oval */
+.page .progress-track { height: 6px; }
+.page .progress-fill {
   background: var(--gold) !important;
   box-shadow: none !important;
 }
-#page-kpi .progress-fill::after {
+.page .progress-fill::after {
   width: 9px; height: 9px;
   background: var(--gold);
   box-shadow: none;
 }
-/* metric-strip + channel GMV numbers go NEUTRAL — colour is reserved for the
-   two hero status KPIs (Achievement / Daily Pace) only. Kills the rainbow. */
-#page-kpi .mc-val,
-#page-kpi .contrib-ch-gmv { color: var(--t1) !important; }
+/* big value numbers go NEUTRAL — colour is reserved for genuine status signals
+   (Achievement / Daily Pace, the metric-card status sub, channel identity). */
+.page .mc-val,
+.page .contrib-ch-gmv { color: var(--t1) !important; }
 
 /* solid button — no gradient, no glow, no sheen */
-#page-kpi .btn {
+.page .btn {
   background: var(--cyan);
   color: #15100a;
   box-shadow: none;
 }
-#page-kpi .btn::after { display: none; }
-#page-kpi .btn:hover  { transform: none; box-shadow: none; filter: brightness(1.07); }
-#page-kpi .btn:active { transform: scale(0.98); box-shadow: none; filter: none; }
-#page-kpi .inp:focus  { box-shadow: 0 0 0 2px rgba(201,168,76,0.18); }
+.page .btn::after { display: none; }
+.page .btn:hover  { transform: none; box-shadow: none; filter: brightness(1.07); }
+.page .btn:active { transform: scale(0.98); box-shadow: none; filter: none; }
+.page .inp:focus  { box-shadow: 0 0 0 2px rgba(201,168,76,0.18); }
 
 /* Hero 3-column layout */
 #page-kpi .hero-3col {
@@ -5187,11 +5189,13 @@ function calcKpi(skipCharts){
   document.getElementById('h-gmv-sub').innerHTML=elapsed+' hari berjalan &nbsp;'+paceStatus;
 
   /* Metric strip — 8 cards */
+  // Quiet Ledger: value stays neutral; the status SUB carries a small colour
+  // signal — green = good, red = warning, grey = non-status (neutral).
   const stripItems=[
-    {l:'Target GMV',    v:fmtRp(target),      s:'bulan ini',       c:'var(--cyan)'},
-    {l:'Gap to Target', v:fmtRp(Math.abs(target-data.gmv)), s:target-data.gmv<=0?'✓ Tercapai':'Kurang', c:target-data.gmv<=0?'var(--green)':'var(--red)'},
-    {l:'Daily Target',  v:fmtRp(dailyTarget),  s:'per hari',        c:'var(--amber)'},
-    {l:'Forecast EOM',  v:fmtRp(forecastEom),  s:forecastEom>=target?'✓ On track':'⚠ Risk', c:forecastEom>=target?'var(--green)':'var(--red)'},
+    {l:'Target GMV',    v:fmtRp(target),      s:'bulan ini',       sc:'var(--t3)'},
+    {l:'Gap to Target', v:fmtRp(Math.abs(target-data.gmv)), s:target-data.gmv<=0?'✓ Tercapai':'Kurang', sc:target-data.gmv<=0?'var(--green)':'var(--red)'},
+    {l:'Daily Target',  v:fmtRp(dailyTarget),  s:'per hari',        sc:'var(--t3)'},
+    {l:'Forecast EOM',  v:fmtRp(forecastEom),  s:forecastEom>=target?'✓ On track':'⚠ Risk', sc:forecastEom>=target?'var(--green)':'var(--red)'},
   ];
   const stripEl = document.getElementById('kpi-strip-grid');
   const existingCards = stripEl.querySelectorAll('.metric-card');
@@ -5199,18 +5203,19 @@ function calcKpi(skipCharts){
     /* update in-place — no DOM teardown, no blink */
     stripItems.forEach((k,i)=>{
       const card = existingCards[i];
-      card.style.setProperty('--mc', k.c);
+      card.style.setProperty('--mc', k.sc);
       card.querySelector('.mc-val').textContent = k.v;
-      card.querySelector('.mc-val').style.color = k.c;
-      card.querySelector('.mc-sub').textContent = k.s;
+      card.querySelector('.mc-val').style.color = '';        // neutral (CSS controls)
+      const subEl = card.querySelector('.mc-sub');
+      subEl.textContent = k.s; subEl.style.color = k.sc;     // small status colour
     });
   } else {
     const stripKeys=['target','gap','daily_target','forecast'];
   stripEl.innerHTML = stripItems.map((k,i)=>`
-      <div class="metric-card kpi-clickable" style="--mc:${k.c}" onclick="openKpiModal('${stripKeys[i]}',this)" title="Lihat detail">
+      <div class="metric-card kpi-clickable" style="--mc:${k.sc}" onclick="openKpiModal('${stripKeys[i]}',this)" title="Lihat detail">
         <div class="mc-label">${k.l}</div>
-        <div class="mc-val" style="color:${k.c}">${k.v}</div>
-        <div class="mc-sub">${k.s}</div>
+        <div class="mc-val">${k.v}</div>
+        <div class="mc-sub" style="color:${k.sc}">${k.s}</div>
       </div>`).join('');
     /* attach spotlight listener to newly created cards */
     if(window.attachGhostGlow) stripEl.querySelectorAll('.metric-card').forEach(window.attachGhostGlow);
