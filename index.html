@@ -2366,8 +2366,28 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   border-color: rgba(9,9,11,0.16) !important;
   box-shadow: none !important;
 }
+/* ── CALM PASS v2 — kill the loud glow + rainbow the first pass missed ── */
+/* no number glow anywhere (these were set inline via JS textShadow) */
+#page-kpi * { text-shadow: none !important; }
+/* no ambient gold blobs behind the hero (orb3 survived the first pass) */
 #page-kpi .hero-banner .orb1,
-#page-kpi .hero-banner .orb2 { display: none; }      /* remove ambient orbs */
+#page-kpi .hero-banner .orb2,
+#page-kpi .hero-banner .orb3 { display: none !important; }
+/* progress bar: thin, solid, flat — no glow bar, no glowing white oval */
+#page-kpi .progress-track { height: 6px; }
+#page-kpi .progress-fill {
+  background: var(--gold) !important;
+  box-shadow: none !important;
+}
+#page-kpi .progress-fill::after {
+  width: 9px; height: 9px;
+  background: var(--gold);
+  box-shadow: none;
+}
+/* metric-strip + channel GMV numbers go NEUTRAL — colour is reserved for the
+   two hero status KPIs (Achievement / Daily Pace) only. Kills the rainbow. */
+#page-kpi .mc-val,
+#page-kpi .contrib-ch-gmv { color: var(--t1) !important; }
 
 /* solid button — no gradient, no glow, no sheen */
 #page-kpi .btn {
