@@ -1019,55 +1019,44 @@ body.dr-animating .reveal {
 ───────────────────────────────────────────────────── */
 #page-kpi { background: var(--bg); padding: 0; }
 
+/* Quiet Ledger control bar — flat, hairline, no glass. Each control is a stacked
+   mini-field (small label ABOVE the control). */
 .kpi-filter-bar {
-  display: flex; align-items: center; gap: var(--sp3); flex-wrap: wrap;
-  padding: 11px max(var(--sp6), calc((100% - 1280px) / 2 + var(--sp6)));
-  background: rgba(7,12,9,0.78);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border-bottom: 1px solid rgba(201,168,76,0.10);
+  display: flex; align-items: flex-end; gap: var(--sp4); flex-wrap: wrap;
+  padding: 14px max(var(--sp6), calc((100% - 1280px) / 2 + var(--sp6)));
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
   position: sticky; top: 0; z-index: 20;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.028) inset, 0 4px 24px rgba(0,0,0,0.5);
 }
 [data-theme="light"] .kpi-filter-bar {
-  padding-left: max(var(--sp6), calc((100% - 1280px) / 2 + var(--sp6)));
-  padding-right: max(var(--sp6), calc((100% - 1280px) / 2 + var(--sp6)));
-  background: rgba(46,107,69,0.82);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  border-bottom: 1px solid rgba(0,0,0,0.10);
-  box-shadow: 0 4px 18px rgba(27,42,31,0.22);
+  background: var(--bg);
+  border-bottom: 1px solid rgba(9,9,11,0.08);
 }
-[data-theme="light"] .kpi-filter-bar .filter-label { color: rgba(255,255,255,0.9); }
-[data-theme="light"] .kpi-filter-bar .filter-sep { color: rgba(255,255,255,0.45); }
-/* Override global light drp-btn style inside filter bar */
-[data-theme="light"] .kpi-filter-bar .drp-btn {
-  background: rgba(255,255,255,0.18) !important;
-  border: 1px solid rgba(255,255,255,0.32) !important;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.22) inset, 0 4px 12px rgba(0,0,0,0.12) !important;
-  color: #fff !important;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+/* flat, calm controls — no glass, hairline border, consistent height */
+.kpi-filter-bar .drp-btn,
+.kpi-filter-bar .inp {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  box-shadow: none;
+  border-radius: 10px;
+  height: 40px;
 }
-[data-theme="light"] .kpi-filter-bar .drp-btn:hover {
-  background: rgba(255,255,255,0.26) !important;
-  border-color: rgba(255,255,255,0.5) !important;
-}
-[data-theme="light"] .kpi-filter-bar .drp-btn-icon,
-[data-theme="light"] .kpi-filter-bar .drp-btn-arrow { color: rgba(255,255,255,0.8); }
+.kpi-filter-bar .drp-btn:hover { border-color: var(--border-md); background: var(--bg3); }
+.kpi-filter-bar .inp:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(201,168,76,0.16); }
+[data-theme="light"] .kpi-filter-bar .drp-btn,
 [data-theme="light"] .kpi-filter-bar .inp {
-  color: #fff !important;
-  border-color: rgba(255,255,255,0.32) !important;
-  background: rgba(255,255,255,0.18) !important;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.22) inset !important;
+  background: #fff; border-color: rgba(9,9,11,0.12); color: var(--t1); box-shadow: none;
 }
-[data-theme="light"] .kpi-filter-bar .inp::placeholder { color: rgba(255,255,255,0.5); }
-.filter-group { display: flex; align-items: center; gap: var(--sp2); }
+[data-theme="light"] .kpi-filter-bar .inp::placeholder { color: var(--t3); }
+[data-theme="light"] .kpi-filter-bar .drp-btn-icon,
+[data-theme="light"] .kpi-filter-bar .drp-btn-arrow { color: var(--t2); }
+
+.filter-group { display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
 .filter-label {
   font-size: 9.5px; font-weight: 700; color: var(--t3);
-  letter-spacing: 1.2px; text-transform: uppercase; white-space: nowrap;
+  letter-spacing: 1.4px; text-transform: uppercase; white-space: nowrap;
 }
-.filter-sep { color: var(--t3); font-size: 11px; }
+.filter-sep { display: none; }
 
 .kpi-scroll {
   padding: var(--sp6) max(var(--sp7), calc((100% - 1280px) / 2));
@@ -1864,7 +1853,18 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   .fldt-grid, .g3, .period-grid { grid-template-columns: 1fr; }
   .page { padding: 14px; }
   .kpi-scroll { padding: 14px; }
-  .kpi-filter-bar { padding: 10px 14px; }
+  /* Filter bar: NOT sticky on mobile (don't eat the screen while scrolling),
+     compact 2-column grid so controls never overflow. */
+  .kpi-filter-bar {
+    position: static;
+    padding: 12px 14px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; align-items: end;
+  }
+  .kpi-filter-bar .filter-group:nth-child(1) { grid-column: 1 / -1; }   /* Periode full */
+  .kpi-filter-bar .filter-group:nth-child(4) { grid-column: 1 / -1; margin-left: 0; }  /* Export full */
+  .kpi-filter-bar .drp-btn,
+  .kpi-filter-bar .inp { width: 100%; min-width: 0 !important; }
+  .kpi-filter-bar .filter-group:nth-child(4) .drp-btn { justify-content: center; }
   .header { padding: 0 14px; }
   .header-clock, .header-store { display: none; }
   .hero-banner { padding: 18px 20px; }
