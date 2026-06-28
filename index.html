@@ -2649,6 +2649,37 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 #map-reveal.mr-zoom .mr-title,
 #map-reveal.mr-zoom .mr-hint   { opacity: 0; }
 
+/* ── Locked (no-data-yet) stores ── dim grey dot, no pulse/ring; the name shows
+   only via the tap "tease" toast, so the map stays uncluttered. Kemang (unlocked)
+   keeps the full gold dot + label. */
+.mr-store.mr-locked .mr-dot  { fill:#8b8b8b; filter:drop-shadow(0 0 4px rgba(0,0,0,.45)); }
+.mr-store.mr-locked .mr-ring { display:none; }
+.mr-store.mr-locked .mr-glow { fill: rgba(140,140,140,.10); }
+.mr-store.mr-locked .mr-label{ opacity:0; }
+#map-reveal.mr-show .mr-store.mr-locked .mr-dot   { animation: mrPop .45s var(--ease-out) 1.7s forwards; }
+#map-reveal.mr-show .mr-store.mr-locked .mr-label { animation: none; }
+[data-theme="light"] .mr-store.mr-locked .mr-dot { fill:#9a9a9a; filter:drop-shadow(0 0 4px rgba(0,0,0,.2)); }
+
+/* Tapping a locked store: partial dive + blur (JS eases it back after). */
+#map-reveal.mr-zoom-locked .mr-map   { transform: scale(3.2); filter: blur(15px); opacity:.5; }
+#map-reveal.mr-zoom-locked .mr-title,
+#map-reveal.mr-zoom-locked .mr-hint  { opacity: 0; }
+
+/* Cringe "still locked" toast */
+.mr-joke {
+  position:absolute; left:50%; bottom:15%; transform:translate(-50%,12px);
+  z-index:6; text-align:center; pointer-events:none; max-width:78%;
+  background:rgba(16,16,18,.92); border:1px solid rgba(255,255,255,.12);
+  border-radius:14px; padding:13px 20px;
+  opacity:0; transition:opacity .35s var(--ease-out), transform .35s var(--ease-out);
+}
+.mr-joke.show     { opacity:1; transform:translate(-50%,0); }
+.mr-joke-lock     { font-size:12.5px; font-weight:700; color:#ffd98a; margin-bottom:5px; letter-spacing:.02em; }
+.mr-joke-text     { font-size:14px; color:#fafafa; line-height:1.45; }
+[data-theme="light"] .mr-joke      { background:rgba(255,255,255,.96); border-color:rgba(9,9,11,.12); }
+[data-theme="light"] .mr-joke-lock { color:#c98a2e; }
+[data-theme="light"] .mr-joke-text { color:#18181b; }
+
 @keyframes mrDraw { to { stroke-dashoffset: 0; } }
 @keyframes mrFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @keyframes mrPop  { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
@@ -7981,8 +8012,27 @@ function grantAccess(){
 /* ── Store points on the map (add stores here as you expand) ──
    x,y are in the SVG viewBox (0..1000 wide, 0..979 tall — real Jakarta geo).
    region: utara | barat | pusat | timur | selatan. */
+// x/y are SVG-viewBox coords (1000×979). Locked stores were auto-placed from
+// lat/lng via a linear projection calibrated to Kemang's known (449,587) —
+// nudge x/y if a dot sits slightly off, and flip `locked:false` once a store
+// has data. Names are placeholders from Fore's public listing; correct freely.
 const STORE_POINTS = [
   { name: 'Kemang Raya', region: 'selatan', x: 449, y: 587 },
+  { name: 'Cipete', region: 'selatan', x: 401, y: 648, locked: true },
+  { name: 'GAMA Tower Kuningan', region: 'selatan', x: 511, y: 495, locked: true },
+  { name: 'Kalibata City', region: 'selatan', x: 587, y: 571, locked: true },
+  { name: 'Pesanggrahan', region: 'selatan', x: 277, y: 540, locked: true },
+  { name: 'Gandaria City', region: 'selatan', x: 343, y: 530, locked: true },
+  { name: 'Pacific Place', region: 'selatan', x: 436, y: 462, locked: true },
+  { name: 'Sultan Iskandar Muda', region: 'selatan', x: 336, y: 606, locked: true },
+  { name: 'Cideng', region: 'pusat', x: 441, y: 261, locked: true },
+  { name: 'Citra Kemayoran', region: 'pusat', x: 591, y: 228, locked: true },
+  { name: 'Citywalk Sudirman', region: 'pusat', x: 455, y: 401, locked: true },
+  { name: 'Green Pramuka', region: 'pusat', x: 634, y: 304, locked: true },
+  { name: 'Standard Chartered', region: 'pusat', x: 476, y: 427, locked: true },
+  { name: 'Thamrin', region: 'pusat', x: 485, y: 353, locked: true },
+  { name: 'Tanjung Duren', region: 'barat', x: 364, y: 304, locked: true },
+  { name: 'Mall of Indonesia', region: 'utara', x: 709, y: 214, locked: true },
 ];
 
 function renderStorePoints(onPick){
@@ -7992,10 +8042,10 @@ function renderStorePoints(onPick){
   g.innerHTML = '';
   STORE_POINTS.forEach(s => {
     const wrap = document.createElementNS(NS, 'g');
-    wrap.setAttribute('class', 'mr-store');
+    wrap.setAttribute('class', 'mr-store' + (s.locked ? ' mr-locked' : ''));
     wrap.setAttribute('tabindex', '0');
     wrap.setAttribute('role', 'button');
-    wrap.setAttribute('aria-label', 'Masuk toko ' + s.name);
+    wrap.setAttribute('aria-label', (s.locked ? 'Toko terkunci: ' : 'Masuk toko ') + s.name);
     const hit = document.createElementNS(NS, 'circle');   // generous tap target
     hit.setAttribute('class','mr-hit'); hit.setAttribute('cx',s.x); hit.setAttribute('cy',s.y); hit.setAttribute('r','30');
     const glow = document.createElementNS(NS, 'circle');
@@ -8018,6 +8068,43 @@ function renderStorePoints(onPick){
 /* Show the map; WAIT for the user to tap their store, then call done()
    (which reveals the dashboard). Honours reduced-motion by skipping straight
    through — no click needed if motion is reduced. */
+/* Cringe one-liners shown when a not-yet-open store is tapped. Edit freely. */
+const MAP_JOKES = [
+  'Sabar ya… toko ini masih malu-malu kucing 🐱',
+  'Belum kebuka — masih jadi anak rumahan 🏠',
+  'Toko ini masih jomblo, belum siap nge-commit ke kamu 💔',
+  'Eits, ini bukan jodohmu… datanya aja belum ada 📊',
+  'Loading kebahagiaan… 0%. Coba lain kali ya 😌',
+  'Outlet ini lagi nyari jati diri dulu, jangan diganggu ✨',
+  'Maaf, kamu belum di-approve sama semesta 🌌',
+  'Digembok rapat, kayak hati mantan 🔒',
+  'Premium dulu dong 💅 …becanda, sabar aja',
+  'Masih on the way, kayak gebetan yang gak dateng-dateng 🚗',
+];
+function pickJoke(){ return MAP_JOKES[Math.floor(Math.random()*MAP_JOKES.length)]; }
+let _mapAnimating = false;
+/* Tapping a locked store: a teasing partial zoom+blur toward it, a cringe toast,
+   then it eases back so the user can pick the real (unlocked) one. Never enters
+   the dashboard. */
+function showLockedTease(mr, store){
+  if(!mr || !store) return;
+  _mapAnimating = true;
+  const map = mr.querySelector('.mr-map');
+  if(map){
+    const ox=(store.x/1000*100).toFixed(2), oy=(store.y/979*100).toFixed(2);
+    map.style.transformOrigin = ox+'% '+oy+'%';
+  }
+  mr.classList.add('mr-zoom-locked');
+  const t = document.createElement('div'); t.className='mr-joke';
+  const l = document.createElement('div'); l.className='mr-joke-lock'; l.textContent='🔒 '+store.name+' masih terkunci';
+  const j = document.createElement('div'); j.className='mr-joke-text'; j.textContent=pickJoke();
+  t.append(l, j); mr.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{ mr.classList.remove('mr-zoom-locked'); }, 1900);  // ease map back
+  setTimeout(()=>{ t.classList.remove('show'); }, 2400);
+  setTimeout(()=>{ if(t.parentNode) t.remove(); if(map) map.style.transformOrigin=''; _mapAnimating=false; }, 2900);
+}
+
 let _mapPicked = false;
 function runMapReveal(done){
   const mr = document.getElementById('map-reveal');
@@ -8026,6 +8113,8 @@ function runMapReveal(done){
   _mapPicked = false;
 
   const proceed = (store) => {
+    if(_mapAnimating) return;                                         // ignore taps mid-tease
+    if(store && store.locked){ showLockedTease(mr, store); return; }  // not open yet → tease + joke
     if(_mapPicked) return;
     _mapPicked = true;
     // store the chosen store for later (data filtering when multi-store)
