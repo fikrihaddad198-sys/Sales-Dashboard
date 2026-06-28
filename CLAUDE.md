@@ -180,7 +180,7 @@ The indicator dot is counter-scaled: `transform: scaleX(calc(1 / max(var(--p, 0.
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v57`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v58`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -189,7 +189,11 @@ Strategy:
 
 ## Map (Jakarta regions)
 
-Real GeoJSON ADM2 boundaries for 5 DKI Jakarta regions rendered inline as SVG. Store dots (`STORE_POINTS`) are positioned with `x/y` pixel coords relative to the 640×520 SVG viewport. Light mode map outline uses `--t3`, not gold.
+Real GeoJSON ADM2 boundaries for 5 DKI Jakarta regions rendered inline as SVG (viewBox `1000×979`; the region `<path>`s are baked — there is no live projection function). Store dots (`STORE_POINTS`) are positioned with `x/y` coords in that viewBox. Light mode map outline uses `--t3`, not gold.
+
+**Placing new store dots from lat/lng**: the projection is ~linear over Jakarta, so `x = (lng−106.686)/(106.973−106.686)·1000` and `y = (lat−(−6.089))/((−6.371)−(−6.089))·979`, then offset-calibrated so Kemang (`-6.2605,106.8133`) lands on its known `(449,587)`. Good to ~±10px; nudge `x/y` after. (Don't ask the user for coords — compute them.)
+
+**Locked stores**: each `STORE_POINTS` entry may set `locked: true` (no data yet). Locked dots render grey, no pulse/ring, label hidden (`.mr-locked`). Tapping a locked dot calls `showLockedTease()` — a partial zoom+blur toward it + a random cringe one-liner from `MAP_JOKES` in a `.mr-joke` toast, then it eases back (never enters the dashboard). Unlocked dots (currently only Kemang) dive into the app as before. Flip `locked:false` once a store has data. `_mapAnimating` guards taps mid-tease.
 
 **Post-login reveal**: after grant, the Fore logo animates for ~2s then "deflates", and the Jakarta map fades in (`opacity:0` → `.mr-show`) with a zoom — tuned so it does not cover the logo background. The user is fond of this; don't shorten or flatten the reveal without asking. Store dots are clickable.
 
@@ -243,7 +247,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v57` → increment to `fore-v58`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v58` → increment to `fore-v59`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
