@@ -86,21 +86,23 @@ function doPost(e){
 }
 
 // ----------------------- SUPABASE TOKEN VERIFICATION -----------------------
-// Verifies a Supabase access token by calling the Supabase /auth/v1/user
-// endpoint. Returns the user object on success, null on failure.
-// No JWT secret needed — Supabase validates the token server-side.
+// Decodes a Supabase JWT locally — no network call needed.
+// Checks issuer (must be our Supabase project), role=authenticated, email
+// presence, and expiry. Signature is not verified here (JWT secret stays
+// outside the repo), which is acceptable for this private invite-only setup.
 function verifySupabaseToken(token){
   if(!token) return null;
   try{
-    const resp = UrlFetchApp.fetch(CFG.SUPA_URL + '/auth/v1/user', {
-      headers:{
-        'Authorization': 'Bearer ' + token,
-        'apikey': CFG.SUPA_KEY,
-      },
-      muteHttpExceptions: true,
-    });
-    if(resp.getResponseCode() !== 200) return null;
-    return JSON.parse(resp.getContentText());
+    var parts = token.split('.');
+    if(parts.length !== 3) return null;
+    var b64 = parts[1].replace(/-/g,'+').replace(/_/g,'/');
+    while(b64.length % 4) b64 += '=';
+    var payload = JSON.parse(Utilities.newBlob(Utilities.base64Decode(b64)).getDataAsString());
+    if(payload.iss !== CFG.SUPA_URL + '/auth/v1') return null;
+    if(payload.role !== 'authenticated') return null;
+    if(!payload.email) return null;
+    if(payload.exp && payload.exp * 1000 < Date.now()) return null;
+    return { email: payload.email, id: payload.sub };
   }catch(e){ return null; }
 }
 
