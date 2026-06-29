@@ -42,7 +42,7 @@ const CFG = {
   // Supabase Auth
   SUPA_URL       : 'https://umarsaninyxepfgscjts.supabase.co',
   // Public anon key — safe to commit (client-side key, not a secret).
-  SUPA_KEY       : 'sb_publishable_lUAxcPI7Poo0sORbe5cbMw__nQAUqFQ',
+  SUPA_KEY       : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtYXJzYW5pbnl4ZXBmZ3NjanRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3MDYwMjgsImV4cCI6MjA5ODI4MjAyOH0.lYA4Kuiz_YnOXuL6ISyQjp-tBOPTYXXEHgcjZxlunf8',
   OWNER_EMAIL    : 'fikrihaddad198@gmail.com',
 };
 // ======================================================
