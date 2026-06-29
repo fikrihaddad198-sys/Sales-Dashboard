@@ -5574,9 +5574,13 @@ const DOCK_MAX_SCALE = 1.5;   // nearest icon
 const DOCK_RADIUS    = 90;    // px of influence above/below cursor
 let _dockRaf = null, _dockPointerY = 0, _dockBtns = null;
 
+/* Reduced-motion is the only static gate. Touch-vs-precise is decided per
+   event via pointerType — iPadOS reports (pointer:coarse) even WITH a trackpad
+   attached (touch is the "primary" pointer), so a media query would wrongly
+   disable the dock there. pointerType is accurate: 'mouse'/'pen' magnify,
+   'touch' is skipped in the handler. */
 function _dockSupported() {
-  return window.matchMedia('(pointer: fine)').matches &&
-         !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 function resetDockMagnify() {
   const nav = document.getElementById('main-nav');
@@ -5608,6 +5612,7 @@ function initDockMagnify() {
   const nav = document.getElementById('main-nav');
   if (!nav) return;
   nav.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') return;   // proximity needs a hovering cursor
     if (!nav.classList.contains('collapsed') || !_dockSupported()) return;
     _dockPointerY = e.clientY;
     if (!nav.classList.contains('dock-live')) {
