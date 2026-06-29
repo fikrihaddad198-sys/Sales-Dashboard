@@ -7912,7 +7912,6 @@ function replayProgressBar(){
 
 /* ── Access granted → splash → dashboard ── */
 function grantAccess(){
-  stopPolling();
   startHeartbeat();
   _chartAnim = true;   // animate the chart draw for this fresh entrance
   document.dispatchEvent(new Event('fore-session-change'));
