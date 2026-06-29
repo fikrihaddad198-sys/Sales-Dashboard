@@ -999,14 +999,16 @@ body.dr-animating .reveal {
 
 /* ── Desktop sidebar (≥769px) ───────────────────────────────────────────── */
 .sidebar-toggle-inline {
-  display: none; /* hidden on mobile by default */
+  display: none;
 }
 @media (min-width: 769px) {
-  /* Sidebar panel — 240px per data-dense dashboard spec, collapse to 60px icon-rail */
+  /* --ease-out-expo from impeccable/animate.md: "Confident, decisive" */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
   #main-nav {
     position: fixed;
     top: 0; left: 0; bottom: 0;
-    width: 240px;
+    width: 232px;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
@@ -1016,15 +1018,14 @@ body.dr-animating .reveal {
     border-bottom: none;
     height: auto;
     overflow: hidden;
-    /* 300ms cubic-bezier(0.4,0,0.2,1) = Material Design standard — feels natural */
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Layout change = 300–500ms range per impeccable. ease-out-expo: snappy start, smooth settle */
+    transition: width 0.32s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 200;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    /* subtle depth shadow — OLED dark mode style */
-    box-shadow: 4px 0 16px rgba(0,0,0,0.24), 1px 0 0 rgba(255,255,255,0.03);
+    box-shadow: 1px 0 0 var(--t4), 4px 0 20px rgba(0,0,0,0.2);
   }
-  #main-nav.collapsed { width: 60px; }
+  #main-nav.collapsed { width: 58px; }
   #main-nav #nav-pill { display: none; }
 
   /* ── Nav buttons ── */
@@ -1032,10 +1033,9 @@ body.dr-animating .reveal {
     flex-direction: row;
     justify-content: flex-start;
     gap: 0.75rem;
-    /* min-height 44px: meets WCAG touch target requirement */
-    min-height: 44px;
-    padding: 0 1.1rem;
-    font-size: 0.875rem;
+    min-height: 44px; /* WCAG 2.5.5 touch target */
+    padding: 0 1rem;
+    font-size: 0.84rem;
     font-weight: 500;
     letter-spacing: 0.01em;
     border-radius: 0;
@@ -1045,169 +1045,167 @@ body.dr-animating .reveal {
     overflow: hidden;
     height: auto;
     cursor: pointer;
-    /* Left accent indicator — transparent by default, gold on active */
-    border-left: 2px solid transparent;
-    /* opacity+background animate; border-left-color comes last so accent feels deliberate */
-    transition: color 0.15s ease, background 0.15s ease, border-left-color 0.25s ease, opacity 0.1s ease;
+    border: none;
+    /* Active state: inset box-shadow as indicator — avoids border-left layout shift, GPU-composited */
+    box-shadow: inset 0 0 0 0 var(--gold);
+    transition: color 0.15s ease, background 0.15s ease, box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.12s ease;
   }
-  /* Icon container — 24px for comfortable 18px icon centering */
   .nav-btn .ni {
     flex-shrink: 0;
-    width: 24px;
-    height: 24px;
+    width: 22px; height: 22px;
     display: flex; align-items: center; justify-content: center;
-    opacity: 0.7;
+    opacity: 0.65;
     transition: opacity 0.15s ease;
   }
-  .nav-btn:hover .ni { opacity: 1; }
+  .nav-btn:hover .ni,
   .nav-btn.active .ni { opacity: 1; }
 
-  /* Label text wrapper — fades out on collapse */
+  /* Label: fades in with a slight delay after sidebar opens */
   .nav-btn .nav-label {
     flex: 1;
     opacity: 1;
-    /* 120ms delay on expand lets width open first, then label fades in */
-    transition: opacity 0.15s ease 0.1s;
+    transition: opacity 0.18s ease 0.12s;
   }
-  /* Hover: subtle OLED-friendly highlight */
   .nav-btn:hover {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.055);
     color: var(--t1);
   }
-  /* Active: gold accent bar + tinted background */
+  /* Active: background tint + inset left shadow as accent (no side-stripe border) */
   .nav-btn.active {
     color: var(--gold);
-    background: color-mix(in srgb, var(--gold) 8%, transparent);
-    border-left-color: var(--gold);
+    background: color-mix(in srgb, var(--gold) 10%, transparent);
+    box-shadow: inset 3px 0 0 var(--gold);
   }
-  .nav-btn.active:hover { background: color-mix(in srgb, var(--gold) 10%, transparent); }
-  /* Press feedback — immediate visual response */
-  .nav-btn:active { opacity: 0.75; }
+  .nav-btn.active:hover { background: color-mix(in srgb, var(--gold) 13%, transparent); }
+  /* Press: 120ms instant feedback */
+  .nav-btn:active { opacity: 0.7; transition-duration: 0.08s; }
 
-  /* ── Collapsed state: icon-rail ── */
+  /* ── Collapsed icon-rail ── */
   #main-nav.collapsed .nav-btn {
     padding: 0;
     justify-content: center;
-    border-left-color: transparent !important;
+    /* Remove the inset left shadow in collapsed mode (icon-only, no room for indicator) */
+    box-shadow: none;
     position: relative;
   }
   #main-nav.collapsed .nav-btn.active {
     color: var(--gold);
-    background: color-mix(in srgb, var(--gold) 8%, transparent);
+    background: color-mix(in srgb, var(--gold) 10%, transparent);
   }
-  /* Label fades out fast (no delay — collapse should feel snappy) */
+  /* Label fades out fast on collapse (exit = 75% of enter per impeccable) */
   #main-nav.collapsed .nav-btn .nav-label {
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.08s ease;
+    transition: opacity 0.09s ease;
   }
-  /* CSS tooltip on collapsed icons — shows page label on hover */
+  /* Tooltip on collapsed icons — shows aria-label on hover */
   #main-nav.collapsed .nav-btn::after {
     content: attr(aria-label);
-    position: absolute;
-    left: calc(100% + 10px);
-    top: 50%; transform: translateY(-50%);
+    position: fixed;
+    left: 66px;
     background: var(--bg3);
     border: 1px solid var(--t4);
     color: var(--t1);
     font-size: 0.78rem;
     font-weight: 500;
-    padding: 0.3rem 0.65rem;
-    border-radius: 6px;
+    padding: 0.28rem 0.6rem;
+    border-radius: 5px;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    transition: opacity 0.15s ease;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.28);
+    transition: opacity 0.14s ease;
     z-index: 300;
+    transform: translateY(-50%);
+    margin-top: 22px;
   }
   #main-nav.collapsed .nav-btn:hover::after { opacity: 1; }
 
-  /* Push content right of sidebar */
+  /* Content area shifts with sidebar — same easing */
   .app-body {
-    margin-left: 240px;
-    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-left: 232px;
+    transition: margin-left 0.32s cubic-bezier(0.16, 1, 0.3, 1);
     padding-bottom: 0;
   }
-  body.sidebar-collapsed .app-body { margin-left: 60px; }
+  body.sidebar-collapsed .app-body { margin-left: 58px; }
 
-  /* ── Toggle button ── */
+  /* ── Toggle / brand row ── */
   .sidebar-toggle-inline {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 1rem 0 1.1rem;
+    padding: 0 0.85rem 0 1rem;
     width: 100%;
-    min-height: 52px;
+    min-height: 50px;
     background: none;
     border: none;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid var(--t4);
     cursor: pointer;
-    color: var(--t2);
+    color: var(--t3);
     flex-shrink: 0;
-    transition: color 0.18s ease, background 0.18s ease;
-    /* Brand label area */
-    gap: 0.75rem;
+    gap: 0.6rem;
+    transition: color 0.15s ease, background 0.15s ease;
   }
-  .sidebar-toggle-inline:hover { color: var(--t1); background: rgba(255,255,255,0.04); }
-  .sidebar-toggle-inline:active { opacity: 0.8; }
+  .sidebar-toggle-inline:hover { color: var(--t2); background: rgba(255,255,255,0.03); }
+  .sidebar-toggle-inline:active { opacity: 0.75; }
 
-  /* Brand wordmark inside toggle row — hidden when collapsed */
+  /* "FC" monogram — small, gold, uppercase, fades on collapse */
   .sidebar-brand {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--gold);
-    opacity: 1;
     flex: 1;
     white-space: nowrap;
-    transition: opacity 0.08s ease;
+    overflow: hidden;
+    opacity: 1;
+    transition: opacity 0.09s ease;
   }
   #main-nav.collapsed .sidebar-brand { opacity: 0; }
 
-  /* Chevron: points left (collapse) — rotates right when collapsed (expand) */
+  /* Chevron rotates 180° on collapse */
   .sidebar-toggle-icon {
     flex-shrink: 0;
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.18s ease;
+    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    color: var(--t3);
   }
+  .sidebar-toggle-inline:hover .sidebar-toggle-icon { color: var(--t2); }
   #main-nav.collapsed .sidebar-toggle-icon { transform: rotate(180deg); }
   #main-nav.collapsed .sidebar-toggle-inline {
     justify-content: center;
     padding: 0;
   }
 
-  /* ── Light mode overrides ── */
+  /* ── Light mode ── */
   [data-theme="light"] #main-nav {
-    background: #fff;
+    background: #fafafa;
     border-right-color: #e4e4e7;
-    box-shadow: 4px 0 16px rgba(0,0,0,0.08), 1px 0 0 rgba(0,0,0,0.04);
+    box-shadow: 1px 0 0 #e4e4e7, 4px 0 20px rgba(0,0,0,0.06);
   }
-  [data-theme="light"] .sidebar-toggle-inline {
-    border-bottom-color: rgba(0,0,0,0.07);
-    color: #71717a;
-  }
-  [data-theme="light"] .sidebar-toggle-inline:hover { background: rgba(0,0,0,0.03); color: #27272a; }
+  [data-theme="light"] .sidebar-toggle-inline { border-bottom-color: #e4e4e7; color: #a1a1aa; }
+  [data-theme="light"] .sidebar-toggle-inline:hover { background: rgba(0,0,0,0.025); color: #52525b; }
   [data-theme="light"] .nav-btn:hover { background: rgba(0,0,0,0.04); color: #18181b; }
-  [data-theme="light"] .nav-btn .ni { opacity: 0.55; }
+  [data-theme="light"] .nav-btn .ni { opacity: 0.5; }
   [data-theme="light"] .nav-btn:hover .ni,
   [data-theme="light"] .nav-btn.active .ni { opacity: 1; }
-  [data-theme="light"] .nav-btn.active { background: color-mix(in srgb, #c9a84c 9%, transparent); }
+  [data-theme="light"] .nav-btn.active {
+    background: color-mix(in srgb, #c9a84c 9%, transparent);
+    box-shadow: inset 3px 0 0 #c9a84c;
+  }
+  [data-theme="light"] #main-nav.collapsed .nav-btn.active { box-shadow: none; }
   [data-theme="light"] #main-nav.collapsed .nav-btn::after {
     background: #fff;
     border-color: #e4e4e7;
     color: #18181b;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
   }
 
-  /* Respect prefers-reduced-motion (High severity per UX guidelines) */
+  /* prefers-reduced-motion — High severity a11y requirement */
   @media (prefers-reduced-motion: reduce) {
-    #main-nav,
-    .app-body,
-    .sidebar-toggle-icon,
-    .nav-btn,
-    .nav-btn .nav-label,
-    .nav-btn .ni { transition: none !important; }
+    #main-nav, .app-body, .sidebar-toggle-icon,
+    .nav-btn, .nav-btn .nav-label, .nav-btn .ni,
+    .sidebar-brand { transition: none !important; }
   }
 }
 /* ── End desktop sidebar ─────────────────────────────────────────────────── */
@@ -4199,9 +4197,8 @@ body.dashboard-locking .card {
 <nav class="nav" id="main-nav">
   <!-- Sidebar collapse toggle (desktop only) -->
   <button class="sidebar-toggle-inline" id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M3 9l9-6 9 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span class="sidebar-brand">Fore Coffee</span>
-    <svg class="sidebar-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <span class="sidebar-brand">FC</span>
+    <svg class="sidebar-toggle-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <!-- Sliding pill: floating active background that glides between tabs -->
   <span id="nav-pill" aria-hidden="true"></span>
