@@ -263,6 +263,7 @@ body::after {
 [data-theme="light"] .cmc-bar { background: #e4e4e7; }
 [data-theme="light"] .peak-high { background: rgba(201,168,76,0.12); }
 [data-theme="light"] .peak-low  { background: rgba(248,113,113,0.08); }
+[data-theme="light"] .top-channel-badge { background: #f4f4f5; border-color: #d4d4d8; }
 
 /* Scrollbar — thin & premium; thumb settles in on hover (no layout shift). */
 ::-webkit-scrollbar { width:6px; height:6px; }
@@ -1042,6 +1043,16 @@ body.dr-animating .reveal {
 }
 .peak-high { background: rgba(201,168,76,0.18); color: var(--gold); border: 1px solid var(--gold); }
 .peak-low  { background: rgba(248,113,113,0.12); color: var(--red);  border: 1px solid var(--red); }
+.top-channel-badge {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 0.72rem; font-weight: 500;
+  background: var(--bg3); border: 1px solid var(--t4);
+  border-radius: 99px; padding: 2px 8px;
+  margin-left: 0.75rem; vertical-align: middle;
+  color: var(--t2);
+}
+.tcb-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.tcb-text { color: var(--t3); }
 .h200 { height:200px; } .h220 { height:220px; } .h240 { height:240px; }
 .h260 { height:260px; } .h280 { height:280px; } .h300 { height:300px; }
 .h320 { height:320px; }
@@ -5059,6 +5070,34 @@ function addPeakMarkers(canvas){
   });
 }
 
+/* Inject a pill badge into the card title showing which channel had the highest
+   total sales. Works for both single-dataset (ch-bar-chart: labels=channels,
+   one dataset) and multi-dataset grouped bars. */
+function addTopChannelBadge(canvas) {
+  const chart = Chart.getChart(canvas);
+  if (!chart) return;
+  const card = canvas.closest('.card');
+  if (!card) return;
+  card.querySelectorAll('.top-channel-badge').forEach(el => el.remove());
+  const labels = chart.data.labels || [];
+  if (!labels.length) return;
+  const totals = labels.map((_, i) =>
+    chart.data.datasets.reduce((s, ds) => s + (Number(ds.data[i]) || 0), 0)
+  );
+  const maxVal = Math.max(...totals);
+  if (maxVal <= 0) return;
+  const maxIdx = totals.indexOf(maxVal);
+  const topLabel = labels[maxIdx];
+  const topKey = topLabel.toLowerCase();
+  const color = (typeof TC !== 'undefined' && TC[topKey]) ? TC[topKey] : 'var(--gold)';
+  const badge = document.createElement('div');
+  badge.className = 'top-channel-badge';
+  badge.innerHTML = `<span class="tcb-dot" style="background:${color}"></span><span>${topLabel}</span> <span class="tcb-text">terbaik bulan ini</span>`;
+  const title = card.querySelector('.card-hdr');
+  if (title) title.appendChild(badge);
+  else card.prepend(badge);
+}
+
 /* Replay the entrance DRAW animation for every chart on a page (reset→update)
    WITHOUT rebuilding — used on tab revisits so charts re-animate each visit.
    Far lighter than renderPage(): no innerHTML, no new Chart() instances, just
@@ -5066,9 +5105,14 @@ function addPeakMarkers(canvas){
 function replayPageCharts(pageEl){
   if(!pageEl || !window.Chart || !Chart.getChart) return;
   if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const CHANNEL_BADGE_IDS = new Set(['ch-bar-chart']);
   pageEl.querySelectorAll('canvas').forEach(cv=>{
     const ch = Chart.getChart(cv);
-    if(ch){ ch.reset(); ch.update(); requestAnimationFrame(()=>addPeakMarkers(cv)); }
+    if(ch){
+      ch.reset(); ch.update();
+      requestAnimationFrame(()=>addPeakMarkers(cv));
+      if(CHANNEL_BADGE_IDS.has(cv.id)) requestAnimationFrame(()=>addTopChannelBadge(cv));
+    }
   });
 }
 function showPage(p,btn,skipHash){
@@ -5651,6 +5695,7 @@ function applyChannelFilter(){
     data:{ labels:channels.map(c=>c.name), datasets:[{ label:'Sales', data:channels.map(c=>c.val), backgroundColor:channels.map(c=>c.color+'cc'), borderRadius:{topLeft:6,topRight:6}, borderSkipped:false }] },
     options:{ ...baseOptions(), plugins:{...baseOptions().plugins,legend:{display:false}} }
   });
+  requestAnimationFrame(()=>addTopChannelBadge(document.getElementById('ch-bar-chart')));
 
   const maxV=Math.max(...channels.map(c=>c.val),1);
   document.getElementById('ch-breakdown-list').innerHTML=`<div style="display:flex;flex-direction:column;gap:12px;">`
