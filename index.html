@@ -935,6 +935,68 @@ body.dr-animating .reveal {
 .nav-btn[data-page="race"].active     { color: var(--amber);  }
 .nav-btn[data-page="compare"].active  { color: var(--cyan);   }
 
+/* ── Bottom tab bar — mobile (≤768px) ──────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Reposition nav to bottom of viewport */
+  #main-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0; top: auto;
+    height: 56px;
+    padding: 0 0 env(safe-area-inset-bottom, 0);
+    border-bottom: none;
+    border-top: 1px solid rgba(201,168,76,0.12);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+    z-index: 210;
+    justify-content: stretch;
+    /* pill indicator hidden on mobile — use text color only */
+  }
+  #nav-pill { display: none; }
+
+  /* Each button: column layout, equal width, smaller text */
+  #main-nav .nav-btn {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    height: 100%;
+    padding: 0;
+    min-width: 40px;
+    font-size: 0.58rem;
+    letter-spacing: 0;
+    white-space: nowrap;
+    border-radius: 0;
+  }
+  #main-nav .nav-btn .ni {
+    font-size: 14px;
+  }
+  #main-nav .nav-btn .ni svg {
+    width: 16px; height: 16px;
+  }
+  /* Active: gold highlight */
+  #main-nav .nav-btn.active { color: var(--gold); }
+  /* Override per-page accent colors on mobile — single gold */
+  #main-nav .nav-btn[data-page].active { color: var(--gold); }
+
+  /* Push page content above bottom bar */
+  .app-body {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Light mode bottom bar */
+@media (max-width: 768px) {
+  [data-theme="light"] #main-nav {
+    background: rgba(251,249,242,0.97);
+    border-top: 1px solid rgba(46,107,69,0.15);
+    box-shadow: 0 -4px 18px rgba(27,42,31,0.07);
+  }
+  [data-theme="light"] #main-nav .nav-btn.active,
+  [data-theme="light"] #main-nav .nav-btn[data-page].active {
+    color: var(--gold);
+  }
+}
+/* ── End bottom tab bar ─────────────────────────────────────────────────── */
+
 .compare-body { display: flex; flex-direction: column; gap: 1.5rem; }
 .compare-empty { color: var(--t3); text-align: center; padding: 3rem 1rem; font-size: 0.95rem; }
 .compare-cols { display: flex; gap: 1rem; flex-wrap: wrap; }
