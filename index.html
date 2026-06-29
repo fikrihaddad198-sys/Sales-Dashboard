@@ -3944,7 +3944,7 @@ body.dashboard-locking .card {
     <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>Race
   </button>
   <button class="nav-btn" data-page="compare" onclick="showPage('compare',this)" aria-label="Compare">
-    <span class="ni">⚖️</span>Compare
+    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 9l9-6 9 6M5 20h14M8 12H5l-2 5h6zm11 0h3l2 5h-6z"/></svg></span>Compare
   </button>
 </nav>
 
@@ -5293,6 +5293,7 @@ function renderCompareTrendChart(stores, rows) {
 }
 
 function renderCompare(){
+  if(_renderedPages.has('compare')){ replayPageCharts(document.getElementById('page-compare')); return; }
   const body = document.getElementById('compare-body');
   if(!body) return;
   const rows = (allData || []);
@@ -5333,13 +5334,13 @@ function renderCompare(){
   body.innerHTML = `
     <div class="compare-cols">${cols}</div>
     <div class="card">
-      <div class="card-title">Revenue per Channel per Toko</div>
+      <div class="card-hdr">Revenue per Channel per Toko</div>
       <div class="chart-wrap">
         <canvas id="compare-channel-chart"></canvas>
       </div>
     </div>
     <div class="card">
-      <div class="card-title">Tren Revenue Harian per Toko</div>
+      <div class="card-hdr">Tren Revenue Harian per Toko</div>
       <div class="chart-wrap">
         <canvas id="compare-trend-chart"></canvas>
       </div>
@@ -5347,6 +5348,7 @@ function renderCompare(){
 
   renderCompareChannelChart(stores);
   renderCompareTrendChart(stores, rows);
+  _renderedPages.add('compare');
 }
 
 /* ═══════════════════════════════════════════════════
