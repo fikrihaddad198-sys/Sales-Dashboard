@@ -8443,7 +8443,13 @@ if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW register failed:', err));
   });
-  navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+  // Only reload when an existing SW is replaced by a new version.
+  // On first visit there's no previous controller, so skip the reload
+  // (otherwise the fresh install fires controllerchange and loops back to device picker).
+  const _prevController = navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(_prevController) window.location.reload();
+  });
 }
 </script>
 
