@@ -3747,31 +3747,25 @@ body.dashboard-locking .card {
       <div class="pin-logo-mark"><span class="header-logo-icon" style="width:22px;height:28px;display:block;"></span></div>
       <div class="pin-logo-text">Fore Coffee</div>
     </div>
-    <div id="pin-title">Daftar Akses</div>
-    <div id="pin-subtitle">Masukkan ID Fore &amp; nama untuk meminta akses</div>
+    <div id="pin-title">Masuk</div>
+    <div id="pin-subtitle">Masukkan email dan password akses kamu</div>
     <!-- Glass panel: frosted surface the form floats on -->
     <div id="pin-glass">
-      <!-- STATE: registration form -->
       <div id="reg-form">
         <div id="reg-error" class="reg-msg"></div>
         <label class="reg-field">
-          <span class="reg-label">ID Fore</span>
-          <input id="reg-id" class="reg-input" type="tel" inputmode="numeric"
-                 pattern="[0-9]*" maxlength="8" placeholder="contoh: 5857" autocomplete="off">
+          <span class="reg-label">Email</span>
+          <input id="reg-email" class="reg-input" type="email" inputmode="email"
+                 placeholder="nama@email.com" autocomplete="email"
+                 onkeydown="if(event.key==='Enter'){document.getElementById('reg-pw').focus();}">
         </label>
         <label class="reg-field">
-          <span class="reg-label">Nama Lengkap</span>
-          <input id="reg-name" class="reg-input" type="text" maxlength="60"
-                 placeholder="Nama lengkap" autocomplete="off">
+          <span class="reg-label">Password</span>
+          <input id="reg-pw" class="reg-input" type="password"
+                 placeholder="Password" autocomplete="current-password"
+                 onkeydown="if(event.key==='Enter'){submitLogin();}">
         </label>
-        <button id="reg-submit" class="reg-btn" onclick="submitRegister()">Minta Akses</button>
-      </div>
-      <!-- STATE: waiting for approval -->
-      <div id="reg-wait" style="display:none;">
-        <div class="reg-spinner"></div>
-        <div id="reg-wait-title" class="reg-wait-title">Menunggu persetujuan…</div>
-        <div id="reg-wait-sub" class="reg-wait-sub">Permintaanmu sudah dikirim ke owner.<br>Maksimal <strong>2 menit</strong> akses akan diberikan atau ditolak.</div>
-        <button id="reg-cancel" class="reg-btn reg-btn-ghost" onclick="cancelRegister()">Batal</button>
+        <button id="reg-submit" class="reg-btn" onclick="submitLogin()">Masuk</button>
       </div>
     </div>
   </div>
@@ -4495,6 +4489,11 @@ const CSV_URL    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?t
    only returns when a valid 30-min token is presented. */
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbwyGkd-mZSYW924JyEqPAk_8rUP6DTJ7HcTFEqH8nOtKoLQp32x-hWXG5OstJQjOvTS/exec';
 
+/* ── Supabase Auth ─────────────────────────────────────────────── */
+const SUPA_URL   = 'https://umarsaninyxepfgscjts.supabase.co';
+const SUPA_KEY   = 'sb_publishable_lUAxcPI7Poo0sORbe5cbMw__nQAUqFQ';
+const OWNER_EMAIL = 'fikrihaddad198@gmail.com';
+
 /* Lazy-load the export-only CDN libs on first use (PDF / Excel buttons), so
    they never block first paint. Each src loads at most once (deduped). */
 const _loadedScripts = {};
@@ -4512,7 +4511,23 @@ const _CDN = {
   xlsx:'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
   html2canvas:'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
   jspdf:'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
+  supabase:'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js',
 };
+
+/* Supabase client — lazy-loaded once at first login attempt. */
+let _supaClient = null;
+async function ensureSupabase(){
+  if(_supaClient) return _supaClient;
+  await loadScript(_CDN.supabase);
+  _supaClient = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+    auth: {
+      storage: sessionStorage,   // closing the tab/window = logged out (intentional)
+      persistSession: true,
+      autoRefreshToken: true,
+    }
+  });
+  return _supaClient;
+}
 async function ensureExportLibs(kind){
   if(kind==='xlsx'){
     if(typeof XLSX==='undefined') await loadScript(_CDN.xlsx);
@@ -7696,90 +7711,49 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(
 </div>
 
 <script>
-/* ══ ACCESS AUTH (register → owner approval → 30-min token) ══ */
-let _pollTimer = null, _pollReqId = null, _sessTimer = null;
+/* ══ ACCESS AUTH (Supabase Email + Password) ══ */
+let _sessTimer = null;
 
-async function sha256(str){
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-/* ── Registration form helpers ── */
+/* ── Login form helpers ── */
 function regMsg(msg, ok){
   const el = document.getElementById('reg-error');
   if(!el) return;
   el.textContent = msg || '';
   el.classList.toggle('ok', !!ok);
 }
-function showRegState(state){   // 'form' | 'wait'
-  const f = document.getElementById('reg-form');
-  const w = document.getElementById('reg-wait');
-  if(f) f.style.display = state==='form' ? 'flex' : 'none';
-  if(w) w.style.display = state==='wait' ? 'flex' : 'none';
-}
 
-/* User submits ID Fore + Nama → ask the gatekeeper. */
-async function submitRegister(){
-  const idEl = document.getElementById('reg-id');
-  const nmEl = document.getElementById('reg-name');
-  const btn  = document.getElementById('reg-submit');
-  const idFore = (idEl.value||'').trim();
-  const name   = (nmEl.value||'').trim();
-  if(!/^\d{1,8}$/.test(idFore)){ regMsg('ID Fore harus berupa angka.'); idEl.focus(); return; }
-  if(name.length < 2){ regMsg('Nama lengkap belum diisi.'); nmEl.focus(); return; }
+/* User submits Email + Password → Supabase authenticates instantly. */
+async function submitLogin(){
+  const emailEl = document.getElementById('reg-email');
+  const pwEl    = document.getElementById('reg-pw');
+  const btn     = document.getElementById('reg-submit');
+  const email   = (emailEl ? emailEl.value : '').trim();
+  const pw      = (pwEl    ? pwEl.value    : '').trim();
+  if(!email || !email.includes('@')){ regMsg('Email tidak valid.'); emailEl && emailEl.focus(); return; }
+  if(pw.length < 6){ regMsg('Password minimal 6 karakter.'); pwEl && pwEl.focus(); return; }
   regMsg('');
-  btn.disabled = true; btn.textContent = 'Mengirim…';
+  btn.disabled = true; btn.textContent = 'Masuk…';
   try{
-    const res = await gasCall('register', { idFore: idFore, name: name });
-    if(!res || !res.ok){
-      regMsg(res && res.error==='invalid_id'   ? 'ID Fore tidak valid.'
-           : res && res.error==='invalid_name' ? 'Nama tidak valid.'
-           : 'Gagal mengirim. Coba lagi.');
-      return;
-    }
-    if(res.status === 'approved'){       // owner → instant access
-      SESS.set(res.token, res.expiresAt, res.name, res.isOwner);
-      grantAccess();
-      return;
-    }
-    _pollReqId = res.requestId;          // pending → wait for approval
-    showRegState('wait');
-    startPolling();
+    const sb = await ensureSupabase();
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
+    if(error) throw error;
+    const session  = data.session;
+    const user     = data.user;
+    const ownerFlg = user.email.toLowerCase() === OWNER_EMAIL.toLowerCase();
+    // owner → no expiry (0); normal user → use Supabase token expiry
+    const exp = ownerFlg ? 0 : session.expires_at * 1000;
+    SESS.set(session.access_token, exp, user.email, ownerFlg);
+    grantAccess();
   }catch(e){
-    regMsg(e.message==='not_configured'
-      ? 'Sistem akses belum dikonfigurasi.'
-      : 'Tidak bisa terhubung ke server.');
+    const msg = e.message || '';
+    regMsg(msg.includes('Invalid login credentials') || msg.includes('invalid_credentials')
+      ? 'Email atau password salah.'
+      : msg.includes('Email not confirmed')
+      ? 'Email belum diverifikasi. Cek inbox kamu.'
+      : 'Tidak bisa masuk. Coba lagi.');
   }finally{
-    btn.disabled = false; btn.textContent = 'Minta Akses';
+    btn.disabled = false; btn.textContent = 'Masuk';
   }
-}
-
-function startPolling(){
-  stopPolling();
-  _pollTimer = setInterval(async ()=>{
-    if(!_pollReqId) return;
-    try{
-      const res = await gasCall('poll', { requestId: _pollReqId });
-      if(!res || !res.ok) return;
-      if(res.status === 'approved'){
-        stopPolling();
-        SESS.set(res.token, res.expiresAt, res.name, false);
-        grantAccess();
-      } else if(res.status === 'rejected'){
-        stopPolling(); showRegState('form');
-        regMsg('Permintaan ditolak oleh owner.');
-      } else if(res.status === 'expired'){
-        stopPolling(); showRegState('form');
-        regMsg('Akses kedaluwarsa. Silakan daftar lagi.');
-      }
-    }catch(e){ /* keep polling */ }
-  }, 3000);
-}
-function stopPolling(){ if(_pollTimer){ clearInterval(_pollTimer); _pollTimer=null; } }
-
-function cancelRegister(){
-  stopPolling(); _pollReqId = null;
-  showRegState('form'); regMsg('');
 }
 
 /* ── Session countdown chip ── */
@@ -7807,37 +7781,39 @@ function startSessionTimer(expiresAt, isOwner){
   _sessTimer = setInterval(tick, 1000);
 }
 
-/* ── End session → back to the registration screen ── */
+/* ── End session → back to the login screen ── */
 let _heartTimer = null;
 function startHeartbeat(){
   stopHeartbeat();
-  // Send immediately, then every 30s.
-  function beat(){
+  // Every 5 min: refresh Supabase token and update SESS. If session gone → logout.
+  async function beat(){
     if(!sessionValid()) return;
-    gasCall('heartbeat', { token: SESS.token||'' }).then(res=>{
-      if(res && !res.ok && (res.error==='revoked'||res.error==='expired'||res.error==='invalid_token')){
-        endSession('revoked');
-      }
-    }).catch(()=>{});
+    try{
+      const sb = await ensureSupabase();
+      const { data, error } = await sb.auth.getSession();
+      if(error || !data.session){ endSession('revoked'); return; }
+      const s = data.session;
+      const ownerFlg = SESS.isOwner;
+      SESS.set(s.access_token, ownerFlg ? 0 : s.expires_at*1000, SESS.name, ownerFlg);
+    }catch(e){}
   }
   beat();
-  _heartTimer = setInterval(beat, 30000);
+  _heartTimer = setInterval(beat, 5*60*1000); // every 5 min
 }
 function stopHeartbeat(){ if(_heartTimer){ clearInterval(_heartTimer); _heartTimer=null; } }
 
 function endSession(reason){
-  stopPolling(); _pollReqId = null;
   stopHeartbeat();
   if(_sessTimer){ clearInterval(_sessTimer); _sessTimer=null; }
+  // Sign out from Supabase (best-effort, don't block UI on it)
+  ensureSupabase().then(sb=>sb.auth.signOut()).catch(()=>{});
   SESS.clear();
   document.dispatchEvent(new Event('fore-session-change'));
   const chip = document.getElementById('sess-chip'); if(chip) chip.classList.remove('show');
   document.body.classList.remove('dashboard-ready','dr-animating');
-  const idEl=document.getElementById('reg-id'); if(idEl) idEl.value='';
-  showRegState('form');
-  regMsg(reason==='expired' ? 'Sesi 30 menit habis. Silakan daftar lagi.'
-       : reason==='revoked' ? 'Akses dicabut. Silakan daftar lagi.'
-       : reason==='manual'  ? 'Kamu sudah keluar. Silakan daftar lagi untuk masuk.' : '');
+  regMsg(reason==='expired' ? 'Sesi habis. Silakan masuk lagi.'
+       : reason==='revoked' ? 'Akses dicabut. Silakan masuk lagi.'
+       : reason==='manual'  ? 'Kamu sudah keluar.' : '');
   const pin = document.getElementById('pin-screen');
   if(pin){
     pin.classList.remove('unlocked');
@@ -7889,10 +7865,11 @@ function playPinEntrance(){
 }
 
 /* ── Standby logo click → registration screen ── */
+function showRegState(){ /* no-op: single-state login form, always visible */ }
 function standbyToPin(){
   const sb  = document.getElementById('standby-screen');
   const pin = document.getElementById('pin-screen');
-  showRegState('form'); regMsg('');
+  regMsg('');
   pin.style.display = 'flex'; pin.style.opacity = '0';
   pin.classList.remove('unlocked');
   playPinEntrance();
@@ -8352,14 +8329,8 @@ function openDevicePicker(){
     const sel = ds.querySelector('.device-opt[onclick*="\'' + saved + '\'"]');
     if(sel) sel.classList.add('selected');
   }
-  showRegState('form');
-  // Enter submits the registration form.
-  document.addEventListener('keydown', e=>{
-    if(document.getElementById('pin-screen').style.display==='none') return;
-    const dsEl=document.getElementById('device-screen');
-    if(dsEl && dsEl.style.display!=='none' && !dsEl.classList.contains('device-hide')) return;
-    if(e.key==='Enter') submitRegister();
-  });
+  // Enter on login screen submits via the input's own onkeydown handler.
+  // No extra document-level listener needed.
   // Apply logo mask same as header
   const icon = document.querySelector('.pin-logo-mark .header-logo-icon');
   if(icon){

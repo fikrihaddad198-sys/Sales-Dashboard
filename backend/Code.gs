@@ -26,18 +26,24 @@ const CFG = {
   // The spreadsheet that holds the sales data (the one with sheet "bacot").
   SPREADSHEET_ID : '1Y49X7Gj2Zy8XaX85ONHQTXnd3ItrmwPZHA2MXlRy4gU',
   DATA_SHEET     : 'bacot',          // sheet name the dashboard reads
-  ACCESS_SHEET   : 'access',         // auto-created; stores registrations
+  ACCESS_SHEET   : 'access',         // kept for legacy Telegram flow (unused by new auth)
 
-  // Telegram
-  TG_BOT_TOKEN   : '8868940589:AAGXIwtUISRupnB5vHtxBtk0I8tvKbLLmHg',  // from @BotFather
-  TG_OWNER_CHAT  : '7316023785',  // your Telegram numeric chat id
+  // Telegram (kept for /siapa and kick features via bot)
+  TG_BOT_TOKEN   : '8868940589:AAGXIwtUISRupnB5vHtxBtk0I8tvKbLLmHg',
+  TG_OWNER_CHAT  : '7316023785',
 
   // Session
-  SESSION_MIN    : 30,               // access duration in minutes
+  SESSION_MIN    : 30,
 
-  // Owner: auto-approved, never expire. Must match BOTH id AND name.
+  // Legacy owner fields (kept for Telegram bot flow)
   OWNER_IDS      : ['1'],
   OWNER_NAME     : 'Fikri',
+
+  // Supabase Auth
+  SUPA_URL       : 'https://umarsaninyxepfgscjts.supabase.co',
+  // Public anon key — safe to commit (client-side key, not a secret).
+  SUPA_KEY       : 'sb_publishable_lUAxcPI7Poo0sORbe5cbMw__nQAUqFQ',
+  OWNER_EMAIL    : 'fikrihaddad198@gmail.com',
 };
 // ======================================================
 
@@ -77,6 +83,25 @@ function doPost(e){
   // No-op. We use polling (pollTelegram trigger) instead of webhook because
   // Apps Script /exec always returns 302, which Telegram treats as failure.
   return ContentService.createTextOutput('ok');
+}
+
+// ----------------------- SUPABASE TOKEN VERIFICATION -----------------------
+// Verifies a Supabase access token by calling the Supabase /auth/v1/user
+// endpoint. Returns the user object on success, null on failure.
+// No JWT secret needed — Supabase validates the token server-side.
+function verifySupabaseToken(token){
+  if(!token) return null;
+  try{
+    const resp = UrlFetchApp.fetch(CFG.SUPA_URL + '/auth/v1/user', {
+      headers:{
+        'Authorization': 'Bearer ' + token,
+        'apikey': CFG.SUPA_KEY,
+      },
+      muteHttpExceptions: true,
+    });
+    if(resp.getResponseCode() !== 200) return null;
+    return JSON.parse(resp.getContentText());
+  }catch(e){ return null; }
 }
 
 // ----------------------- APP API -----------------------
@@ -144,32 +169,26 @@ function apiPoll(requestId){
 }
 
 function apiData(token){
-  const v = validateToken(token);
-  if (!v.ok) return v;
+  // Accept Supabase JWT (new auth) — verify via Supabase REST API.
+  const user = verifySupabaseToken(token);
+  if(!user) return { ok:false, error:'invalid_token' };
+  const isOwner_ = (user.email || '').toLowerCase() === CFG.OWNER_EMAIL.toLowerCase();
   const csv = readDataCsv();
-  return { ok:true, csv:csv, expiresAt:v.expiresAt, name:v.name, isOwner:v.isOwner };
+  return { ok:true, csv:csv, expiresAt:0, name:user.email, isOwner:isOwner_ };
 }
 
 function apiMe(token){
-  const v = validateToken(token);
-  if (!v.ok) return v;
-  return { ok:true, name:v.name, idFore:v.idFore, isOwner:v.isOwner,
-           expiresAt:v.expiresAt, remainingMs: v.expiresAt - Date.now() };
+  const user = verifySupabaseToken(token);
+  if(!user) return { ok:false, error:'invalid_token' };
+  const isOwner_ = (user.email || '').toLowerCase() === CFG.OWNER_EMAIL.toLowerCase();
+  return { ok:true, name:user.email, isOwner:isOwner_, expiresAt:0, remainingMs:0 };
 }
 
 function apiHeartbeat(token){
-  if (!token) return { ok:false, error:'no_token' };
-  const v = validateToken(token);
-  if (!v.ok) return v;
-  // Update lastSeen (col 10) for this token row.
-  const sh = accessSheet();
-  const data = sh.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][4]) === String(token)) {
-      sh.getRange(i+1, 10).setValue(new Date());
-      break;
-    }
-  }
+  // Heartbeat now just validates the Supabase token; no access-sheet writes needed.
+  if(!token) return { ok:false, error:'no_token' };
+  const user = verifySupabaseToken(token);
+  if(!user) return { ok:false, error:'invalid_token' };
   return { ok:true };
 }
 
