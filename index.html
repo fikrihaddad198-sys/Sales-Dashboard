@@ -5126,7 +5126,7 @@ function renderCompareChannelChart(stores) {
 
   const names = Object.keys(stores);
   const channels = ['offline', 'gofood', 'grabfood', 'shopee'];
-  const storeColors = ['#c9a84c', '#63b4ff', '#a78bfa', '#34d399'];
+  const storeColors = [TC.gmv, TC.offline, TC.grabfood, TC.gofood];
   const datasets = names.map((storeName, i) => ({
     label: storeName,
     data: channels.map(ch => stores[storeName].channels[ch] || 0),
@@ -5167,7 +5167,7 @@ function renderCompareTrendChart(stores, rows) {
     storeByDate[s][d] = (storeByDate[s][d] || 0) + (parseFloat(r.gmv) || 0);
   });
 
-  const colors = ['#c9a84c', '#63b4ff', '#a78bfa', '#34d399'];
+  const colors = [TC.gmv, TC.offline, TC.grabfood, TC.gofood];
   const datasets = names.map((name, i) => ({
     label: name,
     data: allDates.map(d => storeByDate[name][d] || 0),
