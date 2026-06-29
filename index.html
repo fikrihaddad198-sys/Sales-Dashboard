@@ -5104,23 +5104,101 @@ function renderPage(p){
 /* ═══════════════════════════════════════════════════
    PAGE: STORE COMPARE
 ═══════════════════════════════════════════════════ */
+function aggregateByStore(rows) {
+  const stores = {};
+  (rows || []).forEach(r => {
+    const s = r.store || 'Kemang';
+    if (!stores[s]) stores[s] = { revenue: 0, txn: 0, channels: {} };
+    const amt = parseFloat(r.gmv) || 0;
+    stores[s].revenue += amt;
+    stores[s].txn += (r.adt_store || 0);
+    const chEntries = [['offline', r.offline||0], ['gofood', r.gofood||0], ['grabfood', r.grabfood||0], ['shopee', r.shopee||0]];
+    chEntries.forEach(([ch, v]) => { stores[s].channels[ch] = (stores[s].channels[ch]||0) + (parseFloat(v)||0); });
+  });
+  return stores;
+}
+
+function renderCompareChannelChart(stores) {
+  const cv = document.getElementById('compare-channel-chart');
+  if (!cv) return;
+  const existing = Chart.getChart(cv);
+  if (existing) existing.destroy();
+
+  const names = Object.keys(stores);
+  const channels = ['offline', 'gofood', 'grabfood', 'shopee'];
+  const storeColors = ['#c9a84c', '#63b4ff', '#a78bfa', '#34d399'];
+  const datasets = names.map((storeName, i) => ({
+    label: storeName,
+    data: channels.map(ch => stores[storeName].channels[ch] || 0),
+    backgroundColor: storeColors[i % storeColors.length],
+    borderRadius: 4,
+  }));
+
+  const bo = baseOptions('rp');
+  new Chart(cv, {
+    type: 'bar',
+    data: { labels: channels.map(ch => ch.charAt(0).toUpperCase() + ch.slice(1)), datasets },
+    options: {
+      ...bo,
+      plugins: { ...bo.plugins, legend: { display: true } },
+      scales: {
+        x: { ...(bo.scales && bo.scales.x ? bo.scales.x : {}) },
+        y: { ...(bo.scales && bo.scales.y ? bo.scales.y : {}), ticks: { color: TC.text3, font: { family:"'JetBrains Mono',monospace", size:9 }, callback: v => fmtRp(v) } }
+      }
+    }
+  });
+}
+
+function renderCompareTrendChart(stores, rows) {
+  const cv = document.getElementById('compare-trend-chart');
+  if (!cv) return;
+  const existing = Chart.getChart(cv);
+  if (existing) existing.destroy();
+
+  const names = Object.keys(stores);
+  const allDates = [...new Set((rows||[]).map(r => r.date || r.tanggal || ''))].filter(Boolean).sort();
+
+  const storeByDate = {};
+  names.forEach(n => { storeByDate[n] = {}; });
+  (rows||[]).forEach(r => {
+    const s = r.store || 'Kemang';
+    const d = r.date || r.tanggal || '';
+    if (!d || !storeByDate[s]) return;
+    storeByDate[s][d] = (storeByDate[s][d] || 0) + (parseFloat(r.gmv) || 0);
+  });
+
+  const colors = ['#c9a84c', '#63b4ff', '#a78bfa', '#34d399'];
+  const datasets = names.map((name, i) => ({
+    label: name,
+    data: allDates.map(d => storeByDate[name][d] || 0),
+    borderColor: colors[i % colors.length],
+    backgroundColor: 'transparent',
+    tension: 0.3,
+    pointRadius: 2,
+  }));
+
+  const bo = baseOptions('rp');
+  new Chart(cv, {
+    type: 'line',
+    data: { labels: allDates, datasets },
+    options: {
+      ...bo,
+      plugins: { ...bo.plugins, legend: { display: true } },
+      scales: {
+        x: { ...(bo.scales && bo.scales.x ? bo.scales.x : {}) },
+        y: { ...(bo.scales && bo.scales.y ? bo.scales.y : {}), ticks: { color: TC.text3, font: { family:"'JetBrains Mono',monospace", size:9 }, callback: v => fmtRp(v) } }
+      }
+    }
+  });
+}
+
 function renderCompare(){
   const body = document.getElementById('compare-body');
   if(!body) return;
   const rows = (allData || []);
   if(!rows.length){ body.innerHTML = '<div class="compare-empty">Belum ada data.</div>'; return; }
 
-  // Group by store name. Current data is single-store (Kemang); all rows fall under one key.
-  const stores = {};
-  rows.forEach(r => {
-    const s = r.store || 'Kemang';
-    if(!stores[s]) stores[s] = { revenue: 0, txn: 0, channels: {} };
-    const amt = parseFloat(r.gmv) || 0;
-    stores[s].revenue += amt;
-    stores[s].txn += (r.adt_store || 0);
-    const chEntries = [['offline', r.offline||0], ['gofood', r.gofood||0], ['grabfood', r.grabfood||0], ['shopee', r.shopee||0]];
-    chEntries.forEach(([ch, v]) => { stores[s].channels[ch] = (stores[s].channels[ch]||0) + v; });
-  });
+  const stores = aggregateByStore(rows);
 
   const names = Object.keys(stores);
   if(names.length < 2){
@@ -5152,7 +5230,23 @@ function renderCompare(){
       </div>`;
   }).join('');
 
-  body.innerHTML = `<div class="compare-cols">${cols}</div>`;
+  body.innerHTML = `
+    <div class="compare-cols">${cols}</div>
+    <div class="card">
+      <div class="card-title">Revenue per Channel per Toko</div>
+      <div class="chart-wrap">
+        <canvas id="compare-channel-chart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Tren Revenue Harian per Toko</div>
+      <div class="chart-wrap">
+        <canvas id="compare-trend-chart"></canvas>
+      </div>
+    </div>`;
+
+  renderCompareChannelChart(stores);
+  renderCompareTrendChart(stores, rows);
 }
 
 /* ═══════════════════════════════════════════════════
