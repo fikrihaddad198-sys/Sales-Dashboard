@@ -7794,7 +7794,7 @@ function startHeartbeat(){
       SESS.set(s.access_token, ownerFlg ? 0 : s.expires_at*1000, SESS.name, ownerFlg);
     }catch(e){}
   }
-  beat();
+  // Don't beat immediately — session storage may not be committed yet right after login.
   _heartTimer = setInterval(beat, 5*60*1000); // every 5 min
 }
 function stopHeartbeat(){ if(_heartTimer){ clearInterval(_heartTimer); _heartTimer=null; } }
