@@ -1,6 +1,6 @@
 # Fore Coffee Sales Dashboard — Claude Context
 
-A single-file PWA sales intelligence dashboard for Fore Coffee Jakarta. Private data protected by a Google Apps Script access-gating backend with Telegram bot approval flow.
+A single-file PWA sales intelligence dashboard for Fore Coffee Jakarta. Auth via Supabase (email + password). Data fetched from Google Sheets via Google Apps Script (JSONP).
 
 ## Architecture
 
@@ -32,54 +32,37 @@ All GAS calls use JSONP (avoids CORS with static hosting). Pattern: append `?act
 
 These are cross-origin and never cached by the service worker (network only).
 
-## Authentication (sessionStorage, NOT localStorage)
+## Authentication (Supabase, sessionStorage)
 
-- Tokens stored in `sessionStorage` — closing the browser tab/window logs the user out (intentional)
-- Session duration: 30 minutes (set in `CFG.SESSION_MIN` in Code.gs)
-- Owner = ID `1` AND name `Fikri` must BOTH match (case-insensitive). Anyone entering owner ID `1` with a different name is treated as a normal user requiring Telegram approval.
-- **Owner sessions never expire** (unlimited) and show no countdown chip. Normal users get a 30-min countdown chip.
-- On every data request the token is validated server-side
+Auth is fully handled by **Supabase** (email + password). No Telegram approval flow.
+
+```javascript
+const SUPA_URL   = 'https://umarsaninyxepfgscjts.supabase.co';
+const OWNER_EMAIL = 'fikrihaddad198@gmail.com';
+```
+
+- `submitLogin()` → `sb.auth.signInWithPassword({ email, password })` → `SESS.set(token, exp, email, isOwner)`
+- **Owner** = email matches `OWNER_EMAIL` → session never expires, no countdown chip
+- **Normal users** → session expires per Supabase token `expires_at`, countdown chip shown
+- Tokens stored in `sessionStorage` — closing tab logs out (intentional)
+- `SESS.clear()` also wipes `localStorage` (legacy cleanup)
 
 ### Client timers (all `setInterval`)
 
-- `_pollTimer` — polls `apiPoll` while waiting for owner approval
 - `_sessTimer` — 1s session countdown tick (drives the expiry chip)
-- `_heartTimer` — 30s heartbeat (`apiHeartbeat`, keeps `lastSeen` fresh)
+- `_heartTimer` — every 5 min: `sb.auth.getSession()` refreshes Supabase token; if gone → `endSession('expired')`
 - Clock — 30s `updateClock()`
 
 A `fore-session-change` DOM event fires on login/logout; the screenshot guard listens for it.
 
-```javascript
-const SESS = {
-  get token(){ return sessionStorage.getItem('foreToken'); },
-  // set / clear also wipes localStorage (legacy cleanup)
-};
-```
+## GAS Backend (Code.gs) — Data only
 
-## GAS Backend (Code.gs)
+GAS is used **only for data**, not auth. Spreadsheet ID: `1Y49X7Gj2Zy8XaX85ONHQTXnd3ItrmwPZHA2MXlRy4gU`, sheet: `bacot`.
 
-```javascript
-const CFG = {
-  SPREADSHEET_ID : '1Y49X7Gj2Zy8XaX85ONHQTXnd3ItrmwPZHA2MXlRy4gU',
-  DATA_SHEET     : 'bacot',
-  ACCESS_SHEET   : 'access',
-  TG_BOT_TOKEN   : '8868940589:AAGXIwtUISRupnB5vHtxBtk0I8tvKbLLmHg',
-  TG_OWNER_CHAT  : '7316023785',
-  SESSION_MIN    : 30,
-  OWNER_IDS      : ['1'],
-  OWNER_NAME     : 'Fikri',
-};
-```
+GAS endpoints (`doGet` only, JSONP — append `?action=…&callback=cb` to `GAS_URL`):
+- `data` — return CSV rows from the spreadsheet (token passed for legacy compat, not enforced)
 
-**Polling architecture** (NOT webhook): Apps Script `/exec` always responds with HTTP 302 to POST, which Telegram treats as an error and retries indefinitely — jamming the delivery queue. Solution: `pollTelegram()` runs via a 1-minute time-driven trigger using `getUpdates`. `notifyOwner()` still sends messages instantly; only button-tap processing has ≤1 min latency.
-
-GAS endpoints (`doGet` only, JSONP):
-- `register` — submit access request, triggers Telegram notification to owner
-- `poll` — check if owner approved/rejected
-- `data` — return CSV data (validates token first)
-- `me` — validate token, return user info
-- `heartbeat` — update `lastSeen` timestamp (col J in access sheet)
-- `kick` — owner revokes a live session
+All GAS calls go through `gasCall(action, params)` which injects a JSONP `<script>` tag (avoids CORS).
 
 ## Performance Rules (do not break these)
 
@@ -201,21 +184,6 @@ Real GeoJSON ADM2 boundaries for 5 DKI Jakarta regions rendered inline as SVG (v
 
 **Post-login reveal**: after grant, the Fore logo animates for ~2s then "deflates", and the Jakarta map fades in (`opacity:0` → `.mr-show`) with a zoom — tuned so it does not cover the logo background. The user is fond of this; don't shorten or flatten the reveal without asking. Store dots are clickable.
 
-## Telegram Bot Approval Flow
-
-1. User submits `register` → GAS sends Approve/Reject buttons to owner's Telegram
-2. Owner taps button → `pollTelegram()` (1-min trigger) picks it up → updates access sheet
-3. Frontend polls `apiPoll` → gets approved/rejected → grants or denies dashboard access
-
-### Bot commands (handled in `pollTelegram`)
-
-- `/start` or `/id` → replies with the sender's chat ID (use this to get `TG_OWNER_CHAT` during setup)
-- `/siapa` → **owner only**; lists users online in the last 3 min with remaining session minutes + a Kick button each
-- Kick button (`kick:<idFore>`) → revokes that user's session
-- Approve/Reject buttons (`<decision>:<requestId>`) → owner only
-
-One-time setup: run `setupPollTrigger()` once to create the 1-min trigger AND delete the Telegram webhook (getUpdates and a webhook cannot both be active).
-
 ## Screenshot Protection
 
 A full-screen `#screen-guard` overlay blacks out the app whenever a **non-owner** session sends the page to the background — `visibilitychange` (hidden), `blur`, and `pagehide`. This catches the preview frame mobile OSes grab for the app switcher / screenshot animation, so non-owners can't capture content. Owner sessions are exempt (`SESS.isOwner`). Re-evaluated on the `fore-session-change` event.
@@ -223,12 +191,6 @@ A full-screen `#screen-guard` overlay blacks out the app whenever a **non-owner*
 **History — do not re-introduce the flicker.** An earlier version kept a "flicker layer" continuously on for non-owner sessions, which made the user's screen visibly flicker during normal use (a reported bug). That was removed. The current guard is `display:none` by default and only `display:block` when it has BOTH `guard-on` (armed) AND `active` (backgrounded) — so it never appears, and never flickers, while the app is in the foreground.
 
 PDF export (`exportKpiPDF`, KPI Summary page) uses html2canvas + jspdf to render `#kpi-hero` to an A4 PDF, paginating tall images across pages.
-
-## Online User Monitoring
-
-`apiHeartbeat` is called every 30s from the client (`_heartTimer`), updating col J (`lastSeen`) in the `access` sheet. `getOnlineUsers(N)` returns users seen in the last N minutes (used by `/siapa`, default 3 min). `apiKick` lets the owner revoke any live session by `idFore`/token.
-
-`access` sheet columns (`ACCESS_HEADERS`): `requestId, idFore, name, status, token, createdAt, approvedAt, expiresAt, tgMsgId, lastSeen` (lastSeen = col J / index 10).
 
 ## Claude Tooling in this repo (`.claude/`)
 
@@ -245,13 +207,13 @@ For any UI/design work, **default to `ui-ux-pro-max` + `frontend-design` first**
 
 ## Branch
 
-Active development: `claude/charming-mayer-5l3pru`
+Active development: `claude/halo-skill-readiness-nlynlg`
 
 Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — restore from here if a redesign goes wrong.
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v65` → increment to `fore-v66`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v81` → increment to `fore-v82`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
@@ -259,6 +221,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 6. Never create canvas gradients outside `grad()` caching function
 7. Keep entrance animations scoped to `body.dr-animating`, not `body.dashboard-ready`
 8. Gold (`#c9a84c`) is the single accent — do not introduce new accent colors into chrome/nav
+9. **Update `CLAUDE.md` in the same commit whenever you change architecture, auth, data flow, or any config constant.** This file is the only persistent memory across sessions — if it's stale, every future session will work from wrong assumptions. No exceptions.
 
 ## Coding Discipline (Karpathy principles)
 
