@@ -259,6 +259,8 @@ body::after {
 }
 [data-theme="light"] body::before { background:radial-gradient(circle, rgba(46,107,69,0.07) 0%, transparent 60%); }
 [data-theme="light"] body::after  { background:radial-gradient(circle, rgba(111,78,55,0.05) 0%, transparent 60%); }
+[data-theme="light"] .compare-metric-card { background: #fff; border-color: #e4e4e7; }
+[data-theme="light"] .cmc-bar { background: #e4e4e7; }
 
 /* Scrollbar — thin & premium; thumb settles in on hover (no layout shift). */
 ::-webkit-scrollbar { width:6px; height:6px; }
@@ -932,6 +934,14 @@ body.dr-animating .reveal {
 
 .compare-body { display: flex; flex-direction: column; gap: 1.5rem; }
 .compare-empty { color: var(--t3); text-align: center; padding: 3rem 1rem; font-size: 0.95rem; }
+.compare-cols { display: flex; gap: 1rem; flex-wrap: wrap; }
+.compare-store-col { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.75rem; }
+.compare-store-name { font-size: 1rem; font-weight: 600; color: var(--t1); padding: 0.25rem 0; border-bottom: 1px solid var(--t4); }
+.compare-metric-card { background: var(--bg2); border: 1px solid var(--t4); border-radius: 10px; padding: 0.85rem 1rem; }
+.cmc-label { font-size: 0.75rem; color: var(--t3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+.cmc-value { font-size: 1.4rem; font-weight: 700; color: var(--t1); font-variant-numeric: tabular-nums; }
+.cmc-bar { margin-top: 0.5rem; height: 4px; background: var(--bg4); border-radius: 2px; }
+.cmc-bar-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.6s ease; }
 
 /* ─────────────────────────────────────────────────────
    PAGE ACCENT SCOPING
@@ -5088,6 +5098,61 @@ function renderPage(p){
   else if(p==='period') initPeriodPage();
   else if(p==='fldt') initFldtPage();
   else if(p==='race'){ if(!_raceRows.length) initRacePage(); }
+  else if(p==='compare') renderCompare();
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE: STORE COMPARE
+═══════════════════════════════════════════════════ */
+function renderCompare(){
+  const body = document.getElementById('compare-body');
+  if(!body) return;
+  const rows = (allData || []);
+  if(!rows.length){ body.innerHTML = '<div class="compare-empty">Belum ada data.</div>'; return; }
+
+  // Group by store name. Current data is single-store (Kemang); all rows fall under one key.
+  const stores = {};
+  rows.forEach(r => {
+    const s = r.store || 'Kemang';
+    if(!stores[s]) stores[s] = { revenue: 0, txn: 0, channels: {} };
+    const amt = parseFloat(r.gmv) || 0;
+    stores[s].revenue += amt;
+    stores[s].txn += (r.adt_store || 0);
+    const chEntries = [['offline', r.offline||0], ['gofood', r.gofood||0], ['grabfood', r.grabfood||0], ['shopee', r.shopee||0]];
+    chEntries.forEach(([ch, v]) => { stores[s].channels[ch] = (stores[s].channels[ch]||0) + v; });
+  });
+
+  const names = Object.keys(stores);
+  if(names.length < 2){
+    body.innerHTML = '<div class="compare-empty">Hanya ada 1 toko. Perbandingan tersedia saat toko kedua dibuka.</div>';
+    return;
+  }
+
+  const maxRev = Math.max(...names.map(n => stores[n].revenue));
+  const cols = names.map(name => {
+    const d = stores[name];
+    const aov = d.txn > 0 ? d.revenue / d.txn : 0;
+    const barPct = maxRev > 0 ? (d.revenue / maxRev * 100).toFixed(1) : 0;
+    return `
+      <div class="compare-store-col">
+        <div class="compare-store-name">${name}</div>
+        <div class="compare-metric-card">
+          <div class="cmc-label">Revenue</div>
+          <div class="cmc-value">${fmtRp(d.revenue)}</div>
+          <div class="cmc-bar"><div class="cmc-bar-fill" style="width:${barPct}%"></div></div>
+        </div>
+        <div class="compare-metric-card">
+          <div class="cmc-label">Transaksi</div>
+          <div class="cmc-value">${Math.round(d.txn).toLocaleString('id-ID')}</div>
+        </div>
+        <div class="compare-metric-card">
+          <div class="cmc-label">Avg Order</div>
+          <div class="cmc-value">${fmtRp(aov)}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  body.innerHTML = `<div class="compare-cols">${cols}</div>`;
 }
 
 /* ═══════════════════════════════════════════════════
