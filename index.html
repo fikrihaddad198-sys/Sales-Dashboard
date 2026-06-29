@@ -261,6 +261,8 @@ body::after {
 [data-theme="light"] body::after  { background:radial-gradient(circle, rgba(111,78,55,0.05) 0%, transparent 60%); }
 [data-theme="light"] .compare-metric-card { background: #fff; border-color: #e4e4e7; }
 [data-theme="light"] .cmc-bar { background: #e4e4e7; }
+[data-theme="light"] .peak-high { background: rgba(201,168,76,0.12); }
+[data-theme="light"] .peak-low  { background: rgba(248,113,113,0.08); }
 
 /* Scrollbar — thin & premium; thumb settles in on hover (no layout shift). */
 ::-webkit-scrollbar { width:6px; height:6px; }
@@ -1024,6 +1026,22 @@ body.dr-animating .reveal {
 .chart-wrap { position: relative; }
 .chart-wrap canvas { width: 100% !important; display: block; }
 .h140 { height:140px; } .h160 { height:160px; } .h180 { height:180px; }
+
+/* Peak/lowest markers on daily trend charts */
+.peak-marker {
+  position: absolute;
+  transform: translate(-50%, -130%);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  z-index: 2;
+}
+.peak-high { background: rgba(201,168,76,0.18); color: var(--gold); border: 1px solid var(--gold); }
+.peak-low  { background: rgba(248,113,113,0.12); color: var(--red);  border: 1px solid var(--red); }
 .h200 { height:200px; } .h220 { height:220px; } .h240 { height:240px; }
 .h260 { height:260px; } .h280 { height:280px; } .h300 { height:300px; }
 .h320 { height:320px; }
@@ -5003,6 +5021,44 @@ function moveNavPill(btn, instant){
   if(instant) requestAnimationFrame(() => requestAnimationFrame(() => pill.classList.remove('instant')));
 }
 
+/* Peak/lowest markers on daily trend charts.
+   Injects .peak-marker divs (▲ high, ▼ low) as absolute overlays inside .chart-wrap.
+   Only operates on dataset[0] — call only for single-series daily trend line charts. */
+/* Only single-series daily trend line charts — multi-series (weekly-trend, custom-daily, compare-trend)
+   have overlapping datasets so markers on dataset[0] alone would be misleading. */
+const PEAK_TREND_IDS = new Set(['kpi-trend-chart','ch-trend-chart']);
+function addPeakMarkers(canvas){
+  if(!canvas || !PEAK_TREND_IDS.has(canvas.id)) return;
+  const chart = Chart.getChart(canvas);
+  if(!chart) return;
+  const wrap = canvas.closest('.chart-wrap');
+  if(!wrap) return;
+  // Remove old markers
+  wrap.querySelectorAll('.peak-marker').forEach(el=>el.remove());
+  const ds = chart.data.datasets[0];
+  if(!ds || !ds.data.length) return;
+  const vals = ds.data.map(Number);
+  if(vals.every(v=>v===0)) return;
+  const maxVal = Math.max(...vals);
+  const minVal = Math.min(...vals);
+  const maxIdx = vals.indexOf(maxVal);
+  const minIdx = vals.indexOf(minVal);
+  if(maxIdx === minIdx) return; // degenerate — single point
+  [{idx:maxIdx, cls:'peak-high', label:'▲ '+fmtRp(maxVal)},
+   {idx:minIdx, cls:'peak-low',  label:'▼ '+fmtRp(minVal)}]
+  .forEach(({idx, cls, label})=>{
+    const meta = chart.getDatasetMeta(0);
+    if(!meta.data[idx]) return;
+    const pt = meta.data[idx].getCenterPoint();
+    const el = document.createElement('div');
+    el.className = 'peak-marker '+cls;
+    el.textContent = label;
+    el.style.left = pt.x+'px';
+    el.style.top  = pt.y+'px';
+    wrap.appendChild(el);
+  });
+}
+
 /* Replay the entrance DRAW animation for every chart on a page (reset→update)
    WITHOUT rebuilding — used on tab revisits so charts re-animate each visit.
    Far lighter than renderPage(): no innerHTML, no new Chart() instances, just
@@ -5012,7 +5068,7 @@ function replayPageCharts(pageEl){
   if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   pageEl.querySelectorAll('canvas').forEach(cv=>{
     const ch = Chart.getChart(cv);
-    if(ch){ ch.reset(); ch.update(); }
+    if(ch){ ch.reset(); ch.update(); requestAnimationFrame(()=>addPeakMarkers(cv)); }
   });
 }
 function showPage(p,btn,skipHash){
@@ -5494,6 +5550,7 @@ function buildKpiTrend(rows,ma7){
         insightMarkers:{ enabled:true, formatter:fmtRp, color:TC.gmv } }
     }
   });
+  requestAnimationFrame(()=>addPeakMarkers(document.getElementById('kpi-trend-chart')));
 }
 function buildKpiStacked(rows){
   destroyChart('kpiStacked');
@@ -5628,6 +5685,7 @@ function buildChTrend(){
     data:{ labels:_chRows.map(r=>fmtShortDate(r.date)), datasets:[{ label:_chTrendKey, data:_chRows.map(r=>r[_chTrendKey]||0), borderColor:color, backgroundColor:ctx=>grad(ctx,color,0.18), fill:true, tension:.42, pointRadius:3, pointHoverRadius:7, pointBackgroundColor:color, pointBorderColor:'rgba(8,12,20,0.8)', pointBorderWidth:2, borderWidth:2.5, cubicInterpolationMode:'monotone' }] },
     options:{ ...baseOptions(), plugins:{...baseOptions().plugins,legend:{display:false}} }
   });
+  requestAnimationFrame(()=>addPeakMarkers(document.getElementById('ch-trend-chart')));
 }
 
 /* ═══════════════════════════════════════════════════
