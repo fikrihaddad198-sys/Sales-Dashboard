@@ -259,6 +259,11 @@ body::after {
 }
 [data-theme="light"] body::before { background:radial-gradient(circle, rgba(46,107,69,0.07) 0%, transparent 60%); }
 [data-theme="light"] body::after  { background:radial-gradient(circle, rgba(111,78,55,0.05) 0%, transparent 60%); }
+[data-theme="light"] .compare-metric-card { background: #fff; border-color: #e4e4e7; }
+[data-theme="light"] .cmc-bar { background: #e4e4e7; }
+[data-theme="light"] .peak-high { background: rgba(201,168,76,0.12); }
+[data-theme="light"] .peak-low  { background: rgba(248,113,113,0.08); }
+[data-theme="light"] .top-channel-badge { background: #f4f4f5; border-color: #d4d4d8; }
 
 /* Scrollbar — thin & premium; thumb settles in on hover (no layout shift). */
 ::-webkit-scrollbar { width:6px; height:6px; }
@@ -928,6 +933,18 @@ body.dr-animating .reveal {
 .nav-btn[data-page="allsumm"].active  { color: var(--violet); }
 .nav-btn[data-page="d2d"].active      { color: var(--pink);   }
 .nav-btn[data-page="race"].active     { color: var(--amber);  }
+.nav-btn[data-page="compare"].active  { color: var(--cyan);   }
+
+.compare-body { display: flex; flex-direction: column; gap: 1.5rem; }
+.compare-empty { color: var(--t3); text-align: center; padding: 3rem 1rem; font-size: 0.95rem; }
+.compare-cols { display: flex; gap: 1rem; flex-wrap: wrap; }
+.compare-store-col { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.75rem; }
+.compare-store-name { font-size: 1rem; font-weight: 600; color: var(--t1); padding: 0.25rem 0; border-bottom: 1px solid var(--t4); }
+.compare-metric-card { background: var(--bg2); border: 1px solid var(--t4); border-radius: 10px; padding: 0.85rem 1rem; }
+.cmc-label { font-size: 0.75rem; color: var(--t3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+.cmc-value { font-size: 1.4rem; font-weight: 700; color: var(--t1); font-variant-numeric: tabular-nums; }
+.cmc-bar { margin-top: 0.5rem; height: 4px; background: var(--bg4); border-radius: 2px; }
+.cmc-bar-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 0.6s ease; }
 
 /* ─────────────────────────────────────────────────────
    PAGE ACCENT SCOPING
@@ -1010,6 +1027,32 @@ body.dr-animating .reveal {
 .chart-wrap { position: relative; }
 .chart-wrap canvas { width: 100% !important; display: block; }
 .h140 { height:140px; } .h160 { height:160px; } .h180 { height:180px; }
+
+/* Peak/lowest markers on daily trend charts */
+.peak-marker {
+  position: absolute;
+  transform: translate(-50%, -130%);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  pointer-events: none;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  z-index: 2;
+}
+.peak-high { background: rgba(201,168,76,0.18); color: var(--gold); border: 1px solid var(--gold); }
+.peak-low  { background: rgba(248,113,113,0.12); color: var(--red);  border: 1px solid var(--red); }
+.top-channel-badge {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  font-size: 0.72rem; font-weight: 500;
+  background: var(--bg3); border: 1px solid var(--t4);
+  border-radius: 99px; padding: 2px 8px;
+  margin-left: 0.75rem; vertical-align: middle;
+  color: var(--t2);
+}
+.tcb-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.tcb-text { color: var(--t3); }
 .h200 { height:200px; } .h220 { height:220px; } .h240 { height:240px; }
 .h260 { height:260px; } .h280 { height:280px; } .h300 { height:300px; }
 .h320 { height:320px; }
@@ -3900,6 +3943,9 @@ body.dashboard-locking .card {
   <button class="nav-btn" data-page="race" onclick="showPage('race',this)" aria-label="Race">
     <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>Race
   </button>
+  <button class="nav-btn" data-page="compare" onclick="showPage('compare',this)" aria-label="Compare">
+    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 9l9-6 9 6M5 20h14M8 12H5l-2 5h6zm11 0h3l2 5h-6z"/></svg></span>Compare
+  </button>
 </nav>
 
 <div class="app-body">
@@ -4368,6 +4414,17 @@ body.dashboard-locking .card {
   </div>
 </div><!-- /race-inner -->
 </div><!-- /page-race -->
+
+<!-- ════════════════════ COMPARE ════════════════════ -->
+<div class="page" id="page-compare">
+  <div class="page-header">
+    <h2 class="page-title">Perbandingan Toko</h2>
+    <p class="page-sub">Revenue, transaksi, dan channel per toko</p>
+  </div>
+  <div id="compare-body" class="compare-body">
+    <div class="compare-empty">Belum ada data toko lain.</div>
+  </div>
+</div>
 
 </div><!-- /app-body -->
 
@@ -4975,6 +5032,72 @@ function moveNavPill(btn, instant){
   if(instant) requestAnimationFrame(() => requestAnimationFrame(() => pill.classList.remove('instant')));
 }
 
+/* Peak/lowest markers on daily trend charts.
+   Injects .peak-marker divs (▲ high, ▼ low) as absolute overlays inside .chart-wrap.
+   Only operates on dataset[0] — call only for single-series daily trend line charts. */
+/* Only single-series daily trend line charts — multi-series (weekly-trend, custom-daily, compare-trend)
+   have overlapping datasets so markers on dataset[0] alone would be misleading. */
+const PEAK_TREND_IDS = new Set(['kpi-trend-chart','ch-trend-chart']);
+function addPeakMarkers(canvas){
+  if(!canvas || !PEAK_TREND_IDS.has(canvas.id)) return;
+  const chart = Chart.getChart(canvas);
+  if(!chart) return;
+  const wrap = canvas.closest('.chart-wrap');
+  if(!wrap) return;
+  // Remove old markers
+  wrap.querySelectorAll('.peak-marker').forEach(el=>el.remove());
+  const ds = chart.data.datasets[0];
+  if(!ds || !ds.data.length) return;
+  const vals = ds.data.map(Number);
+  if(vals.every(v=>v===0)) return;
+  const maxVal = Math.max(...vals);
+  const minVal = Math.min(...vals);
+  const maxIdx = vals.indexOf(maxVal);
+  const minIdx = vals.indexOf(minVal);
+  if(maxIdx === minIdx) return; // degenerate — single point
+  [{idx:maxIdx, cls:'peak-high', label:'▲ '+fmtRp(maxVal)},
+   {idx:minIdx, cls:'peak-low',  label:'▼ '+fmtRp(minVal)}]
+  .forEach(({idx, cls, label})=>{
+    const meta = chart.getDatasetMeta(0);
+    if(!meta.data[idx]) return;
+    const pt = meta.data[idx].getCenterPoint();
+    const el = document.createElement('div');
+    el.className = 'peak-marker '+cls;
+    el.textContent = label;
+    el.style.left = pt.x+'px';
+    el.style.top  = pt.y+'px';
+    wrap.appendChild(el);
+  });
+}
+
+/* Inject a pill badge into the card title showing which channel had the highest
+   total sales. Works for both single-dataset (ch-bar-chart: labels=channels,
+   one dataset) and multi-dataset grouped bars. */
+function addTopChannelBadge(canvas) {
+  const chart = Chart.getChart(canvas);
+  if (!chart) return;
+  const card = canvas.closest('.card');
+  if (!card) return;
+  card.querySelectorAll('.top-channel-badge').forEach(el => el.remove());
+  const labels = chart.data.labels || [];
+  if (!labels.length) return;
+  const totals = labels.map((_, i) =>
+    chart.data.datasets.reduce((s, ds) => s + (Number(ds.data[i]) || 0), 0)
+  );
+  const maxVal = Math.max(...totals);
+  if (maxVal <= 0) return;
+  const maxIdx = totals.indexOf(maxVal);
+  const topLabel = labels[maxIdx];
+  const topKey = topLabel.toLowerCase();
+  const color = (typeof TC !== 'undefined' && TC[topKey]) ? TC[topKey] : 'var(--gold)';
+  const badge = document.createElement('div');
+  badge.className = 'top-channel-badge';
+  badge.innerHTML = `<span class="tcb-dot" style="background:${color}"></span><span>${topLabel}</span> <span class="tcb-text">terbaik bulan ini</span>`;
+  const title = card.querySelector('.card-hdr');
+  if (title) title.appendChild(badge);
+  else card.prepend(badge);
+}
+
 /* Replay the entrance DRAW animation for every chart on a page (reset→update)
    WITHOUT rebuilding — used on tab revisits so charts re-animate each visit.
    Far lighter than renderPage(): no innerHTML, no new Chart() instances, just
@@ -4982,9 +5105,14 @@ function moveNavPill(btn, instant){
 function replayPageCharts(pageEl){
   if(!pageEl || !window.Chart || !Chart.getChart) return;
   if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const CHANNEL_BADGE_IDS = new Set(['ch-bar-chart']);
   pageEl.querySelectorAll('canvas').forEach(cv=>{
     const ch = Chart.getChart(cv);
-    if(ch){ ch.reset(); ch.update(); }
+    if(ch){
+      ch.reset(); ch.update();
+      requestAnimationFrame(()=>addPeakMarkers(cv));
+      if(CHANNEL_BADGE_IDS.has(cv.id)) requestAnimationFrame(()=>addTopChannelBadge(cv));
+    }
   });
 }
 function showPage(p,btn,skipHash){
@@ -5055,7 +5183,7 @@ function showPage(p,btn,skipHash){
 /* Restore page from URL hash on load */
 window.addEventListener('DOMContentLoaded',()=>{
   const hash=location.hash.replace('#','');
-  const valid=['kpi','channel','period','fldt','allsumm','d2d','race'];
+  const valid=['kpi','channel','period','fldt','allsumm','d2d','race','compare'];
   if(hash && valid.includes(hash)) showPage(hash,null,true);
   // Place the nav pill under whichever tab is active (no slide on first paint).
   const place = () => { const a=document.querySelector('.nav-btn.active'); if(a) moveNavPill(a, true); };
@@ -5070,6 +5198,157 @@ function renderPage(p){
   else if(p==='period') initPeriodPage();
   else if(p==='fldt') initFldtPage();
   else if(p==='race'){ if(!_raceRows.length) initRacePage(); }
+  else if(p==='compare') renderCompare();
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE: STORE COMPARE
+═══════════════════════════════════════════════════ */
+function aggregateByStore(rows) {
+  const stores = {};
+  (rows || []).forEach(r => {
+    const s = r.store || 'Kemang';
+    if (!stores[s]) stores[s] = { revenue: 0, txn: 0, channels: {} };
+    const amt = parseFloat(r.gmv) || 0;
+    stores[s].revenue += amt;
+    stores[s].txn += (r.adt_store || 0);
+    const chEntries = [['offline', r.offline||0], ['gofood', r.gofood||0], ['grabfood', r.grabfood||0], ['shopee', r.shopee||0]];
+    chEntries.forEach(([ch, v]) => { stores[s].channels[ch] = (stores[s].channels[ch]||0) + (parseFloat(v)||0); });
+  });
+  return stores;
+}
+
+function renderCompareChannelChart(stores) {
+  const cv = document.getElementById('compare-channel-chart');
+  if (!cv) return;
+  const existing = Chart.getChart(cv);
+  if (existing) existing.destroy();
+
+  const names = Object.keys(stores);
+  const channels = ['offline', 'gofood', 'grabfood', 'shopee'];
+  const storeColors = [TC.gmv, TC.offline, TC.grabfood, TC.gofood];
+  const datasets = names.map((storeName, i) => ({
+    label: storeName,
+    data: channels.map(ch => stores[storeName].channels[ch] || 0),
+    backgroundColor: storeColors[i % storeColors.length],
+    borderRadius: 4,
+  }));
+
+  const bo = baseOptions('rp');
+  new Chart(cv, {
+    type: 'bar',
+    data: { labels: channels.map(ch => ch.charAt(0).toUpperCase() + ch.slice(1)), datasets },
+    options: {
+      ...bo,
+      plugins: { ...bo.plugins, legend: { display: true } },
+      scales: {
+        x: { ...(bo.scales && bo.scales.x ? bo.scales.x : {}) },
+        y: { ...(bo.scales && bo.scales.y ? bo.scales.y : {}), ticks: { color: TC.text3, font: { family:"'JetBrains Mono',monospace", size:9 }, callback: v => fmtRp(v) } }
+      }
+    }
+  });
+}
+
+function renderCompareTrendChart(stores, rows) {
+  const cv = document.getElementById('compare-trend-chart');
+  if (!cv) return;
+  const existing = Chart.getChart(cv);
+  if (existing) existing.destroy();
+
+  const names = Object.keys(stores);
+  const allDates = [...new Set((rows||[]).map(r => r.date || r.tanggal || ''))].filter(Boolean).sort();
+
+  const storeByDate = {};
+  names.forEach(n => { storeByDate[n] = {}; });
+  (rows||[]).forEach(r => {
+    const s = r.store || 'Kemang';
+    const d = r.date || r.tanggal || '';
+    if (!d || !storeByDate[s]) return;
+    storeByDate[s][d] = (storeByDate[s][d] || 0) + (parseFloat(r.gmv) || 0);
+  });
+
+  const colors = [TC.gmv, TC.offline, TC.grabfood, TC.gofood];
+  const datasets = names.map((name, i) => ({
+    label: name,
+    data: allDates.map(d => storeByDate[name][d] || 0),
+    borderColor: colors[i % colors.length],
+    backgroundColor: 'transparent',
+    tension: 0.3,
+    pointRadius: 2,
+  }));
+
+  const bo = baseOptions('rp');
+  new Chart(cv, {
+    type: 'line',
+    data: { labels: allDates, datasets },
+    options: {
+      ...bo,
+      plugins: { ...bo.plugins, legend: { display: true } },
+      scales: {
+        x: { ...(bo.scales && bo.scales.x ? bo.scales.x : {}) },
+        y: { ...(bo.scales && bo.scales.y ? bo.scales.y : {}), ticks: { color: TC.text3, font: { family:"'JetBrains Mono',monospace", size:9 }, callback: v => fmtRp(v) } }
+      }
+    }
+  });
+}
+
+function renderCompare(){
+  if(_renderedPages.has('compare')){ replayPageCharts(document.getElementById('page-compare')); return; }
+  const body = document.getElementById('compare-body');
+  if(!body) return;
+  const rows = (allData || []);
+  if(!rows.length){ body.innerHTML = '<div class="compare-empty">Belum ada data.</div>'; return; }
+
+  const stores = aggregateByStore(rows);
+
+  const names = Object.keys(stores);
+  if(names.length < 2){
+    body.innerHTML = '<div class="compare-empty">Hanya ada 1 toko. Perbandingan tersedia saat toko kedua dibuka.</div>';
+    return;
+  }
+
+  const maxRev = Math.max(...names.map(n => stores[n].revenue));
+  const cols = names.map(name => {
+    const d = stores[name];
+    const aov = d.txn > 0 ? d.revenue / d.txn : 0;
+    const barPct = maxRev > 0 ? (d.revenue / maxRev * 100).toFixed(1) : 0;
+    return `
+      <div class="compare-store-col">
+        <div class="compare-store-name">${name}</div>
+        <div class="compare-metric-card">
+          <div class="cmc-label">Revenue</div>
+          <div class="cmc-value">${fmtRp(d.revenue)}</div>
+          <div class="cmc-bar"><div class="cmc-bar-fill" style="width:${barPct}%"></div></div>
+        </div>
+        <div class="compare-metric-card">
+          <div class="cmc-label">Transaksi</div>
+          <div class="cmc-value">${Math.round(d.txn).toLocaleString('id-ID')}</div>
+        </div>
+        <div class="compare-metric-card">
+          <div class="cmc-label">Avg Order</div>
+          <div class="cmc-value">${fmtRp(aov)}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="compare-cols">${cols}</div>
+    <div class="card">
+      <div class="card-hdr">Revenue per Channel per Toko</div>
+      <div class="chart-wrap">
+        <canvas id="compare-channel-chart"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr">Tren Revenue Harian per Toko</div>
+      <div class="chart-wrap">
+        <canvas id="compare-trend-chart"></canvas>
+      </div>
+    </div>`;
+
+  renderCompareChannelChart(stores);
+  renderCompareTrendChart(stores, rows);
+  _renderedPages.add('compare');
 }
 
 /* ═══════════════════════════════════════════════════
@@ -5317,6 +5596,7 @@ function buildKpiTrend(rows,ma7){
         insightMarkers:{ enabled:true, formatter:fmtRp, color:TC.gmv } }
     }
   });
+  requestAnimationFrame(()=>addPeakMarkers(document.getElementById('kpi-trend-chart')));
 }
 function buildKpiStacked(rows){
   destroyChart('kpiStacked');
@@ -5417,6 +5697,7 @@ function applyChannelFilter(){
     data:{ labels:channels.map(c=>c.name), datasets:[{ label:'Sales', data:channels.map(c=>c.val), backgroundColor:channels.map(c=>c.color+'cc'), borderRadius:{topLeft:6,topRight:6}, borderSkipped:false }] },
     options:{ ...baseOptions(), plugins:{...baseOptions().plugins,legend:{display:false}} }
   });
+  requestAnimationFrame(()=>addTopChannelBadge(document.getElementById('ch-bar-chart')));
 
   const maxV=Math.max(...channels.map(c=>c.val),1);
   document.getElementById('ch-breakdown-list').innerHTML=`<div style="display:flex;flex-direction:column;gap:12px;">`
@@ -5451,6 +5732,7 @@ function buildChTrend(){
     data:{ labels:_chRows.map(r=>fmtShortDate(r.date)), datasets:[{ label:_chTrendKey, data:_chRows.map(r=>r[_chTrendKey]||0), borderColor:color, backgroundColor:ctx=>grad(ctx,color,0.18), fill:true, tension:.42, pointRadius:3, pointHoverRadius:7, pointBackgroundColor:color, pointBorderColor:'rgba(8,12,20,0.8)', pointBorderWidth:2, borderWidth:2.5, cubicInterpolationMode:'monotone' }] },
     options:{ ...baseOptions(), plugins:{...baseOptions().plugins,legend:{display:false}} }
   });
+  requestAnimationFrame(()=>addPeakMarkers(document.getElementById('ch-trend-chart')));
 }
 
 /* ═══════════════════════════════════════════════════
