@@ -7749,8 +7749,13 @@ async function submitLogin(){
     grantAccess();
   }catch(e){
     const msg = e.message || '';
-    // Show raw error temporarily for diagnosis
-    regMsg(msg || 'Tidak bisa masuk. Coba lagi.');
+    regMsg(
+      msg.includes('Invalid login credentials') || msg.includes('invalid_credentials')
+        ? 'Email atau password salah.'
+        : msg.includes('Email not confirmed')
+        ? 'Email belum diverifikasi. Hubungi admin.'
+        : 'Tidak bisa masuk. Coba lagi.'
+    );
   }finally{
     btn.disabled = false; btn.textContent = 'Masuk';
   }
