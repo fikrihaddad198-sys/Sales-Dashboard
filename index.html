@@ -542,25 +542,24 @@ body.dr-animating .reveal {
    replay the per-card .reveal cascade every single time (felt jittery /
    too fast). Instead cards are shown instantly and the whole page does
    a single gentle fade+rise. */
-/* OPACITY-ONLY fade. No translateY: moving the page (canvas charts + glass
-   blur) every frame was what made the cards look like they shook/lagged.
-   A pure cross-fade has nothing to re-rasterise in motion, so it stays smooth. */
+/* Subtle opacity + 4px rise. translateY(4px) is small enough to avoid
+   canvas/glass-blur re-rasterisation shake while adding just enough motion. */
 @keyframes page-swap-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .page.page-swapping {
-  animation: page-swap-in 0.36s var(--ease-out);
-  will-change: opacity;
+  animation: page-swap-in 0.18s var(--ease-out) both;
+  will-change: opacity, transform;
 }
-[data-perf="ipad"]   .page.page-swapping { animation-duration: 0.30s; }
-[data-perf="mobile"] .page.page-swapping { animation-duration: 0.24s; } /* HP: light fade */
+[data-perf="ipad"]   .page.page-swapping { animation-duration: 0.18s; }
+[data-perf="mobile"] .page.page-swapping { animation-duration: 0.18s; }
 @media (prefers-reduced-motion: reduce) { .page.page-swapping { animation: none; } }
 
 /* Per-page chart entrance now lives in JS (replayPageCharts → reset+update re-runs
-   each chart's draw animation on revisit), NOT CSS. Do NOT add translate to
-   .page / .page-swapping — moving the whole page re-rasterised its canvas+blur
-   every frame and shook (old jitter bug). The page stays opacity-only. */
+   each chart's draw animation on revisit), NOT CSS. The page-swap-in animation uses
+   opacity + a subtle translateY(4px) rise (small enough to avoid canvas/glass-blur
+   re-rasterisation shake while adding just enough motion). */
 
 /* ─────────────────────────────────────────────────────
    SKELETON LOADING
@@ -740,7 +739,7 @@ body.dr-animating .reveal {
 }
 .hdr-btn {
   height: 32px;
-  background: var(--surface);
+  background: var(--bg3);
   border: 1px solid var(--border-md);
   color: var(--t2); cursor: pointer;
   display: inline-flex; align-items: center; gap: 5px;
@@ -752,7 +751,7 @@ body.dr-animating .reveal {
 .hdr-btn:hover { background: var(--cyan-10); border-color: rgba(201,168,76,0.35); color: var(--cyan); }
 .hdr-icon-btn {
   width: 32px; height: 32px;
-  background: var(--surface);
+  background: var(--bg3);
   border: 1px solid var(--border);
   color: var(--t2); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -908,7 +907,7 @@ body.dr-animating .reveal {
 .nav-btn .ni svg { display: block; }
 .nav-btn:hover {
   color: var(--t1);
-  background: var(--surface);
+  background: var(--bg3);
 }
 .nav-btn.active:hover { background: none; }   /* pill is the active fill */
 .nav-btn:hover .ni { opacity: 1; }
@@ -934,6 +933,155 @@ body.dr-animating .reveal {
 .nav-btn[data-page="d2d"].active      { color: var(--pink);   }
 .nav-btn[data-page="race"].active     { color: var(--amber);  }
 .nav-btn[data-page="compare"].active  { color: var(--cyan);   }
+
+/* ── Bottom tab bar — mobile (≤768px) ──────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Reposition nav to bottom of viewport */
+  #main-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0; top: auto;
+    height: 56px;
+    padding: 0 0 env(safe-area-inset-bottom, 0);
+    border-bottom: none;
+    border-top: 1px solid rgba(201,168,76,0.12);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.5);
+    z-index: 210;
+    background: var(--bg1);
+    /* pill indicator hidden on mobile — use text color only */
+  }
+  #nav-pill { display: none; }
+
+  /* Each button: column layout, equal width, smaller text */
+  #main-nav .nav-btn {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    height: 100%;
+    padding: 0;
+    min-width: 40px;
+    font-size: 0.58rem;
+    letter-spacing: 0;
+    white-space: nowrap;
+    border-radius: 0;
+  }
+  #main-nav .nav-btn .ni {
+    font-size: 14px;
+  }
+  #main-nav .nav-btn .ni svg {
+    width: 16px; height: 16px;
+  }
+  /* Active: gold highlight */
+  #main-nav .nav-btn.active { color: var(--gold); }
+  /* Override per-page accent colors on mobile — single gold */
+  #main-nav .nav-btn[data-page].active { color: var(--gold); }
+
+  /* Push page content above bottom bar */
+  .app-body {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Light mode bottom bar */
+@media (max-width: 768px) {
+  [data-theme="light"] #main-nav {
+    background: rgba(251,249,242,0.97);
+    border-top: 1px solid rgba(46,107,69,0.15);
+    border-bottom: none;
+    box-shadow: 0 -4px 18px rgba(27,42,31,0.07);
+  }
+  [data-theme="light"] #main-nav .nav-btn.active,
+  [data-theme="light"] #main-nav .nav-btn[data-page].active {
+    color: var(--gold);
+  }
+}
+/* ── End bottom tab bar ─────────────────────────────────────────────────── */
+
+/* ── Desktop sidebar (≥769px) ───────────────────────────────────────────── */
+.sidebar-toggle {
+  display: none; /* hidden on mobile by default */
+}
+@media (min-width: 769px) {
+  #main-nav {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 200px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 1rem 0;
+    background: var(--bg1);
+    border-right: 1px solid var(--t4);
+    border-bottom: none;
+    height: auto;
+    overflow: hidden;
+    transition: width 0.2s ease;
+    z-index: 200;
+    /* override the horizontal glass bar styles */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+  #main-nav.collapsed { width: 56px; }
+  /* Hide sliding pill on desktop sidebar */
+  #main-nav #nav-pill { display: none; }
+
+  .nav-btn {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.875rem;
+    border-radius: 0;
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    height: auto;
+  }
+  .nav-btn .ni { font-size: 1.1rem; flex-shrink: 0; }
+  .nav-btn.active {
+    color: var(--gold);
+    background: color-mix(in srgb, var(--gold) 10%, transparent);
+  }
+  .nav-btn.active:hover { background: color-mix(in srgb, var(--gold) 10%, transparent); }
+  .nav-btn:hover { background: var(--bg3); }
+  #main-nav.collapsed .nav-btn {
+    padding: 0.65rem;
+    justify-content: center;
+  }
+
+  .app-body {
+    margin-left: 200px;
+    transition: margin-left 0.2s ease;
+    padding-bottom: 0;
+  }
+  body.sidebar-collapsed .app-body { margin-left: 56px; }
+
+  /* Sidebar toggle button */
+  .sidebar-toggle {
+    display: flex;
+    position: fixed;
+    top: 0.75rem;
+    left: calc(200px + 0.75rem);
+    width: 32px; height: 32px;
+    background: var(--bg2);
+    border: 1px solid var(--t4);
+    border-radius: 6px;
+    cursor: pointer;
+    align-items: center; justify-content: center;
+    color: var(--t2);
+    z-index: 201;
+    transition: left 0.2s ease;
+  }
+  body.sidebar-collapsed .sidebar-toggle { left: calc(56px + 0.75rem); }
+
+  /* Light mode sidebar */
+  [data-theme="light"] #main-nav { background: #fff; border-right-color: #e4e4e7; }
+  [data-theme="light"] .sidebar-toggle { background: #fff; border-color: #d4d4d8; color: #52525b; }
+  [data-theme="light"] .nav-btn.active { background: color-mix(in srgb, #c9a84c 8%, transparent); }
+}
+/* ── End desktop sidebar ─────────────────────────────────────────────────── */
 
 .compare-body { display: flex; flex-direction: column; gap: 1.5rem; }
 .compare-empty { color: var(--t3); text-align: center; padding: 3rem 1rem; font-size: 0.95rem; }
@@ -1687,7 +1835,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 .badge.up   { background: rgba(201,168,76,0.12); color: var(--green); }
 .badge.dn   { background: rgba(239,68,68,0.12);  color: var(--red);   }
 .badge.warn { background: rgba(212,160,90,0.14);  color: var(--amber); }
-.badge.neu  { background: var(--surface);         color: var(--t3);    }
+.badge.neu  { background: var(--bg3);         color: var(--t3);    }
 .arr-up { color: var(--green); }
 .arr-dn { color: var(--red);   }
 
@@ -1798,7 +1946,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   background: var(--bg3); color: var(--t3); flex-shrink: 0;
 }
 .rank-1 { background: var(--amber-20); color: var(--amber); }
-.rank-2 { background: var(--surface);  color: var(--t2); }
+.rank-2 { background: var(--bg3);  color: var(--t2); }
 .rank-3 { background: var(--orange-20); color: var(--orange); }
 .rank-info { flex: 1; min-width: 0; }
 .rank-name { font-size: 12px; font-weight: 600; color: var(--t1); }
@@ -3143,7 +3291,7 @@ body:not(.dashboard-ready) .fc-big {
 .skel {
   position: relative;
   overflow: hidden;
-  background: var(--surface);
+  background: var(--bg3);
   border-radius: var(--r4);
 }
 .skel::after {
@@ -3169,7 +3317,7 @@ body:not(.dashboard-ready) .fc-big {
   display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 20px;
   padding: 26px; margin-bottom: 18px;
   border: 1px solid var(--border); border-radius: var(--r6);
-  background: var(--surface);
+  background: var(--bg3);
 }
 .skel-col { display: flex; flex-direction: column; gap: 12px; }
 .skel-line { height: 12px; }
@@ -5181,7 +5329,23 @@ function showPage(p,btn,skipHash){
   setTimeout(()=>{ if(window.attachReveal){ window.attachReveal(pageEl); window.attachReveal(); } }, 50);
 }
 /* Restore page from URL hash on load */
+function toggleSidebar() {
+  const collapsed = document.body.classList.toggle('sidebar-collapsed');
+  const nav = document.getElementById('main-nav');
+  if (nav) nav.classList.toggle('collapsed', collapsed);
+  sessionStorage.setItem('sidebarCollapsed', collapsed ? '1' : '');
+}
+function initSidebar() {
+  if (window.innerWidth <= 768) return;
+  if (sessionStorage.getItem('sidebarCollapsed') === '1') {
+    document.body.classList.add('sidebar-collapsed');
+    const nav = document.getElementById('main-nav');
+    if (nav) nav.classList.add('collapsed');
+  }
+}
+
 window.addEventListener('DOMContentLoaded',()=>{
+  initSidebar();
   const hash=location.hash.replace('#','');
   const valid=['kpi','channel','period','fldt','allsumm','d2d','race','compare'];
   if(hash && valid.includes(hash)) showPage(hash,null,true);
@@ -7925,6 +8089,36 @@ function closeChannelPopup(){
 }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(); });
 
+/* ── Keyboard shortcuts 1–8: jump to page by number ── */
+const _NAV_PAGES = ['kpi','channel','period','fldt','allsumm','d2d','race','compare'];
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const idx = parseInt(e.key, 10);
+  if (idx >= 1 && idx <= _NAV_PAGES.length) {
+    showPage(_NAV_PAGES[idx - 1]);
+  }
+});
+
+/* ── Swipe navigation (mobile touch) ── */
+(function initSwipe() {
+  let _swipeStartX = null;
+  document.addEventListener('touchstart', e => {
+    if (e.touches.length > 1) { _swipeStartX = null; return; }  // ignore pinch
+    _swipeStartX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (_swipeStartX === null) return;
+    if (e.changedTouches.length > 1) { _swipeStartX = null; return; }  // ignore pinch end
+    const dx = e.changedTouches[0].clientX - _swipeStartX;
+    _swipeStartX = null;
+    if (Math.abs(dx) < 50) return;
+    const cur = _NAV_PAGES.indexOf(currentPage);
+    if (dx < 0 && cur < _NAV_PAGES.length - 1) showPage(_NAV_PAGES[cur + 1]);
+    if (dx > 0 && cur > 0) showPage(_NAV_PAGES[cur - 1]);
+  }, { passive: true });
+})();
+
 /* ── Ghost Card: cursor-following glow ──
    One delegated pointermove walks up from the event target and updates
    --gx/--gy on every ghost-card ancestor (works for cards rebuilt
@@ -8739,6 +8933,10 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+<button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
 
 </body>
 </html>
