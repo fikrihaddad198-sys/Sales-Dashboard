@@ -9056,12 +9056,14 @@ if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(err => console.warn('SW register failed:', err));
   });
-  // Only reload when an existing SW is replaced by a new version.
-  // On first visit there's no previous controller, so skip the reload
-  // (otherwise the fresh install fires controllerchange and loops back to device picker).
+  // Only reload when an existing SW is replaced AND the user is on the dashboard.
+  // Pre-auth screens (device picker, login) have no sessionStorage state worth
+  // preserving — reloading them just bounces the user back to the device picker.
   const _prevController = navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if(_prevController) window.location.reload();
+    if(_prevController && document.body.classList.contains('dashboard-ready')) {
+      window.location.reload();
+    }
   });
 }
 </script>
