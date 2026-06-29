@@ -998,7 +998,7 @@ body.dr-animating .reveal {
 /* ── End bottom tab bar ─────────────────────────────────────────────────── */
 
 /* ── Desktop sidebar (≥769px) ───────────────────────────────────────────── */
-.sidebar-toggle {
+.sidebar-toggle-inline {
   display: none; /* hidden on mobile by default */
 }
 @media (min-width: 769px) {
@@ -1058,27 +1058,21 @@ body.dr-animating .reveal {
   }
   body.sidebar-collapsed .app-body { margin-left: 56px; }
 
-  /* Sidebar toggle button */
-  .sidebar-toggle {
+  /* Sidebar toggle button — inline inside nav, desktop only */
+  .sidebar-toggle-inline {
     display: flex;
-    position: fixed;
-    top: 0.75rem;
-    left: calc(200px + 0.75rem);
-    width: 32px; height: 32px;
-    background: var(--bg2);
-    border: 1px solid var(--t4);
-    border-radius: 6px;
-    cursor: pointer;
     align-items: center; justify-content: center;
-    color: var(--t2);
-    z-index: 201;
-    transition: left 0.2s ease;
+    width: 100%; height: 40px;
+    background: none; border: none; border-bottom: 1px solid var(--t4);
+    cursor: pointer; color: var(--t2);
+    flex-shrink: 0;
+    transition: color 0.15s;
   }
-  body.sidebar-collapsed .sidebar-toggle { left: calc(56px + 0.75rem); }
+  .sidebar-toggle-inline:hover { color: var(--gold); }
 
   /* Light mode sidebar */
   [data-theme="light"] #main-nav { background: #fff; border-right-color: #e4e4e7; }
-  [data-theme="light"] .sidebar-toggle { background: #fff; border-color: #d4d4d8; color: #52525b; }
+  [data-theme="light"] .sidebar-toggle-inline { border-bottom-color: #e4e4e7; color: #52525b; }
   [data-theme="light"] .nav-btn.active { background: color-mix(in srgb, #c9a84c 8%, transparent); }
 }
 /* ── End desktop sidebar ─────────────────────────────────────────────────── */
@@ -4068,6 +4062,10 @@ body.dashboard-locking .card {
 
 <!-- NAV -->
 <nav class="nav" id="main-nav">
+  <!-- Sidebar collapse toggle (desktop only) -->
+  <button class="sidebar-toggle-inline" id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
   <!-- Sliding pill: floating active background that glides between tabs -->
   <span id="nav-pill" aria-hidden="true"></span>
   <button class="nav-btn active" data-page="kpi" onclick="showPage('kpi',this)" aria-label="KPI Summary">
@@ -8934,9 +8932,6 @@ if('serviceWorker' in navigator){
 }
 </script>
 
-<button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar">
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-</button>
 
 </body>
 </html>
