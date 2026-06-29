@@ -8089,6 +8089,34 @@ function closeChannelPopup(){
 }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(); });
 
+/* ── Keyboard shortcuts 1–8: jump to page by number ── */
+const _NAV_PAGES = ['kpi','channel','period','fldt','allsumm','d2d','race','compare'];
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const idx = parseInt(e.key, 10);
+  if (idx >= 1 && idx <= _NAV_PAGES.length) {
+    showPage(_NAV_PAGES[idx - 1]);
+  }
+});
+
+/* ── Swipe navigation (mobile touch) ── */
+(function initSwipe() {
+  let _swipeStartX = null;
+  document.addEventListener('touchstart', e => {
+    _swipeStartX = e.touches[0].clientX;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (_swipeStartX === null) return;
+    const dx = e.changedTouches[0].clientX - _swipeStartX;
+    _swipeStartX = null;
+    if (Math.abs(dx) < 50) return;
+    const cur = _NAV_PAGES.indexOf(currentPage);
+    if (dx < 0 && cur < _NAV_PAGES.length - 1) showPage(_NAV_PAGES[cur + 1]);
+    if (dx > 0 && cur > 0) showPage(_NAV_PAGES[cur - 1]);
+  }, { passive: true });
+})();
+
 /* ── Ghost Card: cursor-following glow ──
    One delegated pointermove walks up from the event target and updates
    --gx/--gy on every ghost-card ancestor (works for cards rebuilt
