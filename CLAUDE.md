@@ -139,6 +139,20 @@ Uses `@property --p` (registered CSS custom property) so `transition: --p` works
 
 The indicator dot is counter-scaled: `transform: scaleX(calc(1 / max(var(--p, 0.15), 0.15)))` so it stays circular as the bar grows.
 
+## Navigation (`#main-nav`)
+
+Mobile (`≤768px`): fixed **bottom tab bar**, icon-only (labels hidden), gold pill behind active icon.
+
+Desktop (`≥769px`): left **sidebar** with two states, toggled by `toggleSidebar()` (persisted in `sessionStorage` `sidebarCollapsed`):
+- **Expanded** (232px): edge-docked, "Fore Coffee" wordmark + per-item labels, pushes content via `.app-body { margin-left: 232px }`.
+- **Collapsed → floating macOS-style dock** (`#main-nav.collapsed`): detaches from edge (`left:14px`, vertically centred), rounded + frosted glass, icon-only tiles, content gutter `margin-left: 88px`.
+
+**Smoothness invariants (don't regress — these were the "patah-patah" bug):**
+- `#main-nav` is `position:fixed`, so animating its geometry (`width/top/left/transform/border-radius`) does **not** reflow the document. Keep the open/close motion on the fixed nav; never animate layout props on the content except the single guarded `margin-left`.
+- `body.sidebar-animating` arms `will-change: margin-left` on `.app-body` only during the ~460ms toggle, then JS drops it (no idle GPU layer).
+- **Dock magnification** (`initDockMagnify`): on `pointermove` over the collapsed dock, each `.nav-btn` scales via `--mag` (cosine falloff, `DOCK_MAX_SCALE`/`DOCK_RADIUS`). Pointer math is **rAF-throttled** (one apply per frame). `will-change:transform` + `z-index` set only while live (`.dock-live`), cleared on `pointerleave`/expand via `resetDockMagnify()`. **Disabled** on `(pointer:coarse)` and `prefers-reduced-motion`. Transform-only — never touches layout.
+- Was a CSS parse bug here once: a bare `--ease-out-expo:` declaration sat directly inside `@media (min-width:769px)` (outside any selector), which invalidated the **entire** block and collapsed the sidebar to a horizontal row. Custom props must live inside a selector (`:root{}`).
+
 ## Design System
 
 **Quiet Ledger calm pass (all `.page`s)**: every dashboard page is flattened — data `.card`/`.metric-card` are flat solid surfaces (`--bg2` / `#fff`), hairline borders, calm hover (border-color only, no lift), **NO glass blur, NO glow** (`text-shadow:none` across `.page`, progress bars thin/solid/flat, hero orbs hidden), and `tabular-nums` throughout. Glass identity is **kept only on chrome (nav/header) + the map reveal** (both live outside `.page`). Big value numbers are **neutral**; colour is reserved for genuine status: Achievement/Daily Pace, the metric-card status **sub** (`sc`: green=good, red=warning, grey=neutral — set in `renderKpi`), and channel identity (dot/bar/%). Don't reintroduce glow/glass on data surfaces.
