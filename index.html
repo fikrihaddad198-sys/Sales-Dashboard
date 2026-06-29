@@ -542,19 +542,18 @@ body.dr-animating .reveal {
    replay the per-card .reveal cascade every single time (felt jittery /
    too fast). Instead cards are shown instantly and the whole page does
    a single gentle fade+rise. */
-/* OPACITY-ONLY fade. No translateY: moving the page (canvas charts + glass
-   blur) every frame was what made the cards look like they shook/lagged.
-   A pure cross-fade has nothing to re-rasterise in motion, so it stays smooth. */
+/* Subtle opacity + 4px rise. translateY(4px) is small enough to avoid
+   canvas/glass-blur re-rasterisation shake while adding just enough motion. */
 @keyframes page-swap-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .page.page-swapping {
-  animation: page-swap-in 0.36s var(--ease-out);
+  animation: page-swap-in 0.18s var(--ease-out) both;
   will-change: opacity;
 }
-[data-perf="ipad"]   .page.page-swapping { animation-duration: 0.30s; }
-[data-perf="mobile"] .page.page-swapping { animation-duration: 0.24s; } /* HP: light fade */
+[data-perf="ipad"]   .page.page-swapping { animation-duration: 0.18s; }
+[data-perf="mobile"] .page.page-swapping { animation-duration: 0.18s; }
 @media (prefers-reduced-motion: reduce) { .page.page-swapping { animation: none; } }
 
 /* Per-page chart entrance now lives in JS (replayPageCharts → reset+update re-runs
