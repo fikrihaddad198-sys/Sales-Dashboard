@@ -221,6 +221,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 6. Never create canvas gradients outside `grad()` caching function
 7. Keep entrance animations scoped to `body.dr-animating`, not `body.dashboard-ready`
 8. Gold (`#c9a84c`) is the single accent — do not introduce new accent colors into chrome/nav
+9. **Update `CLAUDE.md` in the same commit whenever you change architecture, auth, data flow, or any config constant.** This file is the only persistent memory across sessions — if it's stale, every future session will work from wrong assumptions. No exceptions.
 
 ## Coding Discipline (Karpathy principles)
 
