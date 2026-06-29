@@ -928,6 +928,10 @@ body.dr-animating .reveal {
 .nav-btn[data-page="allsumm"].active  { color: var(--violet); }
 .nav-btn[data-page="d2d"].active      { color: var(--pink);   }
 .nav-btn[data-page="race"].active     { color: var(--amber);  }
+.nav-btn[data-page="compare"].active  { color: var(--cyan);   }
+
+.compare-body { display: flex; flex-direction: column; gap: 1.5rem; }
+.compare-empty { color: var(--t3); text-align: center; padding: 3rem 1rem; font-size: 0.95rem; }
 
 /* ─────────────────────────────────────────────────────
    PAGE ACCENT SCOPING
@@ -3900,6 +3904,9 @@ body.dashboard-locking .card {
   <button class="nav-btn" data-page="race" onclick="showPage('race',this)" aria-label="Race">
     <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>Race
   </button>
+  <button class="nav-btn" data-page="compare" onclick="showPage('compare',this)" aria-label="Compare">
+    <span class="ni">⚖️</span>Compare
+  </button>
 </nav>
 
 <div class="app-body">
@@ -4368,6 +4375,17 @@ body.dashboard-locking .card {
   </div>
 </div><!-- /race-inner -->
 </div><!-- /page-race -->
+
+<!-- ════════════════════ COMPARE ════════════════════ -->
+<div class="page" id="page-compare">
+  <div class="page-header">
+    <h2 class="page-title">Perbandingan Toko</h2>
+    <p class="page-sub">Revenue, transaksi, dan channel per toko</p>
+  </div>
+  <div id="compare-body" class="compare-body">
+    <div class="compare-empty">Belum ada data toko lain.</div>
+  </div>
+</div>
 
 </div><!-- /app-body -->
 
@@ -5055,7 +5073,7 @@ function showPage(p,btn,skipHash){
 /* Restore page from URL hash on load */
 window.addEventListener('DOMContentLoaded',()=>{
   const hash=location.hash.replace('#','');
-  const valid=['kpi','channel','period','fldt','allsumm','d2d','race'];
+  const valid=['kpi','channel','period','fldt','allsumm','d2d','race','compare'];
   if(hash && valid.includes(hash)) showPage(hash,null,true);
   // Place the nav pill under whichever tab is active (no slide on first paint).
   const place = () => { const a=document.querySelector('.nav-btn.active'); if(a) moveNavPill(a, true); };
