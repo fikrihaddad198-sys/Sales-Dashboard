@@ -1005,74 +1005,119 @@ body.dr-animating .reveal {
   #main-nav {
     position: fixed;
     top: 0; left: 0; bottom: 0;
-    width: 200px;
+    width: 220px;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    padding: 1rem 0;
+    padding: 0.5rem 0 1rem;
     background: var(--bg1);
     border-right: 1px solid var(--t4);
     border-bottom: none;
     height: auto;
     overflow: hidden;
-    transition: width 0.2s ease;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 200;
-    /* override the horizontal glass bar styles */
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    box-shadow: none;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.18);
   }
-  #main-nav.collapsed { width: 56px; }
+  #main-nav.collapsed { width: 60px; }
   /* Hide sliding pill on desktop sidebar */
   #main-nav #nav-pill { display: none; }
 
+  /* Nav buttons: row layout with label */
   .nav-btn {
     flex-direction: row;
     justify-content: flex-start;
-    gap: 0.75rem;
-    padding: 0.65rem 1rem;
+    gap: 0.8rem;
+    padding: 0.7rem 1.1rem;
     font-size: 0.875rem;
+    font-weight: 500;
     border-radius: 0;
     width: 100%;
     text-align: left;
     white-space: nowrap;
     overflow: hidden;
     height: auto;
+    border-left: 3px solid transparent;
+    transition: color 0.18s, background 0.18s, border-left-color 0.2s;
   }
-  .nav-btn .ni { font-size: 1.1rem; flex-shrink: 0; }
+  .nav-btn .ni {
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    width: 20px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* Label text: fade out on collapse */
+  .nav-btn .nav-label {
+    flex: 1;
+    opacity: 1;
+    transition: opacity 0.12s ease;
+  }
+  .nav-btn:hover { background: color-mix(in srgb, var(--t4) 60%, transparent); }
   .nav-btn.active {
     color: var(--gold);
-    background: color-mix(in srgb, var(--gold) 10%, transparent);
+    background: color-mix(in srgb, var(--gold) 9%, transparent);
+    border-left-color: var(--gold);
   }
-  .nav-btn.active:hover { background: color-mix(in srgb, var(--gold) 10%, transparent); }
-  .nav-btn:hover { background: var(--bg3); }
+  .nav-btn.active:hover { background: color-mix(in srgb, var(--gold) 9%, transparent); }
+
+  /* Collapsed state: center icons, hide labels instantly then fade */
   #main-nav.collapsed .nav-btn {
-    padding: 0.65rem;
+    padding: 0.7rem 0;
     justify-content: center;
+    border-left-color: transparent !important;
+  }
+  #main-nav.collapsed .nav-btn.active {
+    color: var(--gold);
+    background: color-mix(in srgb, var(--gold) 9%, transparent);
+  }
+  #main-nav.collapsed .nav-btn .nav-label {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.08s ease;
   }
 
   .app-body {
-    margin-left: 200px;
-    transition: margin-left 0.2s ease;
+    margin-left: 220px;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     padding-bottom: 0;
   }
-  body.sidebar-collapsed .app-body { margin-left: 56px; }
+  body.sidebar-collapsed .app-body { margin-left: 60px; }
 
-  /* Sidebar toggle button — inline inside nav, desktop only */
+  /* Sidebar toggle button — inline, desktop only */
   .sidebar-toggle-inline {
     display: flex;
-    align-items: center; justify-content: center;
-    width: 100%; height: 40px;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 0.85rem;
+    width: 100%; height: 48px;
     background: none; border: none; border-bottom: 1px solid var(--t4);
-    cursor: pointer; color: var(--t2);
+    cursor: pointer; color: var(--t3);
     flex-shrink: 0;
-    transition: color 0.15s;
+    transition: color 0.18s;
+    margin-bottom: 0.25rem;
   }
   .sidebar-toggle-inline:hover { color: var(--gold); }
 
+  /* Chevron icon: rotates 180° when sidebar collapses */
+  .sidebar-toggle-icon {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+  }
+  #main-nav.collapsed .sidebar-toggle-icon {
+    transform: rotate(180deg);
+  }
+
   /* Light mode sidebar */
-  [data-theme="light"] #main-nav { background: #fff; border-right-color: #e4e4e7; }
-  [data-theme="light"] .sidebar-toggle-inline { border-bottom-color: #e4e4e7; color: #52525b; }
+  [data-theme="light"] #main-nav {
+    background: #fff;
+    border-right-color: #e4e4e7;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.07);
+  }
+  [data-theme="light"] .sidebar-toggle-inline { border-bottom-color: #e4e4e7; color: #71717a; }
+  [data-theme="light"] .sidebar-toggle-inline:hover { color: #c9a84c; }
+  [data-theme="light"] .nav-btn:hover { background: rgba(0,0,0,0.04); }
   [data-theme="light"] .nav-btn.active { background: color-mix(in srgb, #c9a84c 8%, transparent); }
 }
 /* ── End desktop sidebar ─────────────────────────────────────────────────── */
@@ -4064,33 +4109,33 @@ body.dashboard-locking .card {
 <nav class="nav" id="main-nav">
   <!-- Sidebar collapse toggle (desktop only) -->
   <button class="sidebar-toggle-inline" id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    <svg class="sidebar-toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <!-- Sliding pill: floating active background that glides between tabs -->
   <span id="nav-pill" aria-hidden="true"></span>
   <button class="nav-btn active" data-page="kpi" onclick="showPage('kpi',this)" aria-label="KPI Summary">
-    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>KPI Summary
+    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span class="nav-label">KPI Summary</span>
   </button>
   <button class="nav-btn" data-page="channel" onclick="showPage('channel',this)" aria-label="Channel">
-    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 4-4"/></svg></span>Channel
+    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 4-4"/></svg></span><span class="nav-label">Channel</span>
   </button>
   <button class="nav-btn" data-page="period" onclick="showPage('period',this)" aria-label="Week to Week">
-    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Week to Week
+    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><span class="nav-label">Week to Week</span>
   </button>
   <button class="nav-btn" data-page="fldt" onclick="showPage('fldt',this)" aria-label="FLDT">
-    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg></span>FLDT
+    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg></span><span class="nav-label">FLDT</span>
   </button>
   <button class="nav-btn" data-page="allsumm" onclick="showPage('allsumm',this)" aria-label="All Summary">
-    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg></span>All Summary
+    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/></svg></span><span class="nav-label">All Summary</span>
   </button>
   <button class="nav-btn" data-page="d2d" onclick="showPage('d2d',this)" aria-label="Day to Day">
-    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg></span>Day to Day
+    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6h18M3 18h18"/></svg></span><span class="nav-label">Day to Day</span>
   </button>
   <button class="nav-btn" data-page="race" onclick="showPage('race',this)" aria-label="Race">
-    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>Race
+    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span><span class="nav-label">Race</span>
   </button>
   <button class="nav-btn" data-page="compare" onclick="showPage('compare',this)" aria-label="Compare">
-    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 9l9-6 9 6M5 20h14M8 12H5l-2 5h6zm11 0h3l2 5h-6z"/></svg></span>Compare
+    <span class="ni"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 9l9-6 9 6M5 20h14M8 12H5l-2 5h6zm11 0h3l2 5h-6z"/></svg></span><span class="nav-label">Compare</span>
   </button>
 </nav>
 
