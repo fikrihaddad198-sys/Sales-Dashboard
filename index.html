@@ -550,16 +550,16 @@ body.dr-animating .reveal {
 }
 .page.page-swapping {
   animation: page-swap-in 0.18s var(--ease-out) both;
-  will-change: opacity;
+  will-change: opacity, transform;
 }
 [data-perf="ipad"]   .page.page-swapping { animation-duration: 0.18s; }
 [data-perf="mobile"] .page.page-swapping { animation-duration: 0.18s; }
 @media (prefers-reduced-motion: reduce) { .page.page-swapping { animation: none; } }
 
 /* Per-page chart entrance now lives in JS (replayPageCharts → reset+update re-runs
-   each chart's draw animation on revisit), NOT CSS. Do NOT add translate to
-   .page / .page-swapping — moving the whole page re-rasterised its canvas+blur
-   every frame and shook (old jitter bug). The page stays opacity-only. */
+   each chart's draw animation on revisit), NOT CSS. The page-swap-in animation uses
+   opacity + a subtle translateY(4px) rise (small enough to avoid canvas/glass-blur
+   re-rasterisation shake while adding just enough motion). */
 
 /* ─────────────────────────────────────────────────────
    SKELETON LOADING
@@ -739,7 +739,7 @@ body.dr-animating .reveal {
 }
 .hdr-btn {
   height: 32px;
-  background: var(--surface);
+  background: var(--bg3);
   border: 1px solid var(--border-md);
   color: var(--t2); cursor: pointer;
   display: inline-flex; align-items: center; gap: 5px;
@@ -751,7 +751,7 @@ body.dr-animating .reveal {
 .hdr-btn:hover { background: var(--cyan-10); border-color: rgba(201,168,76,0.35); color: var(--cyan); }
 .hdr-icon-btn {
   width: 32px; height: 32px;
-  background: var(--surface);
+  background: var(--bg3);
   border: 1px solid var(--border);
   color: var(--t2); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -907,7 +907,7 @@ body.dr-animating .reveal {
 .nav-btn .ni svg { display: block; }
 .nav-btn:hover {
   color: var(--t1);
-  background: var(--surface);
+  background: var(--bg3);
 }
 .nav-btn.active:hover { background: none; }   /* pill is the active fill */
 .nav-btn:hover .ni { opacity: 1; }
@@ -1045,7 +1045,7 @@ body.dr-animating .reveal {
     background: color-mix(in srgb, var(--gold) 10%, transparent);
   }
   .nav-btn.active:hover { background: color-mix(in srgb, var(--gold) 10%, transparent); }
-  .nav-btn:hover { background: var(--surface); }
+  .nav-btn:hover { background: var(--bg3); }
   #main-nav.collapsed .nav-btn {
     padding: 0.65rem;
     justify-content: center;
@@ -1835,7 +1835,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 .badge.up   { background: rgba(201,168,76,0.12); color: var(--green); }
 .badge.dn   { background: rgba(239,68,68,0.12);  color: var(--red);   }
 .badge.warn { background: rgba(212,160,90,0.14);  color: var(--amber); }
-.badge.neu  { background: var(--surface);         color: var(--t3);    }
+.badge.neu  { background: var(--bg3);         color: var(--t3);    }
 .arr-up { color: var(--green); }
 .arr-dn { color: var(--red);   }
 
@@ -1946,7 +1946,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   background: var(--bg3); color: var(--t3); flex-shrink: 0;
 }
 .rank-1 { background: var(--amber-20); color: var(--amber); }
-.rank-2 { background: var(--surface);  color: var(--t2); }
+.rank-2 { background: var(--bg3);  color: var(--t2); }
 .rank-3 { background: var(--orange-20); color: var(--orange); }
 .rank-info { flex: 1; min-width: 0; }
 .rank-name { font-size: 12px; font-weight: 600; color: var(--t1); }
@@ -3291,7 +3291,7 @@ body:not(.dashboard-ready) .fc-big {
 .skel {
   position: relative;
   overflow: hidden;
-  background: var(--surface);
+  background: var(--bg3);
   border-radius: var(--r4);
 }
 .skel::after {
@@ -3317,7 +3317,7 @@ body:not(.dashboard-ready) .fc-big {
   display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 20px;
   padding: 26px; margin-bottom: 18px;
   border: 1px solid var(--border); border-radius: var(--r6);
-  background: var(--surface);
+  background: var(--bg3);
 }
 .skel-col { display: flex; flex-direction: column; gap: 12px; }
 .skel-line { height: 12px; }
@@ -8104,10 +8104,12 @@ document.addEventListener('keydown', (e) => {
 (function initSwipe() {
   let _swipeStartX = null;
   document.addEventListener('touchstart', e => {
+    if (e.touches.length > 1) { _swipeStartX = null; return; }  // ignore pinch
     _swipeStartX = e.touches[0].clientX;
   }, { passive: true });
   document.addEventListener('touchend', e => {
     if (_swipeStartX === null) return;
+    if (e.changedTouches.length > 1) { _swipeStartX = null; return; }  // ignore pinch end
     const dx = e.changedTouches[0].clientX - _swipeStartX;
     _swipeStartX = null;
     if (Math.abs(dx) < 50) return;
