@@ -998,6 +998,92 @@ body.dr-animating .reveal {
 }
 /* ── End bottom tab bar ─────────────────────────────────────────────────── */
 
+/* ── Desktop sidebar (≥769px) ───────────────────────────────────────────── */
+.sidebar-toggle {
+  display: none; /* hidden on mobile by default */
+}
+@media (min-width: 769px) {
+  #main-nav {
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    width: 200px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 1rem 0;
+    background: var(--bg1);
+    border-right: 1px solid var(--t4);
+    border-bottom: none;
+    height: auto;
+    overflow: hidden;
+    transition: width 0.2s ease;
+    z-index: 200;
+    /* override the horizontal glass bar styles */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+  #main-nav.collapsed { width: 56px; }
+  /* Hide sliding pill on desktop sidebar */
+  #main-nav #nav-pill { display: none; }
+
+  .nav-btn {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem;
+    font-size: 0.875rem;
+    border-radius: 0;
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    height: auto;
+  }
+  .nav-btn .ni { font-size: 1.1rem; flex-shrink: 0; }
+  .nav-btn.active {
+    color: var(--gold);
+    background: color-mix(in srgb, var(--gold) 10%, transparent);
+  }
+  .nav-btn.active:hover { background: color-mix(in srgb, var(--gold) 10%, transparent); }
+  .nav-btn:hover { background: var(--surface); }
+  #main-nav.collapsed .nav-btn {
+    padding: 0.65rem;
+    justify-content: center;
+  }
+
+  .app-body {
+    margin-left: 200px;
+    transition: margin-left 0.2s ease;
+    padding-bottom: 0;
+  }
+  body.sidebar-collapsed .app-body { margin-left: 56px; }
+
+  /* Sidebar toggle button */
+  .sidebar-toggle {
+    display: flex;
+    position: fixed;
+    top: 0.75rem;
+    left: calc(200px + 0.75rem);
+    width: 32px; height: 32px;
+    background: var(--bg2);
+    border: 1px solid var(--t4);
+    border-radius: 6px;
+    cursor: pointer;
+    align-items: center; justify-content: center;
+    color: var(--t2);
+    z-index: 201;
+    transition: left 0.2s ease;
+  }
+  body.sidebar-collapsed .sidebar-toggle { left: calc(56px + 0.75rem); }
+}
+
+/* Light mode sidebar */
+[data-theme="light"] #main-nav { background: #fff; border-right-color: #e4e4e7; }
+[data-theme="light"] .sidebar-toggle { background: #fff; border-color: #d4d4d8; color: #52525b; }
+[data-theme="light"] .nav-btn.active { background: color-mix(in srgb, #c9a84c 8%, transparent); }
+/* ── End desktop sidebar ─────────────────────────────────────────────────── */
+
 .compare-body { display: flex; flex-direction: column; gap: 1.5rem; }
 .compare-empty { color: var(--t3); text-align: center; padding: 3rem 1rem; font-size: 0.95rem; }
 .compare-cols { display: flex; gap: 1rem; flex-wrap: wrap; }
@@ -5244,7 +5330,23 @@ function showPage(p,btn,skipHash){
   setTimeout(()=>{ if(window.attachReveal){ window.attachReveal(pageEl); window.attachReveal(); } }, 50);
 }
 /* Restore page from URL hash on load */
+function toggleSidebar() {
+  const collapsed = document.body.classList.toggle('sidebar-collapsed');
+  const nav = document.getElementById('main-nav');
+  if (nav) nav.classList.toggle('collapsed', collapsed);
+  sessionStorage.setItem('sidebarCollapsed', collapsed ? '1' : '');
+}
+function initSidebar() {
+  if (window.innerWidth <= 768) return;
+  if (sessionStorage.getItem('sidebarCollapsed') === '1') {
+    document.body.classList.add('sidebar-collapsed');
+    const nav = document.getElementById('main-nav');
+    if (nav) nav.classList.add('collapsed');
+  }
+}
+
 window.addEventListener('DOMContentLoaded',()=>{
+  initSidebar();
   const hash=location.hash.replace('#','');
   const valid=['kpi','channel','period','fldt','allsumm','d2d','race','compare'];
   if(hash && valid.includes(hash)) showPage(hash,null,true);
@@ -8802,6 +8904,10 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+<button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
 
 </body>
 </html>
