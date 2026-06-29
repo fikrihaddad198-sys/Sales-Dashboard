@@ -4838,7 +4838,10 @@ async function loadData(){
     const res=await gasCall('data',{ token: SESS.token||'' });
     if(!res || !res.ok){
       const err = res ? res.error : 'no_response';
-      if(err==='expired' || err==='revoked' || err==='invalid_token' || err==='no_token'){
+      // Only auto-logout on definitive server-side session errors (expired/revoked).
+      // invalid_token / no_token may mean GAS hasn't been redeployed yet — show error
+      // but keep the Supabase session alive so the user doesn't get kicked out.
+      if(err==='expired' || err==='revoked'){
         if(skel) skel.classList.remove('show');
         endSession(err==='expired' ? 'expired' : 'revoked');
         return;
