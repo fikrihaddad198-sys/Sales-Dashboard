@@ -1023,18 +1023,50 @@ body.dr-animating .reveal {
     justify-content: flex-start;
     padding: 0;
     background: var(--bg1);
-    border-right: 1px solid var(--t4);
+    border: 1px solid transparent;
+    border-right-color: var(--t4);
     border-bottom: none;
+    border-radius: 0;
     height: auto;
     overflow: hidden;
-    /* Layout change = 300–500ms range per impeccable. ease-out-expo: snappy start, smooth settle */
-    transition: width 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    /* #main-nav is position:fixed → animating its geometry does NOT reflow the
+       document (out of flow). All props here are composited on the nav itself.
+       ease-out-expo (impeccable): confident, decisive. */
+    transition:
+      width 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+      top 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+      bottom 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+      left 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+      border-radius 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+      background-color 0.3s ease,
+      box-shadow 0.42s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 200;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     box-shadow: 1px 0 0 var(--t4), 4px 0 20px rgba(0,0,0,0.2);
   }
-  #main-nav.collapsed { width: 58px; }
+
+  /* ── Collapsed = floating macOS-style dock ───────────────────────────────
+     Detaches from the edge, centers vertically, rounds, frosts. Icons only,
+     vertically packed, with proximity magnification (driven by JS). */
+  #main-nav.collapsed {
+    width: 64px;
+    top: 50%;
+    bottom: auto;
+    left: 14px;
+    transform: translateY(-50%);
+    height: auto;
+    max-height: calc(100vh - 28px);
+    border-radius: 22px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(22,22,24,0.72);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+    padding: 8px 0;
+    overflow: visible;
+  }
   #main-nav #nav-pill { display: none; }
 
   /* ── Nav buttons ── */
@@ -1089,36 +1121,56 @@ body.dr-animating .reveal {
   /* Press: 120ms instant feedback */
   .nav-btn:active { opacity: 0.7; transition-duration: 0.08s; }
 
-  /* ── Collapsed icon-rail ── */
+  /* ── Dock items (collapsed) ──
+     Square-ish icon tiles, centered, with magnification driven by --mag
+     (set per-button by JS on pointermove; defaults to 1). transform-only =
+     GPU-composited, never touches layout. transform-origin left so tiles
+     grow toward the content, away from the screen edge — the macOS feel. */
   #main-nav.collapsed .nav-btn {
+    width: 48px;
+    height: 48px;
+    margin: 2px auto;
     padding: 0;
     justify-content: center;
-    /* Remove the inset left shadow in collapsed mode (icon-only, no room for indicator) */
+    border-radius: 14px;
     box-shadow: none;
     position: relative;
+    transform-origin: left center;
+    transform: scale(var(--mag, 1));
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+                background 0.15s ease, color 0.15s ease;
   }
+  /* While the cursor is steering the dock, JS owns transform every frame —
+     drop the CSS transition so the two don't fight (set via .dock-live). */
+  #main-nav.collapsed.dock-live .nav-btn { transition: background 0.15s ease, color 0.15s ease; }
   #main-nav.collapsed .nav-btn.active {
     color: var(--gold);
-    background: color-mix(in srgb, var(--gold) 10%, transparent);
+    background: color-mix(in srgb, var(--gold) 14%, transparent);
   }
-  /* Label fades out fast on collapse (exit = 75% of enter per impeccable) */
-  #main-nav.collapsed .nav-btn .nav-label {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.09s ease;
+  /* A small gold dot marks the active page in dock mode (no room for a stripe) */
+  #main-nav.collapsed .nav-btn.active::before {
+    content: '';
+    position: absolute;
+    left: -5px; top: 50%;
+    width: 4px; height: 4px;
+    margin-top: -2px;
+    border-radius: 50%;
+    background: var(--gold);
   }
-  /* Tooltip on collapsed icons — shows aria-label on hover */
+  /* Label hidden entirely in dock mode */
+  #main-nav.collapsed .nav-btn .nav-label { display: none; }
+  /* Tooltip on dock icons — shows aria-label on hover */
   #main-nav.collapsed .nav-btn::after {
     content: attr(aria-label);
     position: fixed;
-    left: 66px;
+    left: 78px;
     background: var(--bg3);
     border: 1px solid var(--t4);
     color: var(--t1);
     font-size: 0.78rem;
     font-weight: 500;
     padding: 0.28rem 0.6rem;
-    border-radius: 5px;
+    border-radius: 6px;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
@@ -1126,17 +1178,21 @@ body.dr-animating .reveal {
     transition: opacity 0.14s ease;
     z-index: 300;
     transform: translateY(-50%);
-    margin-top: 22px;
+    margin-top: 24px;
   }
   #main-nav.collapsed .nav-btn:hover::after { opacity: 1; }
 
-  /* Content area shifts with sidebar — same easing */
+  /* Content area shifts with sidebar. Single layout-animated property on one
+     element; will-change is armed only during the toggle (body.sidebar-animating)
+     and dropped after, so the GPU layer isn't kept alive idle. */
   .app-body {
     margin-left: 232px;
-    transition: margin-left 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: margin-left 0.42s cubic-bezier(0.16, 1, 0.3, 1);
     padding-bottom: 0;
   }
-  body.sidebar-collapsed .app-body { margin-left: 58px; }
+  body.sidebar-animating .app-body { will-change: margin-left; }
+  /* Dock floats over a reserved gutter (88px) so it never covers data */
+  body.sidebar-collapsed .app-body { margin-left: 88px; }
 
   /* ── Toggle / brand row ── */
   .sidebar-toggle-inline {
@@ -1158,32 +1214,38 @@ body.dr-animating .reveal {
   .sidebar-toggle-inline:hover { color: var(--t2); background: rgba(255,255,255,0.03); }
   .sidebar-toggle-inline:active { opacity: 0.75; }
 
-  /* "FC" monogram — small, gold, uppercase, fades on collapse */
+  /* "Fore Coffee" wordmark — gold, fades out on collapse */
   .sidebar-brand {
-    font-size: 0.72rem;
+    font-size: 0.82rem;
     font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    letter-spacing: 0.02em;
     color: var(--gold);
     flex: 1;
     white-space: nowrap;
     overflow: hidden;
     opacity: 1;
-    transition: opacity 0.09s ease;
+    transition: opacity 0.12s ease;
   }
-  #main-nav.collapsed .sidebar-brand { opacity: 0; }
+  #main-nav.collapsed .sidebar-brand { opacity: 0; width: 0; }
 
   /* Chevron rotates 180° on collapse */
   .sidebar-toggle-icon {
     flex-shrink: 0;
-    transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
     color: var(--t3);
   }
   .sidebar-toggle-inline:hover .sidebar-toggle-icon { color: var(--t2); }
   #main-nav.collapsed .sidebar-toggle-icon { transform: rotate(180deg); }
+  /* In dock mode the toggle becomes a compact chevron tile at the top */
   #main-nav.collapsed .sidebar-toggle-inline {
     justify-content: center;
     padding: 0;
+    width: 48px;
+    height: 36px;
+    min-height: 36px;
+    margin: 0 auto 4px;
+    border-bottom: none;
+    border-radius: 12px;
   }
 
   /* ── Light mode ── */
@@ -1209,12 +1271,20 @@ body.dr-animating .reveal {
     color: #18181b;
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
   }
+  /* Light-mode floating dock: frosted cream glass */
+  [data-theme="light"] #main-nav.collapsed {
+    background: rgba(251,249,242,0.78);
+    border-color: rgba(0,0,0,0.07);
+    box-shadow: 0 12px 40px rgba(27,42,31,0.16), 0 2px 8px rgba(27,42,31,0.08);
+  }
 
-  /* prefers-reduced-motion — High severity a11y requirement */
+  /* prefers-reduced-motion — High severity a11y requirement.
+     Magnification is also disabled in JS under this query. */
   @media (prefers-reduced-motion: reduce) {
     #main-nav, .app-body, .sidebar-toggle-icon,
     .nav-btn, .nav-btn .nav-label, .nav-btn .ni,
     .sidebar-brand { transition: none !important; }
+    #main-nav.collapsed .nav-btn { transform: none !important; }
   }
 }
 /* ── End desktop sidebar ─────────────────────────────────────────────────── */
@@ -4206,7 +4276,7 @@ body.dashboard-locking .card {
 <nav class="nav" id="main-nav">
   <!-- Sidebar collapse toggle (desktop only) -->
   <button class="sidebar-toggle-inline" id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar" title="Toggle sidebar">
-    <span class="sidebar-brand">FC</span>
+    <span class="sidebar-brand">Fore Coffee</span>
     <svg class="sidebar-toggle-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
   </button>
   <!-- Sliding pill: floating active background that glides between tabs -->
@@ -5470,11 +5540,21 @@ function showPage(p,btn,skipHash){
   setTimeout(()=>{ if(window.attachReveal){ window.attachReveal(pageEl); window.attachReveal(); } }, 50);
 }
 /* Restore page from URL hash on load */
+let _sidebarAnimTimer = null;
 function toggleSidebar() {
   const collapsed = document.body.classList.toggle('sidebar-collapsed');
   const nav = document.getElementById('main-nav');
   if (nav) nav.classList.toggle('collapsed', collapsed);
   sessionStorage.setItem('sidebarCollapsed', collapsed ? '1' : '');
+  // Arm will-change only for the duration of the toggle, then drop it so the
+  // GPU layer isn't kept alive idle (impeccable animate.md rule).
+  document.body.classList.add('sidebar-animating');
+  clearTimeout(_sidebarAnimTimer);
+  _sidebarAnimTimer = setTimeout(() => {
+    document.body.classList.remove('sidebar-animating');
+  }, 460);
+  // Leaving dock mode → clear any leftover magnification transforms.
+  if (!collapsed) resetDockMagnify();
 }
 function initSidebar() {
   if (window.innerWidth <= 768) return;
@@ -5485,8 +5565,64 @@ function initSidebar() {
   }
 }
 
+/* ── macOS-style dock magnification ──────────────────────────────────────────
+   When the dock (collapsed sidebar) is hovered with a fine pointer, each icon
+   scales by its vertical distance to the cursor: nearest grows most, neighbours
+   taper off. Pure transform (GPU); pointer math is throttled to one rAF per
+   frame so it never runs ahead of paint. Disabled on touch and reduced-motion. */
+const DOCK_MAX_SCALE = 1.5;   // nearest icon
+const DOCK_RADIUS    = 90;    // px of influence above/below cursor
+let _dockRaf = null, _dockPointerY = 0, _dockBtns = null;
+
+function _dockSupported() {
+  return window.matchMedia('(pointer: fine)').matches &&
+         !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+function resetDockMagnify() {
+  const nav = document.getElementById('main-nav');
+  if (nav) nav.classList.remove('dock-live');
+  document.querySelectorAll('#main-nav .nav-btn').forEach(b => {
+    b.style.removeProperty('--mag');
+    b.style.willChange = '';
+    b.style.zIndex = '';
+  });
+}
+function _dockApply() {
+  _dockRaf = null;
+  if (!_dockBtns) return;
+  _dockBtns.forEach(b => {
+    const r = b.getBoundingClientRect();
+    const c = r.top + r.height / 2;
+    const d = Math.abs(c - _dockPointerY);
+    let mag = 1;
+    if (d < DOCK_RADIUS) {
+      // cosine falloff: smooth 1.5 → 1 across the radius
+      mag = 1 + (DOCK_MAX_SCALE - 1) * (Math.cos((d / DOCK_RADIUS) * Math.PI) + 1) / 2;
+    }
+    b.style.setProperty('--mag', mag.toFixed(3));
+    // Bigger icon paints on top so growth never tucks under a neighbour.
+    b.style.zIndex = Math.round(mag * 10);
+  });
+}
+function initDockMagnify() {
+  const nav = document.getElementById('main-nav');
+  if (!nav) return;
+  nav.addEventListener('pointermove', (e) => {
+    if (!nav.classList.contains('collapsed') || !_dockSupported()) return;
+    _dockPointerY = e.clientY;
+    if (!nav.classList.contains('dock-live')) {
+      nav.classList.add('dock-live');
+      _dockBtns = Array.from(nav.querySelectorAll('.nav-btn'));
+      _dockBtns.forEach(b => { b.style.willChange = 'transform'; });
+    }
+    if (_dockRaf == null) _dockRaf = requestAnimationFrame(_dockApply);
+  });
+  nav.addEventListener('pointerleave', resetDockMagnify);
+}
+
 window.addEventListener('DOMContentLoaded',()=>{
   initSidebar();
+  initDockMagnify();
   const hash=location.hash.replace('#','');
   const valid=['kpi','channel','period','fldt','allsumm','d2d','race','compare'];
   if(hash && valid.includes(hash)) showPage(hash,null,true);
