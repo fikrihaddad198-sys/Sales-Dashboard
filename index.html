@@ -1029,18 +1029,20 @@ body.dr-animating .reveal {
     border-radius: 0;
     height: auto;
     overflow: hidden;
-    /* #main-nav is position:fixed → animating its geometry does NOT reflow the
-       document (out of flow). All props here are composited on the nav itself.
-       ease-out-expo (impeccable): confident, decisive. */
+    /* #main-nav is position:fixed and overlays the content (content width never
+       changes → charts never re-render → the drawer stays buttery at any speed).
+       0.55s easeInOutQuart: gentle accelerate + long glide-out, reads as fluid
+       both opening and closing (not the snappier expo used for micro-motion). */
+    --nav-ease: cubic-bezier(0.76, 0, 0.24, 1);
     transition:
-      width 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-      top 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-      bottom 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-      left 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-      border-radius 0.42s cubic-bezier(0.16, 1, 0.3, 1),
-      background-color 0.3s ease,
-      box-shadow 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+      width 0.55s var(--nav-ease),
+      top 0.55s var(--nav-ease),
+      bottom 0.55s var(--nav-ease),
+      left 0.55s var(--nav-ease),
+      transform 0.55s var(--nav-ease),
+      border-radius 0.55s var(--nav-ease),
+      background-color 0.35s ease,
+      box-shadow 0.55s var(--nav-ease);
     z-index: 200;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -1186,16 +1188,16 @@ body.dr-animating .reveal {
   }
   #main-nav.collapsed .nav-btn:hover::after { opacity: 1; }
 
-  /* Content shifts with the sidebar but does NOT animate: animating margin-left
-     reflows the whole chart-heavy page every frame (the expand judder). The nav
-     itself is position:fixed and animates smoothly on its own; the content just
-     snaps to its final gutter in one step — zero per-frame reflow. */
+  /* Content gutter is CONSTANT (88px) in both states — it never changes width,
+     so Chart.js never sees a resize and never re-renders mid-animation (that
+     per-frame chart re-render was the real expand stutter, worse the slower the
+     animation ran). The expanded sidebar (position:fixed) simply slides/grows
+     OVER the content like a drawer; content stays put. Do NOT re-introduce a
+     width-changing margin here — it brings the chart-rerender jank straight back. */
   .app-body {
-    margin-left: 232px;
+    margin-left: 88px;
     padding-bottom: 0;
   }
-  /* Dock floats over a reserved gutter (88px) so it never covers data */
-  body.sidebar-collapsed .app-body { margin-left: 88px; }
 
   /* ── Toggle / brand row ── */
   .sidebar-toggle-inline {
@@ -1234,7 +1236,7 @@ body.dr-animating .reveal {
   /* Chevron rotates 180° on collapse */
   .sidebar-toggle-icon {
     flex-shrink: 0;
-    transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.55s var(--nav-ease, cubic-bezier(0.76, 0, 0.24, 1));
     color: var(--t3);
   }
   .sidebar-toggle-inline:hover .sidebar-toggle-icon { color: var(--t2); }
