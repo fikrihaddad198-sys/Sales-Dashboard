@@ -149,7 +149,7 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 
 **Smoothness invariants (don't regress — these were the "patah-patah" bug):**
 - `#main-nav` is `position:fixed`, so animating its geometry (`width/top/left/transform/border-radius`) does **not** reflow the document. Keep the open/close motion on the fixed nav.
-- **Content push uses `transform: translateX(152px)` (GPU), NOT `margin`.** `.app-body` margin is fixed 88px so content width never changes → nothing reflows and Chart.js never resizes during the toggle → buttery push AND smooth close. Expanded shifts content right 152px (far-right ~152px clips off-screen via `body{overflow:hidden}`; transient + auto-collapse). **Never** switch this back to an animated `margin`/`width` on content — that reflows the whole chart page every frame (the stutter chased across many commits). `resizeDelay=160` stays as belt-and-suspenders for other resizes. Nav open/close speed lives in `--nav-ease` + `0.55s` (easeInOutQuart); label uses `max-width`+opacity so closing mirrors opening.
+- **Content push = real `margin-left` animation (240px↔88px)** so content genuinely narrows/widens ("terdorong"). translateX was tried to avoid reflow but clipped ~152px of content off-screen on expand ("mengecil" — owner rejected). `Chart.defaults.resizeDelay=160` keeps charts from re-rendering per frame during the push (residual layout reflow remains — acceptable trade for no clipping). Nav open/close speed: `--nav-ease` + `0.55s` (easeInOutQuart); label uses `max-width`+opacity so closing mirrors opening. Dock total height identical in both states (button 44, toggle 40, vertical margin 2) so the toggle never shifts vertically.
 - **Dock magnification** (`initDockMagnify`): on `pointermove` over the collapsed dock, each `.nav-btn` scales via `--mag` (cosine falloff, `DOCK_MAX_SCALE`/`DOCK_RADIUS`). Pointer math is **rAF-throttled** (one apply per frame); resting icon centers are cached on entry (`_dockCenters`) so distance never feeds back on the applied transform. Icons magnify (`--mag`) AND push neighbours apart (`--ty`, `DOCK_SPREAD`) so tiles never overlap. First entry keeps the CSS transition (smooth grow-in); after ~190ms JS adds `.dock-snap` to make subsequent per-frame steering instant (no rubber-band). `will-change:transform` + `z-index` set only while live (`.dock-live`), cleared on `pointerleave`/expand via `resetDockMagnify()`. Touch vs precise is gated per-event by `e.pointerType` (`touch` skipped) — **NOT** a `(pointer:fine)` media query: iPadOS reports `(pointer:coarse)` even with a trackpad attached, which would wrongly disable the dock there. Also disabled under `prefers-reduced-motion`. Transform-only — never touches layout.
 - Was a CSS parse bug here once: a bare `--ease-out-expo:` declaration sat directly inside `@media (min-width:769px)` (outside any selector), which invalidated the **entire** block and collapsed the sidebar to a horizontal row. Custom props must live inside a selector (`:root{}`).
 
@@ -179,7 +179,7 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v92`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v93`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -228,7 +228,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v92` → increment to `fore-v93`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v93` → increment to `fore-v94`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
