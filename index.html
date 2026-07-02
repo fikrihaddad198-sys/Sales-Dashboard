@@ -1099,7 +1099,7 @@ body.dr-animating .reveal {
     overflow: hidden;
     white-space: nowrap;
     padding-right: 10px;
-    transition: max-width 0.55s var(--nav-ease), opacity 0.35s ease;
+    transition: max-width 0.55s var(--nav-ease), opacity 0.18s ease;
   }
   .nav-btn:hover {
     background: rgba(255,255,255,0.06);
@@ -1129,7 +1129,10 @@ body.dr-animating .reveal {
     /* --ty spreads neighbours apart so magnified tiles never overlap (macOS
        dock behaviour); --mag is the proximity scale. Both set by JS. */
     transform: translateY(var(--ty, 0px)) scale(var(--mag, 1));
-    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    /* Softer grow-in / shrink-out (ease-out-quint). Steering stays instant via
+       .dock-snap; this duration only shapes the enter (first touch) and the
+       leave (reset), which felt abrupt at 0.18s. */
+    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
                 background 0.15s ease, color 0.15s ease;
   }
   /* After the first grow has eased in, JS adds .dock-snap so subsequent
@@ -1152,7 +1155,7 @@ body.dr-animating .reveal {
     background: var(--gold);
   }
   /* Dock mode: label shrinks to nothing + fades (reverse of open, not a pop) */
-  #main-nav.collapsed .nav-btn .nav-label { max-width: 0; opacity: 0; margin: 0; }
+  #main-nav.collapsed .nav-btn .nav-label { max-width: 0; opacity: 0; margin: 0; padding: 0; }
   #main-nav.collapsed .nav-btn { gap: 0; }
   /* Tooltip on dock icons — shows aria-label on hover */
   #main-nav.collapsed .nav-btn::after {
@@ -5646,7 +5649,7 @@ function initDockMagnify() {
       nav.classList.add('dock-live');          // first entry keeps the CSS transition → smooth grow
       // After the grow eases in (~190ms), switch to instant per-frame steering.
       clearTimeout(_dockSnapTimer);
-      _dockSnapTimer = setTimeout(() => nav.classList.add('dock-snap'), 190);
+      _dockSnapTimer = setTimeout(() => nav.classList.add('dock-snap'), 300);
     }
     if (_dockRaf == null) _dockRaf = requestAnimationFrame(_dockApply);
   });
