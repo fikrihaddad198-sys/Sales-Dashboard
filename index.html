@@ -140,6 +140,22 @@
   --sp1: 4px;  --sp2: 8px;  --sp3: 12px;  --sp4: 16px;
   --sp5: 20px; --sp6: 24px; --sp7: 32px;  --sp8: 48px;
 
+  /* Semantic success — green, distinct from the gold accent (audit §2) */
+  --success:    #4a9d68;
+  --success-10: rgba(74,157,104,0.12);
+  --success-20: rgba(74,157,104,0.22);
+
+  /* Typography scale (audit §4). 12px floor — nothing below this for real content. */
+  --fs-caption: 12px;   /* smallest allowed: dense labels, table sub-text */
+  --fs-label:   13px;   /* field labels, chips */
+  --fs-body:    14px;   /* default body/UI */
+  --fs-data:    15px;   /* metric values in rows */
+  --fs-h3:      18px;
+  --fs-h2:      22px;
+  --fs-hero:    clamp(30px, 4vw, 44px);
+  --lh-tight:   1.2;
+  --lh-body:    1.55;
+
   /* Motion — one unified easing language (premium, cohesive feel).
      Tokens map the curves already used across the app so every transition
      speaks the same dialect. var() resolves in transition/animation shorthand
@@ -181,6 +197,8 @@
   --amber:   #6f4e37;  --amber-20: rgba(111,78,55,0.20); --amber-10: rgba(111,78,55,0.12); --amber-05: rgba(111,78,55,0.05);
   --orange:  #6f4e37;  --orange-20: rgba(111,78,55,0.20); --orange-05: rgba(111,78,55,0.05);
   --red:     #c0392b;  --red-20: rgba(192,57,43,0.18);   --red-10: rgba(192,57,43,0.10);
+  /* Semantic success — light theme */
+  --success: #2f8f57;  --success-10: rgba(47,143,87,0.12); --success-20: rgba(47,143,87,0.20);
 
   /* Channel colors — same hues, slightly deepened so yellow / light-green
      stay legible on the cream background. */
