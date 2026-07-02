@@ -177,6 +177,15 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 
 **Rule**: Gold accent for data/KPIs only. Chrome/nav/borders stay neutral Zinc/Slate.
 
+**Design tokens** (`:root` + `[data-theme="light"]`): colour ramp `--bg..bg4`, `--t1..t4`, single accent `--gold`/`--cyan` (aliased), semantic `--red`/`--amber`/**`--success`**, channel `--tc-*`; **type scale `--fs-caption(12)/label(13)/body(14)/data(15)/h3(18)/h2(22)/hero`** + `--lh-*`; spacing `--sp1..8`; radius `--r2..r7` (dominant) + `--r-sm..xl` (legacy, ~4 uses — don't grow); elevation `--e0..e4`; motion `--ease-out/smooth/bar/inout`.
+
+### Component inventory (de-facto design system — vanilla classes, no framework)
+
+- **Atoms:** `.badge`(`.up/.dn/.warn/.neu` — up/down carry ↑/↓ shape cue), `.drp-btn`, `.reg-btn`, `.inp`, `.nav-btn`, `.chip`, `.toast`(`.info/.error/.success`), `.drp-preset`.
+- **Molecules:** `.metric-card`, `.summ-kpi-card`, `.fldt-card`, `.rank-row`, `.filter-group`, `#data-error` banner, the DRP popup (`#drp-popup` + presets), `.mr-joke` toast.
+- **Organisms:** `#kpi-hero`, `#main-nav` dock, channel tabs, D2D table (`renderD2D`), All Summary (`renderAllSumm`), the map reveal.
+- **Feedback:** `toast(msg,type)` for transient, `#data-error` for load failures. **Never `alert()`.**
+
 ## Service Worker
 
 `sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v93`.
