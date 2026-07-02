@@ -5627,6 +5627,10 @@ function initDockMagnify() {
   nav.addEventListener('pointermove', (e) => {
     if (e.pointerType === 'touch') return;   // proximity needs a hovering cursor
     if (!nav.classList.contains('collapsed') || !_dockSupported()) return;
+    // Only magnify while actually over an icon — NOT over the expand/toggle
+    // button or the padding. Otherwise aiming at the toggle grows the top icon,
+    // which then snaps back on expand (the stutter). Reset eases back smoothly.
+    if (!e.target.closest('.nav-btn')) { if (nav.classList.contains('dock-live')) resetDockMagnify(); return; }
     _dockPointerY = e.clientY;
     if (!nav.classList.contains('dock-live')) {
       _dockBtns = Array.from(nav.querySelectorAll('.nav-btn'));
