@@ -1062,7 +1062,7 @@ body.dr-animating .reveal {
     flex-direction: row;
     justify-content: flex-start;
     gap: 0.7rem;
-    height: 44px;            /* fixed & identical in both states → dock height never changes */
+    min-height: 42px;
     padding: 0 0.7rem;
     margin: 2px 0;
     font-size: 0.84rem;
@@ -1120,7 +1120,7 @@ body.dr-animating .reveal {
   #main-nav.collapsed .nav-btn {
     width: 44px;
     height: 44px;
-    margin: 2px auto;        /* same vertical pitch as expanded → no height jump */
+    margin: 3px auto;
     padding: 0;
     justify-content: center;
     border-radius: 13px;
@@ -1178,15 +1178,19 @@ body.dr-animating .reveal {
   }
   #main-nav.collapsed .nav-btn:hover::after { opacity: 1; }
 
-  /* Content is pushed by real margin (so it genuinely narrows/widens — no
-     off-screen clipping). Width change would reflow the page each frame;
-     Chart.defaults.resizeDelay (JS) keeps charts from re-rendering mid-push. */
+  /* Content is PUSHED via transform (GPU) — NOT margin. Width stays constant
+     (margin fixed 88px), so nothing reflows and Chart.js never resizes → the
+     push is buttery. Expanded shifts the content right by 152px (translateX);
+     the far-right ~152px slides off-screen while expanded (transient, and the
+     dock auto-collapses on select). Do NOT switch this back to an animated
+     margin — that reflows the whole page every frame (the stutter). */
   .app-body {
-    margin-left: 240px;
+    margin-left: 88px;
     padding-bottom: 0;
-    transition: margin-left 0.55s cubic-bezier(0.76, 0, 0.24, 1);
+    transform: translateX(152px);
+    transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1);
   }
-  body.sidebar-collapsed .app-body { margin-left: 88px; }
+  body.sidebar-collapsed .app-body { transform: none; }
 
   /* ── Toggle / brand row ── */
   .sidebar-toggle-inline {
@@ -1195,7 +1199,7 @@ body.dr-animating .reveal {
     justify-content: space-between;
     padding: 0 0.55rem 0 0.7rem;
     width: 100%;
-    height: 40px;            /* fixed & identical in both states */
+    min-height: 40px;
     margin-bottom: 6px;
     background: none;
     border: none;
@@ -1237,8 +1241,9 @@ body.dr-animating .reveal {
     justify-content: center;
     padding: 0;
     width: 48px;
-    height: 40px;            /* match expanded toggle height → no height jump */
-    margin: 0 auto 6px;
+    height: 36px;
+    min-height: 36px;
+    margin: 0 auto 4px;
     border-bottom: none;
     border-radius: 12px;
   }
