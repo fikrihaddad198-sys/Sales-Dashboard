@@ -230,15 +230,15 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 Full audit artifact: https://claude.ai/code/artifact/bc0ba79f-aca3-435f-a2b1-47fc1034fb13 — composite **6.3/10**. Strong colour discipline + motion craft; held back by typography, spacing-token adoption, and system-state feedback. Owner decisions: **full type scale (12px floor)**, tackle **Critical + High first**, then review.
 
-**🔥 Critical**
-- **Data-fail UX** — `loadData()` catch currently logs to console only → blank dashboard. Must show inline error + Retry.
-- **Type floor + scale** — no `--fs-*` tokens, 30+ raw sizes incl. 7–11px. Add scale (caption 12 / body 14 / data 15 / h3 18 / h2 22 / hero clamp), migrate off sub-12px.
-- **Toast** — replace native `alert()` (generalise the `.mr-joke` toast) → `toast(msg,type)`.
+**✅ Done (v107) — Critical + High**
+- **Data-fail UX** — `loadData()` catch now shows `#data-error` banner + Retry + error toast (no more blank dashboard).
+- **Type scale** — `--fs-caption(12)/label(13)/body(14)/data(15)/h3(18)/h2(22)/hero(clamp)` + `--lh-*`; all sub-12px font-sizes (CSS + inline JS) raised to the 12px floor.
+- **Toast** — `toast(msg,type)` (`info|error|success`) + `#toast-host`; all 6 `alert()` calls replaced.
+- **Skeletons** — `#kpi-skeleton` now shows on every load (not just first), clears on success + error.
+- **`--success`** semantic token added (both themes; green ≠ gold).
+- **Tables (rescoped):** audit's "sortable tables" does **not apply** — D2D is a chronological time-series (sorting breaks vs-Kemarin/Minggu-Lalu) and already has sticky header + sticky col + zebra; All Summary is KPI cards + bar-list + value-sorted rank + card grid, no data grid. No sort added (would be a regression). Verified sticky/zebra render in both themes.
 
-**⚡ High**
-- Loading **skeletons** on every refresh + first page build (not only initial load).
-- **Sortable + sticky-header tables** (Day-to-Day / All Summary).
-- Add **`--success`** semantic token (green ≠ gold) for "on track / good".
+**⏳ Pending review before starting** Medium/Polish tier below.
 
 **✅ Medium / 💎 Polish (after review):** enforce `var(--sp*)` (only ~5% adopted; ~123 raw `padding` + 112 raw `gap`), collapse dual radius scale (`--r2..r7` vs `--r-sm..xl`), date presets, colour-blind ▲/▼ status, empty states, ≥44px touch targets, Cmd-K palette, chart `aria-label`/empty states, component index, build-split + Playwright smoke test.
 
@@ -253,6 +253,8 @@ Full audit artifact: https://claude.ai/code/artifact/bc0ba79f-aca3-435f-a2b1-47f
 7. Keep entrance animations scoped to `body.dr-animating`, not `body.dashboard-ready`
 8. Gold (`#c9a84c`) is the single accent — do not introduce new accent colors into chrome/nav
 9. **Update `CLAUDE.md` in the same commit whenever you change architecture, auth, data flow, or any config constant.** This file is the only persistent memory across sessions — if it's stale, every future session will work from wrong assumptions. No exceptions.
+10. **No `font-size` below `--fs-caption` (12px)** for real content — use the `--fs-*` scale, never a raw sub-12px value.
+11. **User-facing errors/feedback go through `toast(msg,type)` or the `#data-error` banner — never `alert()`.**
 
 ## Coding Discipline (Karpathy principles)
 
