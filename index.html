@@ -1106,10 +1106,8 @@ body.dr-animating .reveal {
     overflow: hidden;
     white-space: nowrap;
     padding-right: 10px;
-    /* No animated property on the label at all — it is simply clipped by the
-       button's overflow as the button (following the dock width) narrows/widens.
-       One source of motion (the dock width) → no fade/clip/max-width artifact,
-       no ghost trail. */
+    /* Reveal on open / hide on close, synced to the dock width. */
+    transition: max-width 0.55s var(--nav-ease);
   }
   .nav-btn:hover {
     background: rgba(255,255,255,0.06);
@@ -1131,31 +1129,22 @@ body.dr-animating .reveal {
      grow toward the content, away from the screen edge — the macOS feel. */
   /* Collapsed: same 44×44 icon cell (from base) — only magnification is added.
      No size/position override, so the icon is pixel-identical to expanded. */
+  /* Collapsed tile = the whole 44×44 button (icon centered inside via .ni). The
+     tile scales as ONE unit (icon + its background together), origin center so it
+     grows in place. Label is max-width:0 in this state so scaling never reveals it. */
   #main-nav.collapsed .nav-btn {
     border-radius: 13px;
     box-shadow: none;
     position: relative;
-    transition: background 0.15s ease, color 0.15s ease;
-  }
-  /* Magnification scales the ICON only (--mag) and spreads it (--ty) — NEVER the
-     button, so the label can't ride along and balloon during a collapse. Vars
-     are set by JS on the button and inherited down to .ni.
-     macOS-like spring: gentle back-out, slower & less bouncy per owner. */
-  #main-nav.collapsed .nav-btn .ni {
-    border-radius: 13px;               /* the tile IS the icon cell now */
-    transform-origin: center center;   /* grows in place, stays on its own spot */
+    transform-origin: center center;
     transform: translateY(var(--ty, 0px)) scale(var(--mag, 1));
-    transition: transform 0.42s cubic-bezier(0.34, 1.3, 0.64, 1), background 0.15s ease;
+    transition: transform 0.42s cubic-bezier(0.34, 1.3, 0.64, 1),
+                background 0.15s ease, color 0.15s ease;
   }
-  /* After the first grow eases in, JS adds .dock-snap so per-frame steering is
-     instant (no rubber-band). First entry keeps the transition → smooth grow. */
-  #main-nav.collapsed.dock-snap .nav-btn .ni { transition: background 0.15s ease; }
-  /* Hover/active tint lives on the ICON in collapsed, so it scales WITH the icon
-     (magnification matches). Button itself stays transparent. */
-  #main-nav.collapsed .nav-btn:hover { background: none; }
-  #main-nav.collapsed .nav-btn:hover .ni { background: rgba(255,255,255,0.06); }
-  #main-nav.collapsed .nav-btn.active { color: var(--gold); background: none; }
-  #main-nav.collapsed .nav-btn.active .ni { background: color-mix(in srgb, var(--gold) 15%, transparent); }
+  /* First grow keeps this transition; .dock-snap drops it so steering is instant. */
+  #main-nav.collapsed.dock-snap .nav-btn { transition: background 0.15s ease, color 0.15s ease; }
+  #main-nav.collapsed .nav-btn:hover { background: rgba(255,255,255,0.06); }
+  #main-nav.collapsed .nav-btn.active { color: var(--gold); background: color-mix(in srgb, var(--gold) 15%, transparent); }
   /* A small gold dot marks the active page in dock mode (no room for a stripe) */
   #main-nav.collapsed .nav-btn.active::before {
     content: '';
@@ -1166,9 +1155,8 @@ body.dr-animating .reveal {
     border-radius: 50%;
     background: var(--gold);
   }
-  /* Dock mode: label shrinks to nothing + fades (reverse of open, not a pop) */
-  /* Collapsed: button is icon-cell width (44) so its overflow clips the label away. */
-  #main-nav.collapsed .nav-btn .nav-label { padding: 0; }
+  /* Collapsed: label hard-hidden (max-width 0) so scaling the tile never reveals it. */
+  #main-nav.collapsed .nav-btn .nav-label { max-width: 0; padding: 0; }
   #main-nav.collapsed .nav-btn { gap: 0; }
 
   /* Content is PUSHED via transform (GPU) — NOT margin. Width stays constant
@@ -5590,8 +5578,7 @@ function resetDockMagnify() {
     b.style.removeProperty('--mag');
     b.style.removeProperty('--ty');
     b.style.zIndex = '';
-    const ni = b.querySelector('.ni');
-    if (ni) ni.style.willChange = '';
+    b.style.willChange = '';
   });
   _dockCenters = null;
   _dockBandTop = null;
@@ -5642,7 +5629,7 @@ function initDockMagnify() {
       _dockBtns = Array.from(nav.querySelectorAll('.nav-btn'));
       // Capture resting centers BEFORE arming live (tiles are at mag 1 / ty 0 now).
       _dockCenters = _dockBtns.map(b => { const r = b.getBoundingClientRect(); return r.top + r.height / 2; });
-      _dockBtns.forEach(b => { const ni = b.querySelector('.ni'); if (ni) ni.style.willChange = 'transform'; });
+      _dockBtns.forEach(b => { b.style.willChange = 'transform'; });
       nav.classList.add('dock-live');          // first entry keeps the CSS transition → smooth grow
       // After the grow eases in (~190ms), switch to instant per-frame steering.
       clearTimeout(_dockSnapTimer);
