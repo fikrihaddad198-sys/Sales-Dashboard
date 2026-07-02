@@ -1106,10 +1106,10 @@ body.dr-animating .reveal {
     overflow: hidden;
     white-space: nowrap;
     padding-right: 10px;
-    /* Clip-only, synced to the dock width (same 0.55s + easing). Text is erased
-       progressively as the card narrows — no separate opacity fade to fight the
-       clip (that fade-vs-clip mismatch was the flicker). */
-    transition: max-width 0.55s var(--nav-ease);
+    /* No animated property on the label at all — it is simply clipped by the
+       button's overflow as the button (following the dock width) narrows/widens.
+       One source of motion (the dock width) → no fade/clip/max-width artifact,
+       no ghost trail. */
   }
   .nav-btn:hover {
     background: rgba(255,255,255,0.06);
@@ -1142,17 +1142,20 @@ body.dr-animating .reveal {
      are set by JS on the button and inherited down to .ni.
      macOS-like spring: gentle back-out, slower & less bouncy per owner. */
   #main-nav.collapsed .nav-btn .ni {
+    border-radius: 13px;               /* the tile IS the icon cell now */
     transform-origin: left center;
     transform: translateY(var(--ty, 0px)) scale(var(--mag, 1));
-    transition: transform 0.42s cubic-bezier(0.34, 1.3, 0.64, 1);
+    transition: transform 0.42s cubic-bezier(0.34, 1.3, 0.64, 1), background 0.15s ease;
   }
   /* After the first grow eases in, JS adds .dock-snap so per-frame steering is
      instant (no rubber-band). First entry keeps the transition → smooth grow. */
-  #main-nav.collapsed.dock-snap .nav-btn .ni { transition: none; }
-  #main-nav.collapsed .nav-btn.active {
-    color: var(--gold);
-    background: color-mix(in srgb, var(--gold) 14%, transparent);
-  }
+  #main-nav.collapsed.dock-snap .nav-btn .ni { transition: background 0.15s ease; }
+  /* Hover/active tint lives on the ICON in collapsed, so it scales WITH the icon
+     (magnification matches). Button itself stays transparent. */
+  #main-nav.collapsed .nav-btn:hover { background: none; }
+  #main-nav.collapsed .nav-btn:hover .ni { background: rgba(255,255,255,0.06); }
+  #main-nav.collapsed .nav-btn.active { color: var(--gold); background: none; }
+  #main-nav.collapsed .nav-btn.active .ni { background: color-mix(in srgb, var(--gold) 15%, transparent); }
   /* A small gold dot marks the active page in dock mode (no room for a stripe) */
   #main-nav.collapsed .nav-btn.active::before {
     content: '';
@@ -1164,7 +1167,8 @@ body.dr-animating .reveal {
     background: var(--gold);
   }
   /* Dock mode: label shrinks to nothing + fades (reverse of open, not a pop) */
-  #main-nav.collapsed .nav-btn .nav-label { max-width: 0; margin: 0; padding: 0; }
+  /* Collapsed: button is icon-cell width (44) so its overflow clips the label away. */
+  #main-nav.collapsed .nav-btn .nav-label { padding: 0; }
   #main-nav.collapsed .nav-btn { gap: 0; }
   /* Tooltip on dock icons — shows aria-label on hover */
   #main-nav.collapsed .nav-btn::after {
