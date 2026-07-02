@@ -1143,7 +1143,7 @@ body.dr-animating .reveal {
      macOS-like spring: gentle back-out, slower & less bouncy per owner. */
   #main-nav.collapsed .nav-btn .ni {
     border-radius: 13px;               /* the tile IS the icon cell now */
-    transform-origin: left center;
+    transform-origin: center center;   /* grows in place, stays on its own spot */
     transform: translateY(var(--ty, 0px)) scale(var(--mag, 1));
     transition: transform 0.42s cubic-bezier(0.34, 1.3, 0.64, 1), background 0.15s ease;
   }
@@ -1170,28 +1170,6 @@ body.dr-animating .reveal {
   /* Collapsed: button is icon-cell width (44) so its overflow clips the label away. */
   #main-nav.collapsed .nav-btn .nav-label { padding: 0; }
   #main-nav.collapsed .nav-btn { gap: 0; }
-  /* Tooltip on dock icons — shows aria-label on hover */
-  #main-nav.collapsed .nav-btn::after {
-    content: attr(aria-label);
-    position: fixed;
-    left: 78px;
-    background: var(--bg3);
-    border: 1px solid var(--t4);
-    color: var(--t1);
-    font-size: 0.78rem;
-    font-weight: 500;
-    padding: 0.28rem 0.6rem;
-    border-radius: 6px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.28);
-    transition: opacity 0.14s ease;
-    z-index: 300;
-    transform: translateY(-50%);
-    margin-top: 24px;
-  }
-  #main-nav.collapsed .nav-btn:hover::after { opacity: 1; }
 
   /* Content is PUSHED via transform (GPU) — NOT margin. Width stays constant
      (margin fixed 88px), so nothing reflows and Chart.js never resizes → the
@@ -1279,12 +1257,6 @@ body.dr-animating .reveal {
     box-shadow: inset 3px 0 0 #c9a84c;
   }
   [data-theme="light"] #main-nav.collapsed .nav-btn.active { box-shadow: none; }
-  [data-theme="light"] #main-nav.collapsed .nav-btn::after {
-    background: #fff;
-    border-color: #e4e4e7;
-    color: #18181b;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-  }
   /* Light-mode floating dock: frosted cream glass */
   [data-theme="light"] #main-nav.collapsed {
     background: rgba(251,249,242,0.78);
