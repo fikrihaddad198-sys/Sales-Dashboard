@@ -3107,6 +3107,20 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 [data-theme="light"] .mr-joke-lock { color:#c98a2e; }
 [data-theme="light"] .mr-joke-text { color:#18181b; }
 
+/* ── Toast (generic, replaces native alert) ── */
+#toast-host{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom,0));
+  transform:translateX(-50%);z-index:10050;display:flex;flex-direction:column;gap:8px;
+  pointer-events:none;width:max-content;max-width:min(92vw,420px)}
+.toast{background:var(--bg2);border:1px solid var(--border-md);border-radius:12px;
+  padding:11px 15px;font-size:var(--fs-body);color:var(--t1);box-shadow:var(--e3);
+  opacity:0;transform:translateY(8px);
+  transition:opacity .22s var(--ease-out),transform .22s var(--ease-out)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.error{box-shadow:inset 3px 0 0 var(--red),var(--e3)}
+.toast.success{box-shadow:inset 3px 0 0 var(--success),var(--e3)}
+.toast.info{box-shadow:inset 3px 0 0 var(--gold),var(--e3)}
+[data-theme="light"] .toast{background:#fff;border-color:var(--border-md)}
+
 @keyframes mrDraw { to { stroke-dashoffset: 0; } }
 @keyframes mrFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @keyframes mrPop  { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
@@ -4173,6 +4187,7 @@ body.dashboard-locking .card {
 
 <!-- ═══ SPLASH SCREEN ═══ -->
 <div id="screen-guard" aria-hidden="true"></div>
+<div id="toast-host" aria-live="polite"></div>
 <div id="splash-screen" style="display:none;" aria-hidden="true">
   <div id="splash-inner" style="position:relative;z-index:1;">
     <div id="splash-logo-mark">
@@ -5234,6 +5249,15 @@ function grad(ctx, color, a1=0.22, a2=0){
   g.addColorStop(1,    `rgba(${r},${gb},${b2},${a2})`);
   cache[key]=g;
   return g;
+}
+
+/* Toast — non-blocking feedback, replaces native alert(). type: info|error|success */
+function toast(msg, type){
+  const host=document.getElementById('toast-host'); if(!host) return;
+  const t=document.createElement('div'); t.className='toast '+(type||'info'); t.textContent=msg;
+  host.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),240); }, 3400);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -6631,9 +6655,9 @@ function getFldtReportData(){
 }
 function getKontVal(key,val,period){ return key==='food_off'?(period.adt_offline>0?val/period.adt_offline*100:null):(period.cup_total>0?val/period.cup_total*100:null); }
 async function downloadFldtExcel(){
-  const d=getFldtReportData(); if(!d){ alert('Data belum tersedia.'); return; }
+  const d=getFldtReportData(); if(!d){ toast('Data belum tersedia.','error'); return; }
   try{ await ensureExportLibs('xlsx'); }
-  catch(e){ alert('Gagal memuat library Excel. Cek koneksi lalu coba lagi.'); return; }
+  catch(e){ toast('Gagal memuat library Excel. Cek koneksi lalu coba lagi.','error'); return; }
   const{periods,wLabels}=d;
   const wb=XLSX.utils.book_new();
   const KONTRIB_KEYS=['food_off','large_off','diary_off','topping_off'];
@@ -6648,7 +6672,7 @@ async function downloadFldtExcel(){
   const ws2=XLSX.utils.aoa_to_sheet(dRows); XLSX.utils.book_append_sheet(wb,ws2,'FLDT Detail');
   XLSX.writeFile(wb,`FLDT_Report_${toInputDate(new Date())}.xlsx`);
 }
-function downloadFldtPDF(){ alert('Gunakan Print to PDF (Ctrl+P → Save as PDF).'); }
+function downloadFldtPDF(){ toast('Gunakan Print to PDF (Ctrl+P → Save as PDF).','info'); }
 
 /* ═══════════════════════════════════════════════════
    INIT
@@ -6746,7 +6770,7 @@ function toggleRace(){
     initRacePage();
     // tunggu init selesai (ada setTimeout 80ms di dalam)
     setTimeout(()=>{
-      if(!_raceRows.length){ alert('Tidak ada data. Pastikan tanggal sudah benar.'); return; }
+      if(!_raceRows.length){ toast('Tidak ada data. Pastikan tanggal sudah benar.','error'); return; }
       _racePlaying=true;
       document.getElementById('race-play-btn').textContent='⏸ Pause';
       _raceFrame=0;
@@ -9142,7 +9166,7 @@ async function exportKpiPDF(){
   const btn = document.getElementById('kpi-export-btn');
   const node = document.getElementById('kpi-hero');
   if(!node || node.style.display==='none' || !allData || !allData.length){
-    alert('Data belum siap. Tunggu dashboard selesai memuat.');
+    toast('Data belum siap. Tunggu dashboard selesai memuat.','info');
     return;
   }
   const lbl = btn ? btn.querySelector('.drp-btn-text') : null;
@@ -9193,7 +9217,7 @@ async function exportKpiPDF(){
     pdf.save(fname);
   }catch(e){
     console.error('exportKpiPDF:', e);
-    alert('Gagal membuat PDF. Coba lagi.');
+    toast('Gagal membuat PDF. Coba lagi.','error');
   }finally{
     if(lbl) lbl.textContent = orig;
     if(btn) btn.style.pointerEvents = '';
