@@ -1014,74 +1014,61 @@ body.dr-animating .reveal {
   display: none;
 }
 @media (min-width: 769px) {
+  /* ── Both states are the SAME floating dock ──────────────────────────────
+     Expanded = the dock widened to the right to reveal labels; collapsed =
+     the dock narrowed to icons only. Same float, center, round, glass — only
+     the width changes. Only `width` animates on the nav (top/left/transform
+     are identical between states), so the open/close is one clean motion.
+     0.55s easeInOutQuart (--nav-ease): fluid both ways. */
   #main-nav {
+    --nav-ease: cubic-bezier(0.76, 0, 0.24, 1);
     position: fixed;
-    top: 0; left: 0; bottom: 0;
-    width: 232px;
+    top: 50%; left: 14px; bottom: auto;
+    transform: translateY(-50%);
+    width: 214px;
+    height: auto;
+    max-height: calc(100vh - 28px);
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
-    padding: 0;
-    background: var(--bg1);
-    border: 1px solid transparent;
-    border-right-color: var(--t4);
-    border-bottom: none;
-    border-radius: 0;
-    height: auto;
+    padding: 8px;
+    background: rgba(22,22,24,0.85);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
     overflow: hidden;
-    /* #main-nav is position:fixed and overlays the content (content width never
-       changes → charts never re-render → the drawer stays buttery at any speed).
-       0.55s easeInOutQuart: gentle accelerate + long glide-out, reads as fluid
-       both opening and closing (not the snappier expo used for micro-motion). */
-    --nav-ease: cubic-bezier(0.76, 0, 0.24, 1);
     transition:
       width 0.55s var(--nav-ease),
-      top 0.55s var(--nav-ease),
-      bottom 0.55s var(--nav-ease),
-      left 0.55s var(--nav-ease),
-      transform 0.55s var(--nav-ease),
       border-radius 0.55s var(--nav-ease),
       background-color 0.35s ease,
       box-shadow 0.55s var(--nav-ease);
     z-index: 200;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    box-shadow: 1px 0 0 var(--t4), 4px 0 20px rgba(0,0,0,0.2);
-  }
-
-  /* ── Collapsed = floating macOS-style dock ───────────────────────────────
-     Detaches from the edge, centers vertically, rounds, frosts. Icons only,
-     vertically packed, with proximity magnification (driven by JS). */
-  #main-nav.collapsed {
-    width: 64px;
-    top: 50%;
-    bottom: auto;
-    left: 14px;
-    transform: translateY(-50%);
-    height: auto;
-    max-height: calc(100vh - 28px);
-    border-radius: 22px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(22,22,24,0.72);
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  /* Collapsed = the same dock, narrowed to an icon rail. overflow:visible so
+     magnified tiles can grow past the edge. */
+  #main-nav.collapsed {
+    width: 64px;
+    border-radius: 22px;
     padding: 8px 0;
     overflow: visible;
   }
   #main-nav #nav-pill { display: none; }
 
-  /* ── Nav buttons ── */
+  /* ── Nav buttons (expanded dock: icon + label row, rounded tile) ── */
   .nav-btn {
     flex-direction: row;
     justify-content: flex-start;
-    gap: 0.75rem;
-    min-height: 44px; /* WCAG 2.5.5 touch target */
-    padding: 0 1rem;
+    gap: 0.7rem;
+    min-height: 42px;
+    padding: 0 0.7rem;
+    margin: 2px 0;
     font-size: 0.84rem;
     font-weight: 500;
     letter-spacing: 0.01em;
-    border-radius: 0;
+    border-radius: 12px;
     width: 100%;
     text-align: left;
     white-space: nowrap;
@@ -1089,37 +1076,35 @@ body.dr-animating .reveal {
     height: auto;
     cursor: pointer;
     border: none;
-    /* Active state: inset box-shadow as indicator — avoids border-left layout shift, GPU-composited */
-    box-shadow: inset 0 0 0 0 var(--gold);
-    transition: color 0.15s ease, background 0.15s ease, box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.12s ease;
+    color: var(--t2);
+    transition: color 0.15s ease, background 0.15s ease, opacity 0.12s ease;
   }
   .nav-btn .ni {
     flex-shrink: 0;
     width: 22px; height: 22px;
     display: flex; align-items: center; justify-content: center;
-    opacity: 0.65;
+    opacity: 0.7;
     transition: opacity 0.15s ease;
   }
   .nav-btn:hover .ni,
   .nav-btn.active .ni { opacity: 1; }
 
-  /* Label: fades in with a slight delay after sidebar opens */
+  /* Label: fades in shortly after the dock widens */
   .nav-btn .nav-label {
     flex: 1;
     opacity: 1;
-    transition: opacity 0.18s ease 0.12s;
+    transition: opacity 0.2s ease 0.12s;
   }
   .nav-btn:hover {
-    background: rgba(255,255,255,0.055);
+    background: rgba(255,255,255,0.06);
     color: var(--t1);
   }
-  /* Active: background tint + inset left shadow as accent (no side-stripe border) */
+  /* Active: gold text + rounded gold tint (no side-stripe — floating pill) */
   .nav-btn.active {
     color: var(--gold);
-    background: color-mix(in srgb, var(--gold) 10%, transparent);
-    box-shadow: inset 3px 0 0 var(--gold);
+    background: color-mix(in srgb, var(--gold) 13%, transparent);
   }
-  .nav-btn.active:hover { background: color-mix(in srgb, var(--gold) 13%, transparent); }
+  .nav-btn.active:hover { background: color-mix(in srgb, var(--gold) 16%, transparent); }
   /* Press: 120ms instant feedback */
   .nav-btn:active { opacity: 0.7; transition-duration: 0.08s; }
 
@@ -1188,28 +1173,31 @@ body.dr-animating .reveal {
   }
   #main-nav.collapsed .nav-btn:hover::after { opacity: 1; }
 
-  /* Content gutter is CONSTANT (88px) in both states — it never changes width,
-     so Chart.js never sees a resize and never re-renders mid-animation (that
-     per-frame chart re-render was the real expand stutter, worse the slower the
-     animation ran). The expanded sidebar (position:fixed) simply slides/grows
-     OVER the content like a drawer; content stays put. Do NOT re-introduce a
-     width-changing margin here — it brings the chart-rerender jank straight back. */
+  /* Content is PUSHED by the dock (owner wants the "terdorong" feel): gutter
+     animates 240px (expanded) ↔ 88px (dock). This changes content width, which
+     would make Chart.js re-render every frame — prevented by a global
+     Chart.defaults.resizeDelay (JS), so charts settle once after the push
+     instead of redrawing per frame. */
   .app-body {
-    margin-left: 88px;
+    margin-left: 240px;
     padding-bottom: 0;
+    transition: margin-left 0.55s cubic-bezier(0.76, 0, 0.24, 1);
   }
+  body.sidebar-collapsed .app-body { margin-left: 88px; }
 
   /* ── Toggle / brand row ── */
   .sidebar-toggle-inline {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 0.85rem 0 1rem;
+    padding: 0 0.55rem 0 0.7rem;
     width: 100%;
-    min-height: 50px;
+    min-height: 40px;
+    margin-bottom: 6px;
     background: none;
     border: none;
-    border-bottom: 1px solid var(--t4);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px 10px 0 0;
     cursor: pointer;
     color: var(--t3);
     flex-shrink: 0;
@@ -1253,13 +1241,13 @@ body.dr-animating .reveal {
     border-radius: 12px;
   }
 
-  /* ── Light mode ── */
+  /* ── Light mode: frosted cream floating dock (both states) ── */
   [data-theme="light"] #main-nav {
-    background: #fafafa;
-    border-right-color: #e4e4e7;
-    box-shadow: 1px 0 0 #e4e4e7, 4px 0 20px rgba(0,0,0,0.06);
+    background: rgba(251,249,242,0.82);
+    border-color: rgba(0,0,0,0.07);
+    box-shadow: 0 12px 40px rgba(27,42,31,0.16), 0 2px 8px rgba(27,42,31,0.08);
   }
-  [data-theme="light"] .sidebar-toggle-inline { border-bottom-color: #e4e4e7; color: #a1a1aa; }
+  [data-theme="light"] .sidebar-toggle-inline { border-bottom-color: rgba(0,0,0,0.07); color: #a1a1aa; }
   [data-theme="light"] .sidebar-toggle-inline:hover { background: rgba(0,0,0,0.025); color: #52525b; }
   [data-theme="light"] .nav-btn:hover { background: rgba(0,0,0,0.04); color: #18181b; }
   [data-theme="light"] .nav-btn .ni { opacity: 0.5; }
@@ -5041,6 +5029,11 @@ const FLDT_META   = [
   {key:'seasonal_sold',label:'Seasonal',icon:'🌸',color:'#c9a84c'},
 ];
 
+// Debounce Chart.js resize: during the sidebar push the content width changes
+// each frame; without this every chart re-renders per frame (the expand
+// stutter). 160ms > the 0.55s toggle isn't needed — the delay just coalesces
+// the burst so charts redraw once after the motion settles.
+Chart.defaults.resizeDelay = 160;
 Chart.defaults.color = TC.text2;
 Chart.defaults.font  = { family:"'Inter',sans-serif", size:11 };
 Chart.defaults.elements.line.borderCapStyle = 'round';
@@ -5493,6 +5486,11 @@ function showPage(p,btn,skipHash){
     activeBtn.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' });
   }
   currentPage=p;
+  // Picked a page while the dock is expanded (desktop) → collapse back to the
+  // icon dock so it doesn't sit over the content (btn truthy = a real user tap).
+  if(btn && window.innerWidth >= 769 && !document.body.classList.contains('sidebar-collapsed')){
+    toggleSidebar();
+  }
   if(!skipHash) history.replaceState(null,'','#'+p);
   // Only (re)build a page the first time it's shown for the current dataset.
   // Pages stay in the DOM (display:none), so re-rendering on every tab switch
