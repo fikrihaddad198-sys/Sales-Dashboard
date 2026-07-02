@@ -4422,12 +4422,12 @@ body.dashboard-locking .card {
             <div class="hero-num" id="h-gmv">—</div>
             <div class="hero-sub" id="h-gmv-sub"></div>
           </div>
-          <div class="h-col h-col-mid kpi-clickable" onclick="openKpiModal('achievement',this)" title="Lihat detail achievement">
+          <div class="h-col h-col-mid kpi-clickable" onclick="openKpiModal('achievement',this)" title="Achievement = persen GMV terhadap target bulanan. 'Ideal' = posisi seharusnya berdasarkan hari berjalan. Klik untuk detail.">
             <div class="hero-kpi-label">Achievement</div>
             <div class="hero-kpi-val arr-up" id="h-ach">—</div>
             <div class="h-col-sub">Ideal: <span id="h-vsideal">—</span></div>
           </div>
-          <div class="h-col h-col-right kpi-clickable" onclick="openKpiModal('pace',this)" title="Lihat detail pace">
+          <div class="h-col h-col-right kpi-clickable" onclick="openKpiModal('pace',this)" title="Daily Pace = rata-rata GMV harian dibanding target harian ideal. 100% = tepat sesuai target. Klik untuk detail.">
             <div class="hero-kpi-label">Daily Pace</div>
             <div class="hero-kpi-val" id="h-pace">—</div>
             <div class="h-col-sub">Avg <span id="h-pace-sub">—</span> / hari</div>
@@ -6079,6 +6079,13 @@ function calcKpi(skipCharts){
     {l:'Daily Target',  v:fmtRp(dailyTarget),  s:'per hari',        sc:'var(--t3)'},
     {l:'Forecast EOM',  v:fmtRp(forecastEom),  s:forecastEom>=target?'✓ On track':'⚠ Risk', sc:forecastEom>=target?'var(--green)':'var(--red)'},
   ];
+  /* Plain-language explanation shown on hover (native title tooltip). */
+  const METRIC_TIPS={
+    'Target GMV':'Target penjualan bulan ini.',
+    'Gap to Target':'Sisa yang dibutuhkan untuk capai target (surplus jika sudah tercapai).',
+    'Daily Target':'Target GMV per hari (target ÷ jumlah hari).',
+    'Forecast EOM':'Proyeksi GMV akhir bulan berdasarkan rata-rata harian saat ini.'
+  };
   const stripEl = document.getElementById('kpi-strip-grid');
   const existingCards = stripEl.querySelectorAll('.metric-card');
   if(existingCards.length === stripItems.length){
@@ -6094,7 +6101,7 @@ function calcKpi(skipCharts){
   } else {
     const stripKeys=['target','gap','daily_target','forecast'];
   stripEl.innerHTML = stripItems.map((k,i)=>`
-      <div class="metric-card kpi-clickable" style="--mc:${k.sc}" onclick="openKpiModal('${stripKeys[i]}',this)" title="Lihat detail">
+      <div class="metric-card kpi-clickable" style="--mc:${k.sc}" onclick="openKpiModal('${stripKeys[i]}',this)" title="${(METRIC_TIPS[k.l]||'')} Klik untuk detail.">
         <div class="mc-label">${k.l}</div>
         <div class="mc-val">${k.v}</div>
         <div class="mc-sub" style="color:${k.sc}">${k.s}</div>
