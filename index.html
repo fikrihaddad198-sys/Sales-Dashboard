@@ -1178,17 +1178,19 @@ body.dr-animating .reveal {
   }
   #main-nav.collapsed .nav-btn:hover::after { opacity: 1; }
 
-  /* Content is PUSHED by the dock (owner wants the "terdorong" feel): gutter
-     animates 240px (expanded) ↔ 88px (dock). This changes content width, which
-     would make Chart.js re-render every frame — prevented by a global
-     Chart.defaults.resizeDelay (JS), so charts settle once after the push
-     instead of redrawing per frame. */
+  /* Content is PUSHED via transform (GPU) — NOT margin. Width stays constant
+     (margin fixed 88px), so nothing reflows and Chart.js never resizes → the
+     push is buttery. Expanded shifts the content right by 152px (translateX);
+     the far-right ~152px slides off-screen while expanded (transient, and the
+     dock auto-collapses on select). Do NOT switch this back to an animated
+     margin — that reflows the whole page every frame (the stutter). */
   .app-body {
-    margin-left: 240px;
+    margin-left: 88px;
     padding-bottom: 0;
-    transition: margin-left 0.55s cubic-bezier(0.76, 0, 0.24, 1);
+    transform: translateX(152px);
+    transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1);
   }
-  body.sidebar-collapsed .app-body { margin-left: 88px; }
+  body.sidebar-collapsed .app-body { transform: none; }
 
   /* ── Toggle / brand row ── */
   .sidebar-toggle-inline {
