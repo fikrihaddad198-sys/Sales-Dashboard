@@ -11,11 +11,18 @@
         "source": "github",
         "repo": "anthropics/skills"
       }
+    },
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
     }
   },
   "enabledPlugins": {
     "superpowers@superpowers-marketplace": true,
     "document-skills@anthropic-agent-skills": true,
-    "example-skills@anthropic-agent-skills": true
+    "example-skills@anthropic-agent-skills": true,
+    "ponytail@ponytail": true
   }
 }
