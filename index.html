@@ -6614,7 +6614,9 @@ function renderFldtCustom(){
 ═══════════════════════════════════════════════════ */
 function loadAllSumm(){
   const s1=getVal('summ-p1s'), e1=getVal('summ-p1e'); if(!s1||!e1||!allData.length) return;
-  const rows1=filterData(s1,e1); if(!rows1.length) return;
+  const rows1=filterData(s1,e1);
+  if(!rows1.length){ showRangeEmpty(true); return; }
+  showRangeEmpty(false);
   const d1=aggregateData(rows1);
   const s2=getVal('summ-p2s'), e2=getVal('summ-p2e');
   const d2=(s2&&e2)?aggregateData(filterData(s2,e2)):null;
@@ -6782,7 +6784,8 @@ function initRacePage(){
   if(!allData.length){ console.warn('Race: data belum loaded'); return; }
 
   _raceRows=filterData(s,e);
-  if(!_raceRows.length){ console.warn('Race: tidak ada data di range ini'); return; }
+  if(!_raceRows.length){ showRangeEmpty(true); return; }
+  showRangeEmpty(false);
 
   // ── Compare mode: load periode 2 (sliced to same length as main) ──
   _raceCompareRows=[];
