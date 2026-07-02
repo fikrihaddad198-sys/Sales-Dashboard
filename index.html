@@ -1186,15 +1186,14 @@ body.dr-animating .reveal {
   }
   #main-nav.collapsed .nav-btn:hover::after { opacity: 1; }
 
-  /* Content area shifts with sidebar. Single layout-animated property on one
-     element; will-change is armed only during the toggle (body.sidebar-animating)
-     and dropped after, so the GPU layer isn't kept alive idle. */
+  /* Content shifts with the sidebar but does NOT animate: animating margin-left
+     reflows the whole chart-heavy page every frame (the expand judder). The nav
+     itself is position:fixed and animates smoothly on its own; the content just
+     snaps to its final gutter in one step — zero per-frame reflow. */
   .app-body {
     margin-left: 232px;
-    transition: margin-left 0.42s cubic-bezier(0.16, 1, 0.3, 1);
     padding-bottom: 0;
   }
-  body.sidebar-animating .app-body { will-change: margin-left; }
   /* Dock floats over a reserved gutter (88px) so it never covers data */
   body.sidebar-collapsed .app-body { margin-left: 88px; }
 
@@ -5544,19 +5543,11 @@ function showPage(p,btn,skipHash){
   setTimeout(()=>{ if(window.attachReveal){ window.attachReveal(pageEl); window.attachReveal(); } }, 50);
 }
 /* Restore page from URL hash on load */
-let _sidebarAnimTimer = null;
 function toggleSidebar() {
   const collapsed = document.body.classList.toggle('sidebar-collapsed');
   const nav = document.getElementById('main-nav');
   if (nav) nav.classList.toggle('collapsed', collapsed);
   sessionStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0');
-  // Arm will-change only for the duration of the toggle, then drop it so the
-  // GPU layer isn't kept alive idle (impeccable animate.md rule).
-  document.body.classList.add('sidebar-animating');
-  clearTimeout(_sidebarAnimTimer);
-  _sidebarAnimTimer = setTimeout(() => {
-    document.body.classList.remove('sidebar-animating');
-  }, 460);
   // Leaving dock mode → clear any leftover magnification transforms.
   if (!collapsed) resetDockMagnify();
 }
