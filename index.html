@@ -1050,9 +1050,8 @@ body.dr-animating .reveal {
   /* Collapsed = the same dock, narrowed to an icon rail. overflow:visible so
      magnified tiles can grow past the edge. */
   #main-nav.collapsed {
-    width: 64px;
+    width: 60px;             /* 44 icon cell + 8 padding each side → icon centered, same x as expanded */
     border-radius: 22px;
-    padding: 8px 0;
     overflow: visible;
   }
   #main-nav #nav-pill { display: none; }
@@ -1061,9 +1060,10 @@ body.dr-animating .reveal {
   .nav-btn {
     flex-direction: row;
     justify-content: flex-start;
-    gap: 0.7rem;
-    height: 44px;            /* fixed & identical in both states → dock height never changes */
-    padding: 0 0.7rem;
+    align-items: center;
+    gap: 0;
+    height: 44px;            /* single source of truth — identical in both states */
+    padding: 0;
     margin: 2px 0;
     font-size: 0.84rem;
     font-weight: 500;
@@ -1073,15 +1073,16 @@ body.dr-animating .reveal {
     text-align: left;
     white-space: nowrap;
     overflow: hidden;
-    height: auto;
     cursor: pointer;
     border: none;
     color: var(--t2);
     transition: color 0.15s ease, background 0.15s ease, opacity 0.12s ease;
   }
+  /* Fixed 44×44 icon cell — SAME size & position in both states. Collapsing
+     just hides the label; the icon never moves or resizes. */
   .nav-btn .ni {
-    flex-shrink: 0;
-    width: 22px; height: 22px;
+    flex: 0 0 44px;
+    width: 44px; height: 44px;
     display: flex; align-items: center; justify-content: center;
     opacity: 0.7;
     transition: opacity 0.15s ease;
@@ -1097,6 +1098,7 @@ body.dr-animating .reveal {
     opacity: 1;
     overflow: hidden;
     white-space: nowrap;
+    padding-right: 10px;
     transition: max-width 0.55s var(--nav-ease), opacity 0.35s ease;
   }
   .nav-btn:hover {
@@ -1117,12 +1119,9 @@ body.dr-animating .reveal {
      (set per-button by JS on pointermove; defaults to 1). transform-only =
      GPU-composited, never touches layout. transform-origin left so tiles
      grow toward the content, away from the screen edge — the macOS feel. */
+  /* Collapsed: same 44×44 icon cell (from base) — only magnification is added.
+     No size/position override, so the icon is pixel-identical to expanded. */
   #main-nav.collapsed .nav-btn {
-    width: 44px;
-    height: 44px;
-    margin: 2px auto;        /* same vertical pitch as expanded → no height jump */
-    padding: 0;
-    justify-content: center;
     border-radius: 13px;
     box-shadow: none;
     position: relative;
