@@ -148,8 +148,8 @@ Desktop (`≥769px`): left **sidebar**, **collapsed (dock) by default** on entry
 - **Collapsed → floating macOS-style dock** (`#main-nav.collapsed`): detaches from edge (`left:14px`, vertically centred), rounded + frosted glass, icon-only tiles, content gutter `margin-left: 88px`.
 
 **Smoothness invariants (don't regress — these were the "patah-patah" bug):**
-- `#main-nav` is `position:fixed`, so animating its geometry (`width/top/left/transform/border-radius`) does **not** reflow the document. Keep the open/close motion on the fixed nav; never animate layout props on the content except the single guarded `margin-left`.
-- `body.sidebar-animating` arms `will-change: margin-left` on `.app-body` only during the ~460ms toggle, then JS drops it (no idle GPU layer).
+- `#main-nav` is `position:fixed`, so animating its geometry (`width/top/left/transform/border-radius`) does **not** reflow the document. Keep the open/close motion on the fixed nav.
+- **`.app-body` `margin-left` is NOT transitioned — it snaps.** Animating it reflowed the whole chart-heavy page every frame (the expand judder). The fixed nav animates smoothly on its own; content just jumps to its final gutter in one step. Don't re-add a `transition: margin-left` here.
 - **Dock magnification** (`initDockMagnify`): on `pointermove` over the collapsed dock, each `.nav-btn` scales via `--mag` (cosine falloff, `DOCK_MAX_SCALE`/`DOCK_RADIUS`). Pointer math is **rAF-throttled** (one apply per frame); resting icon centers are cached on entry (`_dockCenters`) so distance never feeds back on the applied transform. Icons magnify (`--mag`) AND push neighbours apart (`--ty`, `DOCK_SPREAD`) so tiles never overlap. First entry keeps the CSS transition (smooth grow-in); after ~190ms JS adds `.dock-snap` to make subsequent per-frame steering instant (no rubber-band). `will-change:transform` + `z-index` set only while live (`.dock-live`), cleared on `pointerleave`/expand via `resetDockMagnify()`. Touch vs precise is gated per-event by `e.pointerType` (`touch` skipped) — **NOT** a `(pointer:fine)` media query: iPadOS reports `(pointer:coarse)` even with a trackpad attached, which would wrongly disable the dock there. Also disabled under `prefers-reduced-motion`. Transform-only — never touches layout.
 - Was a CSS parse bug here once: a bare `--ease-out-expo:` declaration sat directly inside `@media (min-width:769px)` (outside any selector), which invalidated the **entire** block and collapsed the sidebar to a horizontal row. Custom props must live inside a selector (`:root{}`).
 
@@ -179,7 +179,7 @@ Desktop (`≥769px`): left **sidebar**, **collapsed (dock) by default** on entry
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v86`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v87`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -228,7 +228,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v86` → increment to `fore-v87`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v87` → increment to `fore-v88`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
