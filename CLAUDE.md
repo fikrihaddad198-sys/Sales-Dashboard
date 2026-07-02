@@ -214,6 +214,7 @@ These load automatically in every session (web/iPad included) because they live 
 - **Superpowers** plugin (declared in `.claude/settings.json`, marketplace `obra/superpowers-marketplace`) — structured dev methodology: brainstorm → design → plan → TDD → review. Auto-installed at session start from GitHub (needs network).
 - **Anthropic skills** (`anthropics/skills` marketplace, declared in `.claude/settings.json`): `document-skills` (create/edit Excel, PDF, Word, PowerPoint — use for sales-report exports) + `example-skills` (includes `frontend-design`, `theme-factory`, `webapp-testing`, `brand-guidelines`, etc.). Auto-installed at session start (needs network).
 - **`impeccable`** skill (`.claude/skills/impeccable/`) — the most advanced design tool (23 `/impeccable` commands, 44 anti-pattern detectors). Its bundled hook scripts are NOT registered in `settings.json`, so it stays passive (never auto-runs).
+- **Ponytail** plugin (`ponytail@ponytail` marketplace `DietrichGebert/ponytail`, declared in `.claude/settings.json`) — "lazy senior developer" efficiency framework: minimal necessary code, YAGNI decision-ladder, review/audit/debt skills. Reinforces the Karpathy Coding Discipline below. Auto-installs at session start **where network allows** (the dashboard-scoped git proxy blocks it in some remote sessions — install is a no-op there, no harm).
 
 ### Design-tool precedence (user's rule)
 
