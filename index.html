@@ -1099,7 +1099,9 @@ body.dr-animating .reveal {
     overflow: hidden;
     white-space: nowrap;
     padding-right: 10px;
-    transition: max-width 0.55s var(--nav-ease), opacity 0.18s ease;
+    /* max-width + opacity share one easing/duration → reveal on open and its
+       exact reverse on close, as one motion (kills the fade-vs-clip flicker). */
+    transition: max-width 0.5s var(--nav-ease), opacity 0.5s var(--nav-ease);
   }
   .nav-btn:hover {
     background: rgba(255,255,255,0.06);
@@ -1129,10 +1131,10 @@ body.dr-animating .reveal {
     /* --ty spreads neighbours apart so magnified tiles never overlap (macOS
        dock behaviour); --mag is the proximity scale. Both set by JS. */
     transform: translateY(var(--ty, 0px)) scale(var(--mag, 1));
-    /* Softer grow-in / shrink-out (ease-out-quint). Steering stays instant via
-       .dock-snap; this duration only shapes the enter (first touch) and the
-       leave (reset), which felt abrupt at 0.18s. */
-    transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    /* macOS-like spring: back-out easing overshoots then settles → smooth,
+       slightly bouncy grow-in and a subtle settle on shrink-out. Steering stays
+       instant via .dock-snap; this only shapes enter (first touch) and leave. */
+    transition: transform 0.34s cubic-bezier(0.34, 1.45, 0.64, 1),
                 background 0.15s ease, color 0.15s ease;
   }
   /* After the first grow has eased in, JS adds .dock-snap so subsequent
