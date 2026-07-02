@@ -1089,11 +1089,15 @@ body.dr-animating .reveal {
   .nav-btn:hover .ni,
   .nav-btn.active .ni { opacity: 1; }
 
-  /* Label: fades in shortly after the dock widens */
+  /* Label: max-width + opacity so it grows/shrinks WITH the dock — closing is a
+     clean reverse of opening (no instant display:none pop). */
   .nav-btn .nav-label {
-    flex: 1;
+    flex: 0 1 auto;
+    max-width: 140px;
     opacity: 1;
-    transition: opacity 0.2s ease 0.12s;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: max-width 0.55s var(--nav-ease), opacity 0.35s ease;
   }
   .nav-btn:hover {
     background: rgba(255,255,255,0.06);
@@ -1148,8 +1152,9 @@ body.dr-animating .reveal {
     border-radius: 50%;
     background: var(--gold);
   }
-  /* Label hidden entirely in dock mode */
-  #main-nav.collapsed .nav-btn .nav-label { display: none; }
+  /* Dock mode: label shrinks to nothing + fades (reverse of open, not a pop) */
+  #main-nav.collapsed .nav-btn .nav-label { max-width: 0; opacity: 0; margin: 0; }
+  #main-nav.collapsed .nav-btn { gap: 0; }
   /* Tooltip on dock icons — shows aria-label on hover */
   #main-nav.collapsed .nav-btn::after {
     content: attr(aria-label);
