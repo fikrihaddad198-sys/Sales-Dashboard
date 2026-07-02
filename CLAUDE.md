@@ -179,7 +179,7 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v89`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v90`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -228,7 +228,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v89` → increment to `fore-v90`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v90` → increment to `fore-v91`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
