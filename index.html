@@ -5616,9 +5616,10 @@ function _dockApply() {
       // cosine falloff: smooth 1.5 → 1 across the radius
       mag = 1 + (DOCK_MAX_SCALE - 1) * (Math.cos((d / DOCK_RADIUS) * Math.PI) + 1) / 2;
     }
-    // Push neighbours away from the cursor proportional to their growth so
-    // magnified tiles spread instead of overlapping.
-    const ty = (dist < 0 ? -1 : 1) * (mag - 1) * DOCK_SPREAD;
+    // Push neighbours away from the cursor. sin() is odd and continuous → 0 at
+    // the icon's center with no sign-flip jump as the cursor crosses it (the
+    // old sign()*(mag-1) snapped at every center → the up/down judder).
+    const ty = d < DOCK_RADIUS ? Math.sin((dist / DOCK_RADIUS) * Math.PI) * DOCK_SPREAD : 0;
     b.style.setProperty('--mag', mag.toFixed(3));
     b.style.setProperty('--ty', ty.toFixed(2) + 'px');
     b.style.zIndex = Math.round(mag * 10);
