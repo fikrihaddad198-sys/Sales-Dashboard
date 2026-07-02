@@ -247,7 +247,16 @@ Full audit artifact: https://claude.ai/code/artifact/bc0ba79f-aca3-435f-a2b1-47f
 - **`--success`** semantic token added (both themes; green ≠ gold).
 - **Tables (rescoped):** audit's "sortable tables" does **not apply** — D2D is a chronological time-series (sorting breaks vs-Kemarin/Minggu-Lalu) and already has sticky header + sticky col + zebra; All Summary is KPI cards + bar-list + value-sorted rank + card grid, no data grid. No sort added (would be a regression). Verified sticky/zebra render in both themes.
 
-**⏳ Pending review before starting** Medium/Polish tier below.
+**✅ Done — Medium (safe, additive)**
+- **Date presets** — Hari Ini / 7 / 30 Hari / Bulan Ini in every date picker; trigger map extracted to shared `DRP_TRIGGERS`.
+- **Colour-blind status** — all delta badges carry ↑/↓ shape cue (D2D `pFmt` made consistent).
+- **Component inventory + token index** — documented in Design System section above.
+- **Chart a11y** — `role="img"` + Indonesian `aria-label` on all chart canvases (`CHART_LABELS` + `labelCharts()` at load).
+- **Empty-range state** — `#range-empty` message on KPI + Channel when a valid range has no rows (`showRangeEmpty()`), cleared on page switch.
+
+**⏳ Deferred (risky or own project — need owner decision):** enforce `var(--sp*)` (mass refactor, layout-regression risk), collapse dual radius scale (values differ → visual shift, low ROI), ≥44px touch targets (density trade-off), Cmd-K palette (feature), build-split + Playwright (deploy/infra), per-chart empty overlays for the other pages.
+
+Current audit composite ≈ **7.0/10** (was 6.3); heuristics ≈ **70/100** (was 62).
 
 **✅ Medium / 💎 Polish (after review):** enforce `var(--sp*)` (only ~5% adopted; ~123 raw `padding` + 112 raw `gap`), collapse dual radius scale (`--r2..r7` vs `--r-sm..xl`), date presets, colour-blind ▲/▼ status, empty states, ≥44px touch targets, Cmd-K palette, chart `aria-label`/empty states, component index, build-split + Playwright smoke test.
 

@@ -3141,6 +3141,12 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   font-size:var(--fs-body);color:var(--t1)}
 #data-error #data-error-retry{flex-shrink:0}
 
+/* ── Empty date-range message ── */
+#range-empty{display:none}
+#range-empty.show{display:block;margin:14px clamp(14px,4vw,32px);padding:16px 18px;border-radius:12px;
+  background:var(--bg2);border:1px solid var(--border);color:var(--t2);
+  font-size:var(--fs-body);text-align:center}
+
 @keyframes mrDraw { to { stroke-dashoffset: 0; } }
 @keyframes mrFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @keyframes mrPop  { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
@@ -4347,6 +4353,8 @@ body.dashboard-locking .card {
   <span id="data-error-msg">Gagal memuat data.</span>
   <button class="reg-btn" id="data-error-retry" onclick="loadData()">Coba lagi</button>
 </div>
+<!-- Empty-range surface (shown when a valid date range has no rows) -->
+<div id="range-empty" role="status">Tidak ada data untuk rentang tanggal yang dipilih. Coba rentang lain.</div>
 
 <!-- ════════════════════ KPI SUMMARY ════════════════════ -->
 <div class="page active" id="page-kpi">
@@ -5538,6 +5546,7 @@ function replayPageCharts(pageEl){
   });
 }
 function showPage(p,btn,skipHash){
+  if(typeof showRangeEmpty==='function') showRangeEmpty(false); // clear stale empty-range msg; the page's render re-shows if still empty
   document.querySelectorAll('.page').forEach(el=>{ el.classList.remove('active'); el.scrollTop=0; });
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   const pageEl=document.getElementById('page-'+p);
@@ -5724,9 +5733,35 @@ function initDockMagnify() {
   nav.addEventListener('pointerleave', resetDockMagnify);
 }
 
+/* Chart a11y — canvases are graphics; give each an accessible name so screen
+   readers announce what it shows instead of "canvas". Invisible to sighted
+   users. Canvases exist in the static HTML, so one pass at load covers them. */
+const CHART_LABELS = {
+  'kpi-trend-chart':'Grafik tren GMV harian','kpi-stacked-chart':'Grafik GMV per channel (bertumpuk) harian',
+  'ch-pie-chart':'Grafik proporsi GMV per channel','ch-bar-chart':'Grafik GMV per channel',
+  'ch-adt-chart':'Grafik ADT per channel','ch-trend-chart':'Grafik tren channel',
+  'period-chart-1':'Grafik tren GMV periode 1','period-chart-2':'Grafik tren GMV periode 2',
+  'period-chart-3':'Grafik tren GMV periode 3','weekly-trend-chart':'Grafik tren GMV mingguan',
+  'custom-chart-1':'Grafik periode kustom 1','custom-chart-2':'Grafik periode kustom 2',
+  'custom-compare-chart':'Grafik perbandingan periode kustom','custom-daily-chart':'Grafik GMV harian periode kustom',
+  'fldt-line-chart':'Grafik tren FLDT','fldt-group-bar':'Grafik FLDT per kelompok','fldt-doughnut':'Grafik proporsi FLDT',
+  'fldt-custom-bar':'Grafik FLDT kustom','fldt-custom-dough1':'Grafik proporsi FLDT kustom 1','fldt-custom-dough2':'Grafik proporsi FLDT kustom 2',
+  'race-trail-chart':'Grafik race channel','compare-channel-chart':'Grafik perbandingan channel antar toko',
+  'compare-trend-chart':'Grafik perbandingan tren antar toko','ch-popup-chart':'Grafik detail channel',
+  'ch-popup-contrib-chart':'Grafik kontribusi channel','ch-detail-chart':'Grafik detail channel',
+  'ch-detail-ipt-chart':'Grafik IPT channel','kpi-modal-chart':'Grafik ringkasan KPI'
+};
+function labelCharts(){
+  document.querySelectorAll('canvas').forEach(cv=>{
+    cv.setAttribute('role','img');
+    if(!cv.getAttribute('aria-label')) cv.setAttribute('aria-label', CHART_LABELS[cv.id] || 'Grafik data');
+  });
+}
+
 window.addEventListener('DOMContentLoaded',()=>{
   initSidebar();
   initDockMagnify();
+  labelCharts();
   const hash=location.hash.replace('#','');
   const valid=['kpi','channel','period','fldt','allsumm','d2d','race','compare'];
   if(hash && valid.includes(hash)) showPage(hash,null,true);
@@ -5960,10 +5995,15 @@ function onRaceTargetInput(){
   }catch(e){}
 }
 
+/* Toggle the shared "no data for this range" message. */
+function showRangeEmpty(show){ document.getElementById('range-empty')?.classList.toggle('show', !!show); }
+
 function calcKpi(skipCharts){
   const s=getVal('kpi-start'), e=getVal('kpi-end');
   if(!s||!e||!allData.length) return;
-  const rows=filterData(s,e); if(!rows.length) return;
+  const rows=filterData(s,e);
+  if(!rows.length){ showRangeEmpty(true); return; }
+  showRangeEmpty(false);
   _kpiRows=rows;  /* expose for channel popup */
   saveTarget();   /* persist target for this month */
   const target=parseNum(getVal('kpi-target')||'0');
@@ -6208,7 +6248,9 @@ let _chRows=[];
 function applyChannelFilter(){
   const s=getVal('ch-start'), e=getVal('ch-end');
   if(!s||!e||!allData.length) return;
-  _chRows=filterData(s,e); if(!_chRows.length) return;
+  _chRows=filterData(s,e);
+  if(!_chRows.length){ showRangeEmpty(true); return; }
+  showRangeEmpty(false);
   const d=aggregateData(_chRows);
   const total=d.offline+d.gofood+d.grabfood+d.shopee||1;
   const kpis=[
