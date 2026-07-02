@@ -6644,7 +6644,7 @@ function loadD2D(){
 }
 function renderD2D(rows,byDate){
   const prevDate=(ds,n)=>{ const d=new Date(ds); d.setDate(d.getDate()-n); return toInputDate(d); };
-  const pFmt=(v1,v2)=>{ if(!v2||v2===0) return'—'; const p=safePct(v1,v2), up=p>=0; return`<span class="badge ${up?'up':'dn'}">${up?'+':''}${p.toFixed(1)}%</span>`; };
+  const pFmt=(v1,v2)=>{ if(!v2||v2===0) return'—'; const p=safePct(v1,v2), up=p>=0; return`<span class="badge ${up?'up':'dn'}">${up?'↑':'↓'}${Math.abs(p).toFixed(1)}%</span>`; };
   const groups=[
     {label:'GMV',color:TC.gmv,cols:[{h:'GMV',fn:r=>`<span class="td-mono" style="color:${TC.gmv}">${fmtRp(r.gmv)}</span>`},{h:'vs Kemarin',fn:r=>pFmt(r.gmv,byDate[prevDate(r.date,1)]?.gmv)},{h:'vs Minggu Lalu',fn:r=>pFmt(r.gmv,byDate[prevDate(r.date,7)]?.gmv)},{h:'Δ Kemarin',fn:r=>{ const p=byDate[prevDate(r.date,1)]; if(!p) return'—'; const d=r.gmv-(p.gmv||0),up=d>=0; return`<span style="font-size:12px;font-weight:700;font-family:var(--mono);color:${up?'var(--green)':'var(--red)'}">${up?'+':''}${fmtRp(d)}</span>`; }}]},
     {label:'OFFLINE',color:TC.offline,cols:[{h:'Offline',fn:r=>`<span class="td-mono">${fmtRp(r.offline)}</span>`},{h:'vs Kemarin',fn:r=>pFmt(r.offline,byDate[prevDate(r.date,1)]?.offline)},{h:'vs MingguLalu',fn:r=>pFmt(r.offline,byDate[prevDate(r.date,7)]?.offline)}]},
