@@ -3121,6 +3121,14 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 .toast.info{box-shadow:inset 3px 0 0 var(--gold),var(--e3)}
 [data-theme="light"] .toast{background:#fff;border-color:var(--border-md)}
 
+/* ── Data-load error banner ── */
+#data-error{display:none}
+#data-error.show{display:flex;margin:14px clamp(14px,4vw,32px);padding:14px 18px;border-radius:12px;
+  background:var(--red-10);border:1px solid var(--red-20);box-shadow:inset 3px 0 0 var(--red);
+  gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  font-size:var(--fs-body);color:var(--t1)}
+#data-error #data-error-retry{flex-shrink:0}
+
 @keyframes mrDraw { to { stroke-dashoffset: 0; } }
 @keyframes mrFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 @keyframes mrPop  { from { opacity: 0; transform: scale(0); } to { opacity: 1; transform: scale(1); } }
@@ -4316,6 +4324,12 @@ body.dashboard-locking .card {
 
 <div class="app-body">
 
+<!-- Data-load failure surface (shown by loadData on error, cleared on success) -->
+<div id="data-error" role="alert">
+  <span id="data-error-msg">Gagal memuat data.</span>
+  <button class="reg-btn" id="data-error-retry" onclick="loadData()">Coba lagi</button>
+</div>
+
 <!-- ════════════════════ KPI SUMMARY ════════════════════ -->
 <div class="page active" id="page-kpi">
   <div class="kpi-filter-bar">
@@ -5266,10 +5280,9 @@ function toast(msg, type){
 async function loadData(){
   const el=document.getElementById('last-updated'); // may be absent (badge removed)
   if(el) el.textContent='loading…';
-  // Show skeleton only on first load (when there's no data yet to display)
+  // Show the skeleton on EVERY load (not just first) while the KPI page is current.
   const skel=document.getElementById('kpi-skeleton');
-  const firstLoad=!allData||!allData.length;
-  if(skel && firstLoad) skel.classList.add('show');
+  if(skel && currentPage==='kpi') skel.classList.add('show');
   try{
     // Data is served by the gatekeeper and only returned for a valid token.
     const res=await gasCall('data',{ token: SESS.token||'' });
@@ -5290,11 +5303,22 @@ async function loadData(){
     if(res.expiresAt) startSessionTimer(res.expiresAt, res.isOwner);
     if(el) el.textContent=new Date().toLocaleTimeString('id-ID');
     if(skel) skel.classList.remove('show');
+    document.getElementById('data-error')?.classList.remove('show'); // clear any prior failure
     initDefaults(); renderCurrentPage(); _renderedPages.add(currentPage);
   }catch(e){
     if(skel) skel.classList.remove('show');
     if(el) el.textContent = e.message==='timeout' ? 'TIMEOUT' :
                             e.message==='not_configured' ? 'BELUM SETUP' : 'ERROR';
+    // Surface the failure instead of leaving a blank dashboard.
+    const de=document.getElementById('data-error');
+    if(de){
+      document.getElementById('data-error-msg').textContent =
+        e.message==='timeout' ? 'Koneksi timeout saat memuat data.' :
+        e.message==='not_configured' ? 'Sumber data belum dikonfigurasi.' :
+        'Gagal memuat data. Periksa koneksi lalu coba lagi.';
+      de.classList.add('show');
+    }
+    toast('Gagal memuat data','error');
     console.error('loadData:',e);
   }
 }
