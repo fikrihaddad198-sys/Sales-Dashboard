@@ -226,9 +226,25 @@ Active development: `claude/halo-skill-readiness-nlynlg`
 
 Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — restore from here if a redesign goes wrong.
 
+## Known Gaps & Roadmap (design audit 2026-07-03)
+
+Full audit artifact: https://claude.ai/code/artifact/bc0ba79f-aca3-435f-a2b1-47fc1034fb13 — composite **6.3/10**. Strong colour discipline + motion craft; held back by typography, spacing-token adoption, and system-state feedback. Owner decisions: **full type scale (12px floor)**, tackle **Critical + High first**, then review.
+
+**🔥 Critical**
+- **Data-fail UX** — `loadData()` catch currently logs to console only → blank dashboard. Must show inline error + Retry.
+- **Type floor + scale** — no `--fs-*` tokens, 30+ raw sizes incl. 7–11px. Add scale (caption 12 / body 14 / data 15 / h3 18 / h2 22 / hero clamp), migrate off sub-12px.
+- **Toast** — replace native `alert()` (generalise the `.mr-joke` toast) → `toast(msg,type)`.
+
+**⚡ High**
+- Loading **skeletons** on every refresh + first page build (not only initial load).
+- **Sortable + sticky-header tables** (Day-to-Day / All Summary).
+- Add **`--success`** semantic token (green ≠ gold) for "on track / good".
+
+**✅ Medium / 💎 Polish (after review):** enforce `var(--sp*)` (only ~5% adopted; ~123 raw `padding` + 112 raw `gap`), collapse dual radius scale (`--r2..r7` vs `--r-sm..xl`), date presets, colour-blind ▲/▼ status, empty states, ≥44px touch targets, Cmd-K palette, chart `aria-label`/empty states, component index, build-split + Playwright smoke test.
+
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v93` → increment to `fore-v94`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v106` → increment to `fore-v107`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
