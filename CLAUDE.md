@@ -226,9 +226,25 @@ Active development: `claude/halo-skill-readiness-nlynlg`
 
 Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — restore from here if a redesign goes wrong.
 
+## Known Gaps & Roadmap (design audit 2026-07-03)
+
+Full audit artifact: https://claude.ai/code/artifact/bc0ba79f-aca3-435f-a2b1-47fc1034fb13 — composite **6.3/10**. Strong colour discipline + motion craft; held back by typography, spacing-token adoption, and system-state feedback. Owner decisions: **full type scale (12px floor)**, tackle **Critical + High first**, then review.
+
+**✅ Done (v107) — Critical + High**
+- **Data-fail UX** — `loadData()` catch now shows `#data-error` banner + Retry + error toast (no more blank dashboard).
+- **Type scale** — `--fs-caption(12)/label(13)/body(14)/data(15)/h3(18)/h2(22)/hero(clamp)` + `--lh-*`; all sub-12px font-sizes (CSS + inline JS) raised to the 12px floor.
+- **Toast** — `toast(msg,type)` (`info|error|success`) + `#toast-host`; all 6 `alert()` calls replaced.
+- **Skeletons** — `#kpi-skeleton` now shows on every load (not just first), clears on success + error.
+- **`--success`** semantic token added (both themes; green ≠ gold).
+- **Tables (rescoped):** audit's "sortable tables" does **not apply** — D2D is a chronological time-series (sorting breaks vs-Kemarin/Minggu-Lalu) and already has sticky header + sticky col + zebra; All Summary is KPI cards + bar-list + value-sorted rank + card grid, no data grid. No sort added (would be a regression). Verified sticky/zebra render in both themes.
+
+**⏳ Pending review before starting** Medium/Polish tier below.
+
+**✅ Medium / 💎 Polish (after review):** enforce `var(--sp*)` (only ~5% adopted; ~123 raw `padding` + 112 raw `gap`), collapse dual radius scale (`--r2..r7` vs `--r-sm..xl`), date presets, colour-blind ▲/▼ status, empty states, ≥44px touch targets, Cmd-K palette, chart `aria-label`/empty states, component index, build-split + Playwright smoke test.
+
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v93` → increment to `fore-v94`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v106` → increment to `fore-v107`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
@@ -237,6 +253,8 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 7. Keep entrance animations scoped to `body.dr-animating`, not `body.dashboard-ready`
 8. Gold (`#c9a84c`) is the single accent — do not introduce new accent colors into chrome/nav
 9. **Update `CLAUDE.md` in the same commit whenever you change architecture, auth, data flow, or any config constant.** This file is the only persistent memory across sessions — if it's stale, every future session will work from wrong assumptions. No exceptions.
+10. **No `font-size` below `--fs-caption` (12px)** for real content — use the `--fs-*` scale, never a raw sub-12px value.
+11. **User-facing errors/feedback go through `toast(msg,type)` or the `#data-error` banner — never `alert()`.**
 
 ## Coding Discipline (Karpathy principles)
 
