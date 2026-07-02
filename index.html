@@ -5576,7 +5576,7 @@ function initSidebar() {
 const DOCK_MAX_SCALE = 1.5;   // nearest icon
 const DOCK_RADIUS    = 90;    // px of influence above/below cursor
 const DOCK_SPREAD    = 16;    // px each magnified icon pushes its neighbours away
-let _dockRaf = null, _dockPointerY = 0, _dockBtns = null, _dockCenters = null, _dockSnapTimer = null;
+let _dockRaf = null, _dockPointerY = 0, _dockBtns = null, _dockCenters = null, _dockSnapTimer = null, _dockBandTop = null;
 
 /* Reduced-motion is the only static gate. Touch-vs-precise is decided per
    event via pointerType — iPadOS reports (pointer:coarse) even WITH a trackpad
@@ -5597,6 +5597,7 @@ function resetDockMagnify() {
     b.style.zIndex = '';
   });
   _dockCenters = null;
+  _dockBandTop = null;
 }
 function _dockApply() {
   _dockRaf = null;
@@ -5627,10 +5628,15 @@ function initDockMagnify() {
   nav.addEventListener('pointermove', (e) => {
     if (e.pointerType === 'touch') return;   // proximity needs a hovering cursor
     if (!nav.classList.contains('collapsed') || !_dockSupported()) return;
-    // Only magnify while actually over an icon — NOT over the expand/toggle
-    // button or the padding. Otherwise aiming at the toggle grows the top icon,
-    // which then snaps back on expand (the stutter). Reset eases back smoothly.
-    if (!e.target.closest('.nav-btn')) { if (nav.classList.contains('dock-live')) resetDockMagnify(); return; }
+    // Magnify across the whole icon band (icons AND the gaps between them, for
+    // continuous proximity), but NOT over the toggle above them — else aiming
+    // at the expand button grows the top icon and it snaps back on expand.
+    // Threshold = bottom edge of the toggle, cached per hover-session.
+    if (_dockBandTop == null) {
+      const tg = nav.querySelector('.sidebar-toggle-inline');
+      _dockBandTop = tg ? tg.getBoundingClientRect().bottom : nav.getBoundingClientRect().top;
+    }
+    if (e.clientY < _dockBandTop) { if (nav.classList.contains('dock-live')) resetDockMagnify(); return; }
     _dockPointerY = e.clientY;
     if (!nav.classList.contains('dock-live')) {
       _dockBtns = Array.from(nav.querySelectorAll('.nav-btn'));
