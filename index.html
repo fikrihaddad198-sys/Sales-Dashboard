@@ -1127,22 +1127,26 @@ body.dr-animating .reveal {
      GPU-composited, never touches layout. transform-origin left so tiles
      grow toward the content, away from the screen edge — the macOS feel. */
   #main-nav.collapsed .nav-btn {
-    width: 48px;
-    height: 48px;
-    margin: 2px auto;
+    width: 44px;
+    height: 44px;
+    margin: 3px auto;
     padding: 0;
     justify-content: center;
-    border-radius: 14px;
+    border-radius: 13px;
     box-shadow: none;
     position: relative;
     transform-origin: left center;
-    transform: scale(var(--mag, 1));
+    /* --ty spreads neighbours apart so magnified tiles never overlap (macOS
+       dock behaviour); --mag is the proximity scale. Both set by JS. */
+    transform: translateY(var(--ty, 0px)) scale(var(--mag, 1));
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
                 background 0.15s ease, color 0.15s ease;
   }
-  /* While the cursor is steering the dock, JS owns transform every frame —
-     drop the CSS transition so the two don't fight (set via .dock-live). */
-  #main-nav.collapsed.dock-live .nav-btn { transition: background 0.15s ease, color 0.15s ease; }
+  /* After the first grow has eased in, JS adds .dock-snap so subsequent
+     per-frame updates are instant (no rubber-band lag while steering). The
+     FIRST entry keeps the transition above, so the icon grows in smoothly
+     instead of popping. */
+  #main-nav.collapsed.dock-snap .nav-btn { transition: background 0.15s ease, color 0.15s ease; }
   #main-nav.collapsed .nav-btn.active {
     color: var(--gold);
     background: color-mix(in srgb, var(--gold) 14%, transparent);
@@ -5545,7 +5549,7 @@ function toggleSidebar() {
   const collapsed = document.body.classList.toggle('sidebar-collapsed');
   const nav = document.getElementById('main-nav');
   if (nav) nav.classList.toggle('collapsed', collapsed);
-  sessionStorage.setItem('sidebarCollapsed', collapsed ? '1' : '');
+  sessionStorage.setItem('sidebarCollapsed', collapsed ? '1' : '0');
   // Arm will-change only for the duration of the toggle, then drop it so the
   // GPU layer isn't kept alive idle (impeccable animate.md rule).
   document.body.classList.add('sidebar-animating');
@@ -5558,7 +5562,10 @@ function toggleSidebar() {
 }
 function initSidebar() {
   if (window.innerWidth <= 768) return;
-  if (sessionStorage.getItem('sidebarCollapsed') === '1') {
+  // Default to the collapsed dock; only stay expanded if the user explicitly
+  // chose that this session (stored '0'). Owner wants icons-only on entry.
+  const pref = sessionStorage.getItem('sidebarCollapsed');
+  if (pref !== '0') {
     document.body.classList.add('sidebar-collapsed');
     const nav = document.getElementById('main-nav');
     if (nav) nav.classList.add('collapsed');
@@ -5572,7 +5579,8 @@ function initSidebar() {
    frame so it never runs ahead of paint. Disabled on touch and reduced-motion. */
 const DOCK_MAX_SCALE = 1.5;   // nearest icon
 const DOCK_RADIUS    = 90;    // px of influence above/below cursor
-let _dockRaf = null, _dockPointerY = 0, _dockBtns = null;
+const DOCK_SPREAD    = 16;    // px each magnified icon pushes its neighbours away
+let _dockRaf = null, _dockPointerY = 0, _dockBtns = null, _dockCenters = null, _dockSnapTimer = null;
 
 /* Reduced-motion is the only static gate. Touch-vs-precise is decided per
    event via pointerType — iPadOS reports (pointer:coarse) even WITH a trackpad
@@ -5584,27 +5592,35 @@ function _dockSupported() {
 }
 function resetDockMagnify() {
   const nav = document.getElementById('main-nav');
-  if (nav) nav.classList.remove('dock-live');
+  if (nav) nav.classList.remove('dock-live', 'dock-snap');
+  clearTimeout(_dockSnapTimer); _dockSnapTimer = null;
   document.querySelectorAll('#main-nav .nav-btn').forEach(b => {
     b.style.removeProperty('--mag');
+    b.style.removeProperty('--ty');
     b.style.willChange = '';
     b.style.zIndex = '';
   });
+  _dockCenters = null;
 }
 function _dockApply() {
   _dockRaf = null;
-  if (!_dockBtns) return;
-  _dockBtns.forEach(b => {
-    const r = b.getBoundingClientRect();
-    const c = r.top + r.height / 2;
-    const d = Math.abs(c - _dockPointerY);
+  if (!_dockBtns || !_dockCenters) return;
+  _dockBtns.forEach((b, i) => {
+    // _dockCenters holds RESTING viewport centers (captured on entry, transform
+    // applied at origin:left center keeps vertical center fixed), so the reading
+    // never feeds back on the scale/translate we apply here.
+    const dist = _dockCenters[i] - _dockPointerY;
+    const d = Math.abs(dist);
     let mag = 1;
     if (d < DOCK_RADIUS) {
       // cosine falloff: smooth 1.5 → 1 across the radius
       mag = 1 + (DOCK_MAX_SCALE - 1) * (Math.cos((d / DOCK_RADIUS) * Math.PI) + 1) / 2;
     }
+    // Push neighbours away from the cursor proportional to their growth so
+    // magnified tiles spread instead of overlapping.
+    const ty = (dist < 0 ? -1 : 1) * (mag - 1) * DOCK_SPREAD;
     b.style.setProperty('--mag', mag.toFixed(3));
-    // Bigger icon paints on top so growth never tucks under a neighbour.
+    b.style.setProperty('--ty', ty.toFixed(2) + 'px');
     b.style.zIndex = Math.round(mag * 10);
   });
 }
@@ -5616,9 +5632,14 @@ function initDockMagnify() {
     if (!nav.classList.contains('collapsed') || !_dockSupported()) return;
     _dockPointerY = e.clientY;
     if (!nav.classList.contains('dock-live')) {
-      nav.classList.add('dock-live');
       _dockBtns = Array.from(nav.querySelectorAll('.nav-btn'));
+      // Capture resting centers BEFORE arming live (tiles are at mag 1 / ty 0 now).
+      _dockCenters = _dockBtns.map(b => { const r = b.getBoundingClientRect(); return r.top + r.height / 2; });
       _dockBtns.forEach(b => { b.style.willChange = 'transform'; });
+      nav.classList.add('dock-live');          // first entry keeps the CSS transition → smooth grow
+      // After the grow eases in (~190ms), switch to instant per-frame steering.
+      clearTimeout(_dockSnapTimer);
+      _dockSnapTimer = setTimeout(() => nav.classList.add('dock-snap'), 190);
     }
     if (_dockRaf == null) _dockRaf = requestAnimationFrame(_dockApply);
   });

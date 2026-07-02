@@ -143,14 +143,14 @@ The indicator dot is counter-scaled: `transform: scaleX(calc(1 / max(var(--p, 0.
 
 Mobile (`≤768px`): fixed **bottom tab bar**, icon-only (labels hidden), gold pill behind active icon.
 
-Desktop (`≥769px`): left **sidebar** with two states, toggled by `toggleSidebar()` (persisted in `sessionStorage` `sidebarCollapsed`):
+Desktop (`≥769px`): left **sidebar**, **collapsed (dock) by default** on entry — `initSidebar()` collapses unless the user explicitly expanded this session (`sidebarCollapsed==='0'`). Two states, toggled by `toggleSidebar()` (persisted in `sessionStorage` `sidebarCollapsed`: `'1'`=dock, `'0'`=expanded):
 - **Expanded** (232px): edge-docked, "Fore Coffee" wordmark + per-item labels, pushes content via `.app-body { margin-left: 232px }`.
 - **Collapsed → floating macOS-style dock** (`#main-nav.collapsed`): detaches from edge (`left:14px`, vertically centred), rounded + frosted glass, icon-only tiles, content gutter `margin-left: 88px`.
 
 **Smoothness invariants (don't regress — these were the "patah-patah" bug):**
 - `#main-nav` is `position:fixed`, so animating its geometry (`width/top/left/transform/border-radius`) does **not** reflow the document. Keep the open/close motion on the fixed nav; never animate layout props on the content except the single guarded `margin-left`.
 - `body.sidebar-animating` arms `will-change: margin-left` on `.app-body` only during the ~460ms toggle, then JS drops it (no idle GPU layer).
-- **Dock magnification** (`initDockMagnify`): on `pointermove` over the collapsed dock, each `.nav-btn` scales via `--mag` (cosine falloff, `DOCK_MAX_SCALE`/`DOCK_RADIUS`). Pointer math is **rAF-throttled** (one apply per frame). `will-change:transform` + `z-index` set only while live (`.dock-live`), cleared on `pointerleave`/expand via `resetDockMagnify()`. Touch vs precise is gated per-event by `e.pointerType` (`touch` skipped) — **NOT** a `(pointer:fine)` media query: iPadOS reports `(pointer:coarse)` even with a trackpad attached, which would wrongly disable the dock there. Also disabled under `prefers-reduced-motion`. Transform-only — never touches layout.
+- **Dock magnification** (`initDockMagnify`): on `pointermove` over the collapsed dock, each `.nav-btn` scales via `--mag` (cosine falloff, `DOCK_MAX_SCALE`/`DOCK_RADIUS`). Pointer math is **rAF-throttled** (one apply per frame); resting icon centers are cached on entry (`_dockCenters`) so distance never feeds back on the applied transform. Icons magnify (`--mag`) AND push neighbours apart (`--ty`, `DOCK_SPREAD`) so tiles never overlap. First entry keeps the CSS transition (smooth grow-in); after ~190ms JS adds `.dock-snap` to make subsequent per-frame steering instant (no rubber-band). `will-change:transform` + `z-index` set only while live (`.dock-live`), cleared on `pointerleave`/expand via `resetDockMagnify()`. Touch vs precise is gated per-event by `e.pointerType` (`touch` skipped) — **NOT** a `(pointer:fine)` media query: iPadOS reports `(pointer:coarse)` even with a trackpad attached, which would wrongly disable the dock there. Also disabled under `prefers-reduced-motion`. Transform-only — never touches layout.
 - Was a CSS parse bug here once: a bare `--ease-out-expo:` declaration sat directly inside `@media (min-width:769px)` (outside any selector), which invalidated the **entire** block and collapsed the sidebar to a horizontal row. Custom props must live inside a selector (`:root{}`).
 
 ## Design System
@@ -179,7 +179,7 @@ Desktop (`≥769px`): left **sidebar** with two states, toggled by `toggleSideba
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v84`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v85`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -227,7 +227,7 @@ Checkpoint before redesign: `checkpoint-pre-redesign` (commit `40a34af`) — res
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v84` → increment to `fore-v85`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v85` → increment to `fore-v86`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
