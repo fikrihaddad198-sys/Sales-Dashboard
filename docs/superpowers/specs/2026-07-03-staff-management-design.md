@@ -106,12 +106,14 @@ Owner verification: GAS calls Supabase `GET /auth/v1/user` with the caller's tok
 - New **Kelola Staff** page (owner-only) in the nav dock, hidden for staff.
 - `SESS.isOwner` now comes from GAS `is_owner`, not `OWNER_EMAIL`.
 
-## Open decisions for owner review
+## Decisions (finalized by owner, 2026-07-03)
 
-1. **Fore ID format** — free text, or a pattern (e.g. `FOR-<store>-<nn>`)? Proposal: free text, 3–20 chars, letters/numbers/dash, unique, case-insensitive.
-2. **Owner's own account** — the owner also logs in with a Fore ID (e.g. `owner`), flagged `is_owner=TRUE`. Confirm.
-3. **Password rules** — min length? Proposal: min 8 chars (Supabase default is 6; 8 is safer).
-4. **"Online" window** — 3 minutes? adjustable.
+1. **Fore ID = numeric, 3–8 digits** (regex `^\d{3,8}$`), unique. e.g. `001`, `12345678`. Leading zeros allowed → store/compare as a string, never as a number.
+2. **Owner account** — owner also logs in with a numeric Fore ID; their `staff` row has `is_owner=TRUE`, `status=active`.
+3. **Password** — minimum 6 characters (Supabase default).
+4. **"Online" window** — `last_seen` within **3 minutes** = online.
+
+Fore ID is numeric only, so the email↔Fore-ID mapping is by digit-string; no case-insensitivity needed.
 
 ## Risks / honest notes
 
