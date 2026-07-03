@@ -4284,6 +4284,22 @@ body.is-owner .owner-only { display:flex !important; }
         </label>
         <button id="reg-submit2" class="reg-btn" onclick="submitRegister()">Daftar</button>
       </div>
+
+      <!-- RECOVERY: set a new password after clicking the email reset link -->
+      <div id="recovery-form" style="display:none">
+        <label class="reg-field">
+          <span class="reg-label">Password Baru (min 6)</span>
+          <input id="rec-pw" class="reg-input" type="password"
+                 placeholder="Password baru" autocomplete="new-password">
+        </label>
+        <label class="reg-field">
+          <span class="reg-label">Ulangi Password Baru</span>
+          <input id="rec-pw2" class="reg-input" type="password"
+                 placeholder="Ulangi password baru" autocomplete="new-password"
+                 onkeydown="if(event.key==='Enter'){submitRecovery();}">
+        </label>
+        <button id="rec-submit" class="reg-btn" onclick="submitRecovery()">Simpan Password Baru</button>
+      </div>
     </div>
   </div>
 </div>
@@ -8933,6 +8949,61 @@ async function submitRegister(){
   }
 }
 
+/* Password recovery: the reset link from email lands here with a recovery token
+   in the URL hash. Supabase (detectSessionInUrl, default on) exchanges it for a
+   temporary session on createClient; we then let the user set a new password. */
+function isRecoveryLink(){
+  const h = location.hash || '';
+  return h.indexOf('type=recovery') !== -1 || h.indexOf('access_token=') !== -1;
+}
+async function enterRecoveryMode(){
+  const sub = document.getElementById('pin-subtitle');
+  const tabs = document.querySelector('.auth-tabs');
+  document.getElementById('login-form').style.display    = 'none';
+  document.getElementById('register-form').style.display = 'none';
+  document.getElementById('recovery-form').style.display = '';
+  if(tabs) tabs.style.display = 'none';
+  if(sub) sub.textContent = 'Buat password baru';
+  // Make sure the login screen is visible (not the standby/dashboard).
+  const pin = document.getElementById('pin-screen');
+  if(pin){ pin.style.display='flex'; pin.style.opacity='1'; pin.classList.remove('unlocked'); }
+  try{
+    // createClient with the recovery hash present exchanges it for a session.
+    await ensureSupabase();
+    regMsg('Masukkan password baru kamu di bawah.', true);
+  }catch(e){
+    regMsg('Gagal memproses link reset. Buka link dari email sekali lagi.');
+  }
+}
+async function submitRecovery(){
+  const pwEl  = document.getElementById('rec-pw');
+  const pw2El = document.getElementById('rec-pw2');
+  const btn   = document.getElementById('rec-submit');
+  const pw  = (pwEl ? pwEl.value : '').trim();
+  const pw2 = (pw2El ? pw2El.value : '').trim();
+  if(pw.length < 6){ regMsg('Password minimal 6 karakter.'); pwEl && pwEl.focus(); return; }
+  if(pw !== pw2){ regMsg('Password tidak sama.'); pw2El && pw2El.focus(); return; }
+  regMsg('');
+  btn.disabled = true; btn.textContent = 'Menyimpan…';
+  try{
+    const sb = await ensureSupabase();
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if(error) throw error;
+    // Recovery session must not become a real login — force a clean re-login.
+    await sb.auth.signOut().catch(()=>{});
+    SESS.clear();
+    history.replaceState(null, '', location.pathname + location.search);
+    document.getElementById('recovery-form').style.display = 'none';
+    const tabs = document.querySelector('.auth-tabs'); if(tabs) tabs.style.display = '';
+    switchAuth('login');
+    toast('Password berhasil diubah. Silakan masuk dengan password baru.', 'success');
+  }catch(e){
+    regMsg('Gagal menyimpan password: ' + (e.message || 'error') + '. Link mungkin sudah kedaluwarsa.');
+  }finally{
+    btn.disabled = false; btn.textContent = 'Simpan Password Baru';
+  }
+}
+
 /* ── Session countdown chip ── */
 function fmtRemain(ms){
   if(ms < 0) ms = 0;
@@ -9485,6 +9556,13 @@ function openDevicePicker(){
 (function(){
   const ds = document.getElementById('device-screen');
   const saved = getSavedPerfMode();
+  // Password-reset link from email → set-new-password screen (before anything else).
+  if(isRecoveryLink()){
+    applyPerfMode(saved || 'pc');
+    if(ds) ds.style.display='none';
+    enterRecoveryMode();
+    return;
+  }
   // Returning user with a still-valid token → straight to dashboard.
   if(sessionValid()){
     applyPerfMode(saved || 'pc');
