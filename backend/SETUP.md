@@ -1,80 +1,81 @@
-# Setup Gatekeeper Akses (Apps Script + Telegram)
+# Setup — Staff Management Backend (Apps Script + Supabase)
 
-Panduan sekali setup. Setelah selesai, kirim **URL Web App** (yang diakhiri `/exec`)
-ke saya supaya saya pasang ke aplikasi.
+Panduan sekali setup untuk sistem staff baru (login Fore ID + register + approval owner).
+**Tidak perlu `service_role` / kunci rahasia apa pun** — desainnya sengaja tanpa kunci master.
+
+Setelah deploy, kirim ke saya **URL Web App** (`/exec`) kalau berubah dari yang lama.
 
 ---
 
-## 1. Buat Bot Telegram (2 menit)
+## 1. Aktifkan konfirmasi email di Supabase (1 menit)
 
-1. Buka Telegram, cari **@BotFather**.
-2. Kirim `/newbot`, ikuti instruksi (kasih nama + username bot).
-3. BotFather kasih **token** seperti `8123456789:AAH....`. **Simpan.**
+1. Buka Supabase → project kamu → **Authentication → Sign In / Providers → Email**.
+2. Pastikan **"Confirm email"** = ON. (Ini yang bikin user dapat email konfirmasi saat daftar.)
+3. Tes: nanti saat register pertama, cek email masuk (kadang di folder Spam).
 
-## 2. Cari Chat ID kamu
-
-1. Cari bot baru kamu, tekan **Start**, kirim pesan apa saja (misal `halo`).
-2. Cara cepat dapat Chat ID: cari **@userinfobot**, tekan Start → dia kirim ID kamu (angka).
-3. **Simpan angka itu** (itu `TG_OWNER_CHAT`).
-
-## 3. Buat Apps Script
+## 2. Buat tab `staff` di spreadsheet data
 
 1. Buka spreadsheet data (yang ada sheet **bacot**).
-2. Menu **Extensions → Apps Script**.
-3. Hapus isi `Code.gs` bawaan, **paste seluruh isi** file `backend/Code.gs`.
-4. Di blok **CONFIG** atas, isi:
-   - `TG_BOT_TOKEN` → token dari langkah 1
-   - `TG_OWNER_CHAT` → chat id dari langkah 2
-   - `OWNER_IDS` → pastikan ID Fore kamu ada (default `'5857'` & `'1'`)
-   - Cek `SPREADSHEET_ID` & `DATA_SHEET` sudah benar.
-5. **Save** (ikon disket).
+2. Tambah sheet/tab baru bernama **`staff`** (huruf kecil).
+3. Baris pertama (header), isi persis 7 kolom ini:
 
-## 4. Tes koneksi bot
+   | A | B | C | D | E | F | G |
+   |---|---|---|---|---|---|---|
+   | fore_id | email | status | is_owner | created_at | approved_at | last_seen |
 
-1. Di Apps Script, pilih fungsi **`testTelegram`** di dropdown atas, klik **Run**.
-2. Pertama kali akan minta **izin** (Authorize) → pilih akun Google kamu → Allow.
-3. Kalau berhasil, kamu dapat pesan "Bot tersambung" di Telegram.
+4. **Tambah baris owner-mu** (biar kamu tidak terkunci):
+   - `fore_id`: pilih angka 3–8 digit, misal **`100`**
+   - `email`: email Supabase-mu yang sekarang (`fikrihaddad198@gmail.com`)
+   - `status`: **`active`**
+   - `is_owner`: **`TRUE`**
+   - `created_at` & `approved_at`: tanggal hari ini (bebas format)
+   - `last_seen`: kosongkan
 
-## 5. Deploy sebagai Web App
+5. **Migrasi user lama:** untuk tiap user Supabase yang sudah ada, tambah satu baris:
+   `fore_id` (angka unik), `email` mereka, `status`=`active`, `is_owner`=(kosong), dst.
+   *(Kalau belum ada user lain, lewati.)*
 
-1. Klik **Deploy → New deployment**.
-2. Ikon gerigi → pilih tipe **Web app**.
-3. Setelan:
-   - **Execute as**: `Me` (akun kamu)
-   - **Who has access**: `Anyone`
-4. **Deploy** → Authorize bila diminta.
-5. Salin **Web app URL** (diakhiri `/exec`). **Ini yang dikirim ke saya.**
+## 3. Paste kode & deploy Apps Script
 
-## 6. Pasang webhook Telegram (biar tombol Setujui/Tolak jalan)
+1. Buka spreadsheet → **Extensions → Apps Script**.
+2. Hapus isi `Code.gs`, **paste seluruh isi** `backend/Code.gs` (versi baru).
+3. Cek blok **CFG** atas: `SPREADSHEET_ID`, `DATA_SHEET`, `SUPA_URL`, `SUPA_KEY` sudah benar.
+   (Tidak ada kunci rahasia yang perlu diisi — anon key aman.)
+4. **Save**.
+5. **Deploy → Manage deployments → (deployment yang ada) → Edit → Version: New version → Deploy.**
+   → URL `/exec` **tetap sama** (jadi tidak perlu kirim ulang ke saya).
+   *(Kalau belum pernah deploy: Deploy → New deployment → Web app → Execute as: **Me**, Who has access: **Anyone** → Deploy → salin URL `/exec`.)*
+6. Kalau diminta **Authorize** → pilih akun Google → Allow.
 
-Buka URL ini di browser (ganti `<BOT_TOKEN>` dan `<EXEC_URL>`):
+## 4. Tes backend (checklist — buka URL di browser)
 
-```
-https://api.telegram.org/bot<BOT_TOKEN>/setWebhook?url=<EXEC_URL>
-```
+Ganti `<EXEC>` dengan URL `/exec` kamu. Tiap URL harus balas `callback({...})`.
 
-Kalau muncul `{"ok":true,...}` → berhasil.
+1. **resolveLogin (owner-mu):**
+   `<EXEC>?action=resolveLogin&fore_id=100&callback=cb`
+   → harus muncul email-mu + `"status":"active"` + `"is_owner":true`.
 
-## 7. Kunci data (PENTING untuk keamanan)
+2. **register (user tes):**
+   `<EXEC>?action=register&fore_id=999&email=EMAILTESMU@gmail.com&callback=cb`
+   → `{"ok":true}` **dan** baris baru muncul di tab `staff` dengan status `pending`.
+   *(Register asli nanti dari app; email konfirmasi dikirim oleh app, bukan URL ini.)*
 
-Supaya data tidak bisa diambil tanpa login:
+3. **data tanpa token:**
+   `<EXEC>?action=data&callback=cb`
+   → `{"ok":false,"error":"no_session"}` (bagus — artinya data terkunci).
 
-1. Buka spreadsheet → tombol **Share**.
-2. Bagian **General access** → ubah dari "Anyone with the link" menjadi
-   **Restricted** (hanya kamu).
-
-Karena Apps Script jalan "Execute as: Me", aplikasi tetap bisa baca data
-lewat gatekeeper, tapi orang lain **tidak** bisa akses sheet langsung.
+Kalau ada yang error, perbaiki di Apps Script lalu **Deploy versi baru** lagi.
 
 ---
 
 ## Selesai
 
-Kirim ke saya: **Web app URL (`/exec`)**. Saya pasang ke aplikasi, lalu:
-- User daftar (ID Fore + Nama) → kamu dapat notif Telegram → tap ✅/❌
-- Disetujui → user dapat akses **30 menit**, lalu harus daftar ulang
-- Kamu (ID 5857) → masuk otomatis tanpa approval & tanpa batas waktu
+Kalau ketiga tes di atas hijau → **kabari saya**, lalu saya kerjakan bagian frontend
+(halaman Masuk/Daftar + Kelola Staff). Kalau URL `/exec` berubah, kirim yang baru.
 
-### Mengganti durasi / owner nanti
-Ubah `SESSION_MIN` atau `OWNER_IDS` di CONFIG, lalu **Deploy → Manage deployments
-→ Edit → Version: New version → Deploy** (URL tetap sama).
+**Cara kerja sistemnya:**
+- Staff **Daftar** (Fore ID, email, password) → dapat email konfirmasi → klik konfirmasi.
+- Kamu (owner) buka **Kelola Staff** → **Aktifkan** akun itu.
+- Staff **Masuk** pakai **Fore ID + password**.
+- Kamu bisa lihat siapa **online**, **nonaktifkan**, atau **hapus** kapan saja.
+- Semua data tetap terkunci: hanya status `active` yang bisa menariknya.

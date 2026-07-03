@@ -1,582 +1,210 @@
-/*  Fore Coffee Sales Dashboard - Access Gatekeeper (Google Apps Script)
- *  --------------------------------------------------------------------
- *  Replaces the old PIN. Users register with (ID Fore + Nama). The owner
- *  approves each request from Telegram. An approved session lasts 30 min,
- *  after which the user must register again. ALL dashboard data flows
- *  through here and is only returned when a valid, unexpired token is
- *  presented - the raw Google Sheet stays private.
- *
- *  Architecture: POLLING (not webhook).
- *    Apps Script /exec always responds to POST with HTTP 302, which Telegram
- *    treats as a failure and retries indefinitely — jamming the in-order
- *    delivery queue so only the first callback ever lands. Fix: delete the
- *    webhook entirely and use a time-driven trigger that calls pollTelegram()
- *    every minute. notifyOwner() still sends the message instantly; only the
- *    button-tap processing is polled (≤1 min delay, fine for an approval flow).
- *
- *  Endpoints:
- *    doGet  -> app calls via JSONP  (?action=register|poll|data|me|heartbeat)
- *    doPost -> unused (kept as no-op so old deploys don't 500)
- *
- *  SETUP: see backend/SETUP.md.
- */
+/* ============================================================================
+   Fore Coffee Sales Dashboard — GAS backend (staff management + data)
 
-// ======================= CONFIG =======================
+   Responsibilities:
+   - Serve the sales CSV (sheet "bacot") ONLY to an active, approved staff.
+   - Own the "staff" sheet = identity (Fore ID ↔ email) + status source of truth.
+   - Enforce the approval gate: the data endpoint returns rows only when the
+     caller's status === 'active'. This is the REAL access gate.
+
+   Security model (no master key needed):
+   - Supabase handles password + email confirmation.
+   - Registration uses the client's own Supabase signUp() (sends the confirm
+     email natively) — this backend only records the Fore ID ↔ email mapping and
+     the status. So NO service_role key lives here; only the public anon key,
+     which is safe.
+   - Every owner-only endpoint re-verifies the caller: their Supabase token →
+     email → a staff row with is_owner=TRUE and status=active.
+
+   All responses are JSONP: append ?action=…&callback=cb to the /exec URL.
+
+   SETUP: see backend/SETUP.md.
+   ============================================================================ */
+
 const CFG = {
-  // The spreadsheet that holds the sales data (the one with sheet "bacot").
   SPREADSHEET_ID : '1Y49X7Gj2Zy8XaX85ONHQTXnd3ItrmwPZHA2MXlRy4gU',
-  DATA_SHEET     : 'bacot',          // sheet name the dashboard reads
-  ACCESS_SHEET   : 'access',         // kept for legacy Telegram flow (unused by new auth)
+  DATA_SHEET     : 'bacot',     // sheet the dashboard reads
+  STAFF_SHEET    : 'staff',     // fore_id | email | status | is_owner | created_at | approved_at | last_seen
 
-  // Telegram (kept for /siapa and kick features via bot)
-  TG_BOT_TOKEN   : '8868940589:AAGXIwtUISRupnB5vHtxBtk0I8tvKbLLmHg',
-  TG_OWNER_CHAT  : '7316023785',
-
-  // Session
-  SESSION_MIN    : 30,
-
-  // Legacy owner fields (kept for Telegram bot flow)
-  OWNER_IDS      : ['1'],
-  OWNER_NAME     : 'Fikri',
-
-  // Supabase Auth
   SUPA_URL       : 'https://umarsaninyxepfgscjts.supabase.co',
   // Public anon key — safe to commit (client-side key, not a secret).
   SUPA_KEY       : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtYXJzYW5pbnl4ZXBmZ3NjanRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3MDYwMjgsImV4cCI6MjA5ODI4MjAyOH0.lYA4Kuiz_YnOXuL6ISyQjp-tBOPTYXXEHgcjZxlunf8',
-  OWNER_EMAIL    : 'fikrihaddad198@gmail.com',
+
+  ONLINE_MIN     : 3,           // last_seen within N minutes = "online"
+  FORE_ID_RE     : /^\d{3,8}$/, // numeric, 3–8 digits
 };
-// ======================================================
 
-// Owner = ID in OWNER_IDS AND name matches OWNER_NAME (case-insensitive).
-// Anyone who enters an owner ID with a different name is treated as a
-// normal user and must still be approved.
-function isOwner(idFore, name){
-  if (CFG.OWNER_IDS.indexOf(String(idFore)) === -1) return false;
-  return String(name||'').trim().toLowerCase() === CFG.OWNER_NAME.toLowerCase();
-}
-
-const ACCESS_HEADERS =
-  ['requestId','idFore','name','status','token','createdAt','approvedAt','expiresAt','tgMsgId','lastSeen'];
-
-// ----------------------- ENTRY POINTS -----------------------
+/* ── Router ─────────────────────────────────────────────────────────────── */
 function doGet(e){
-  const p  = (e && e.parameter) || {};
-  const cb = p.callback || '';
+  const p  = e.parameter || {};
+  const cb = p.callback || 'callback';
   let out;
-  try {
-    switch (p.action) {
-      case 'register':  out = apiRegister(p.idFore, p.name); break;
-      case 'poll':      out = apiPoll(p.requestId);          break;
-      case 'data':      out = apiData(p.token);              break;
-      case 'me':        out = apiMe(p.token);                break;
-      case 'heartbeat': out = apiHeartbeat(p.token);          break;
-      case 'kick':      out = apiKick(p.token, p.target);    break;
-      default:          out = { ok:false, error:'unknown_action' };
+  try{
+    switch(p.action){
+      case 'register':     out = apiRegister(p.fore_id, p.email);             break;
+      case 'resolveLogin': out = apiResolveLogin(p.fore_id);                  break;
+      case 'data':         out = apiData(p.token);                           break;
+      case 'me':           out = apiMe(p.token);                             break;
+      case 'listStaff':    out = apiListStaff(p.token);                      break;
+      case 'setStatus':    out = apiSetStatus(p.token, p.fore_id, p.status); break;
+      case 'deleteStaff':  out = apiDeleteStaff(p.token, p.fore_id);         break;
+      default:             out = { ok:false, error:'unknown_action' };
     }
-  } catch (err) {
-    out = { ok:false, error:'server_error', detail:String(err) };
+  }catch(err){
+    out = { ok:false, error: String(err && err.message || err) };
   }
   return jsonp(out, cb);
 }
+// Kept as a no-op so any old client POST doesn't 500.
+function doPost(e){ return jsonp({ ok:false, error:'use_get' }, 'callback'); }
 
-function doPost(e){
-  // No-op. We use polling (pollTelegram trigger) instead of webhook because
-  // Apps Script /exec always returns 302, which Telegram treats as failure.
-  return ContentService.createTextOutput('ok');
-}
-
-// ----------------------- SUPABASE TOKEN VERIFICATION -----------------------
-// Decodes a Supabase JWT locally — no network call needed.
-// Checks issuer (must be our Supabase project), role=authenticated, email
-// presence, and expiry. Signature is not verified here (JWT secret stays
-// outside the repo), which is acceptable for this private invite-only setup.
-function verifySupabaseToken(token){
+/* ── Supabase (anon key only) ───────────────────────────────────────────── */
+// Resolve a user's access token → { email, confirmed } or null.
+function sbUser(token){
   if(!token) return null;
-  try{
-    var parts = token.split('.');
-    if(parts.length !== 3) return null;
-    var b64 = parts[1].replace(/-/g,'+').replace(/_/g,'/');
-    while(b64.length % 4) b64 += '=';
-    var payload = JSON.parse(Utilities.newBlob(Utilities.base64Decode(b64)).getDataAsString());
-    if(payload.iss !== CFG.SUPA_URL + '/auth/v1') return null;
-    if(payload.role !== 'authenticated') return null;
-    if(!payload.email) return null;
-    if(payload.exp && payload.exp * 1000 < Date.now()) return null;
-    return { email: payload.email, id: payload.sub };
-  }catch(e){ return null; }
+  const res = UrlFetchApp.fetch(CFG.SUPA_URL + '/auth/v1/user', {
+    method:'get', muteHttpExceptions:true,
+    headers:{ 'apikey':CFG.SUPA_KEY, 'Authorization':'Bearer '+token }
+  });
+  if(res.getResponseCode() !== 200) return null;
+  const u = JSON.parse(res.getContentText());
+  if(!u || !u.email) return null;
+  return { email:String(u.email).toLowerCase(), confirmed: !!u.email_confirmed_at };
 }
 
-// ----------------------- APP API -----------------------
-function apiRegister(idFore, name){
-  idFore = String(idFore || '').trim();
-  name   = sanitizeName(name);
+/* ── staff sheet helpers ────────────────────────────────────────────────── */
+const STAFF_COLS = ['fore_id','email','status','is_owner','created_at','approved_at','last_seen'];
 
-  if (!/^\d{1,8}$/.test(idFore)) return { ok:false, error:'invalid_id' };
-  if (name.length < 2)           return { ok:false, error:'invalid_name' };
-
-  const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
-  try {
-    const sh = accessSheet();
-    const requestId = Utilities.getUuid();
-    const now = new Date();
-
-    // Owner -> auto approve, no expiry. Requires ID + name match.
-    if (isOwner(idFore, name)) {
-      const token = makeToken();
-      const far   = new Date(now.getTime() + 1000*60*60*24*365*10); // 10y
-      sh.appendRow([requestId, idFore, name || CFG.OWNER_NAME, 'approved',
-                    token, now, now, far, '']);
-      return { ok:true, status:'approved', token:token, name:name||CFG.OWNER_NAME,
-               idFore:idFore, isOwner:true, expiresAt:far.getTime() };
-    }
-
-    // Normal user -> pending. Release lock BEFORE notifyOwner (HTTP to Telegram)
-    // so the lock isn't held during a potentially slow network call.
-    sh.appendRow([requestId, idFore, name, 'pending', '', now, '', '', '']);
-    lock.releaseLock();
-
-    const msgId = notifyOwner(requestId, idFore, name);
-    if (msgId) {
-      const sh2 = accessSheet();
-      setCell(sh2, requestId, 'tgMsgId', String(msgId));
-    }
-
-    return { ok:true, status:'pending', requestId:requestId };
-  } finally {
-    // safe to call even if already released
-    try { lock.releaseLock(); } catch(e) {}
+function staffSheet(){
+  const ss = SpreadsheetApp.openById(CFG.SPREADSHEET_ID);
+  let sh = ss.getSheetByName(CFG.STAFF_SHEET);
+  if(!sh){ sh = ss.insertSheet(CFG.STAFF_SHEET); sh.appendRow(STAFF_COLS); }
+  return sh;
+}
+function staffAll(){
+  const sh = staffSheet();
+  const vals = sh.getDataRange().getValues();
+  const rows = [];
+  for(let i=1;i<vals.length;i++){
+    const r = vals[i]; if(r[0]===''||r[0]===null||r[0]===undefined) continue;
+    rows.push({
+      _row:i+1,
+      fore_id:String(r[0]).trim(),
+      email:String(r[1]||'').trim().toLowerCase(),
+      status:String(r[2]||'').trim().toLowerCase(),
+      is_owner:(r[3]===true || String(r[3]).toUpperCase()==='TRUE'),
+      created_at:String(r[4]||''),
+      approved_at:String(r[5]||''),
+      last_seen:String(r[6]||'')
+    });
   }
+  return rows;
 }
+function staffByForeId(id){ id=String(id).trim(); return staffAll().find(r=>r.fore_id===id) || null; }
+function staffByEmail(email){ email=String(email).trim().toLowerCase(); return staffAll().find(r=>r.email===email) || null; }
+function staffSet(row, field, value){ staffSheet().getRange(row, STAFF_COLS.indexOf(field)+1).setValue(value); }
+function staffAppend(o){ staffSheet().appendRow(STAFF_COLS.map(c=>o[c]!==undefined?o[c]:'')); }
+function staffDelete(row){ staffSheet().deleteRow(row); }
 
-function apiPoll(requestId){
-  if (!requestId) return { ok:false, error:'no_request' };
-  // Process any pending owner button-taps on-demand. The waiting user's browser
-  // polls this every ~3s, so the approval shows within seconds instead of
-  // waiting up to ~60s for the 1-minute pollTelegram() trigger. The trigger
-  // stays as a fallback for when nobody is actively waiting. pollTelegram() is
-  // lock-guarded, so concurrent waiters can't double-pull getUpdates.
-  try { pollTelegram(); } catch(e) {}
-  const row = findRow(requestId);
-  if (!row) return { ok:false, error:'not_found' };
-
-  if (row.status === 'approved') {
-    if (row.expiresAt && new Date(row.expiresAt).getTime() < Date.now()) {
-      return { ok:true, status:'expired' };
-    }
-    return { ok:true, status:'approved', token:row.token, name:row.name,
-             idFore:row.idFore, expiresAt:new Date(row.expiresAt).getTime() };
-  }
-  return { ok:true, status:row.status }; // pending | rejected
+/* ── caller identity ────────────────────────────────────────────────────── */
+function callerRow(token){ const u=sbUser(token); return u ? staffByEmail(u.email) : null; }
+function requireOwner(token){
+  const row = callerRow(token);
+  if(!row || !row.is_owner || row.status!=='active') throw new Error('not_owner');
+  return row;
 }
+function nowIso(){ return new Date().toISOString(); }
 
-function apiData(token){
-  // Accept Supabase JWT (new auth) — verify via Supabase REST API.
-  const user = verifySupabaseToken(token);
-  if(!user) return { ok:false, error:'invalid_token' };
-  const isOwner_ = (user.email || '').toLowerCase() === CFG.OWNER_EMAIL.toLowerCase();
-  const csv = readDataCsv();
-  return { ok:true, csv:csv, expiresAt:0, name:user.email, isOwner:isOwner_ };
-}
+/* ── Endpoints ──────────────────────────────────────────────────────────── */
 
-function apiMe(token){
-  const user = verifySupabaseToken(token);
-  if(!user) return { ok:false, error:'invalid_token' };
-  const isOwner_ = (user.email || '').toLowerCase() === CFG.OWNER_EMAIL.toLowerCase();
-  return { ok:true, name:user.email, isOwner:isOwner_, expiresAt:0, remainingMs:0 };
-}
-
-function apiHeartbeat(token){
-  // Heartbeat now just validates the Supabase token; no access-sheet writes needed.
-  if(!token) return { ok:false, error:'no_token' };
-  const user = verifySupabaseToken(token);
-  if(!user) return { ok:false, error:'invalid_token' };
+// Reserve a Fore ID ↔ email as PENDING. Called by the client BEFORE it runs
+// Supabase signUp() (which creates the account + sends the confirm email).
+function apiRegister(fore_id, email){
+  fore_id = String(fore_id||'').trim();
+  email   = String(email||'').trim().toLowerCase();
+  if(!CFG.FORE_ID_RE.test(fore_id)) return { ok:false, error:'bad_fore_id' };
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok:false, error:'bad_email' };
+  if(staffByForeId(fore_id)) return { ok:false, error:'fore_id_exists' };
+  if(staffByEmail(email))    return { ok:false, error:'email_exists' };
+  staffAppend({ fore_id, email, status:'pending', is_owner:'', created_at:nowIso() });
   return { ok:true };
 }
 
-function apiKick(token, targetIdFore){
-  // Only owner can kick.
-  const v = validateToken(token);
-  if (!v.ok) return v;
-  if (!v.isOwner) return { ok:false, error:'forbidden' };
-  if (!targetIdFore) return { ok:false, error:'no_target' };
-
-  const sh = accessSheet();
-  const data = sh.getDataRange().getValues();
-  var kicked = 0;
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][1]) === String(targetIdFore) && data[i][3] === 'approved') {
-      sh.getRange(i+1, 4).setValue('revoked');
-      kicked++;
-    }
-  }
-  return { ok:true, kicked:kicked };
+// Fore ID → the email to sign in with + its status. No secrets returned.
+function apiResolveLogin(fore_id){
+  const row = staffByForeId(String(fore_id||'').trim());
+  if(!row) return { ok:false, error:'not_found' };
+  return { ok:true, email:row.email, status:row.status, is_owner:row.is_owner };
 }
 
-// Returns users active in the last N minutes (for /siapa command).
-function getOnlineUsers(withinMinutes){
-  withinMinutes = withinMinutes || 3;
-  const cutoff = new Date(Date.now() - withinMinutes*60000);
-  const data = accessSheet().getDataRange().getValues();
-  var users = [];
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][3] !== 'approved') continue;
-    var exp = data[i][7] ? new Date(data[i][7]) : null;
-    if (exp && exp < new Date()) continue;
-    var lastSeen = data[i][9] ? new Date(data[i][9]) : null;
-    if (!lastSeen || lastSeen < cutoff) continue;
-    users.push({ name: data[i][2], idFore: String(data[i][1]),
-                 lastSeen: lastSeen, expiresAt: exp });
-  }
-  return users;
+// THE data gate — rows only for an active caller. Updates last_seen.
+function apiData(token){
+  const row = callerRow(token);
+  if(!row)                    return { ok:false, error:'no_session' };
+  if(row.status!=='active')   return { ok:false, error:'inactive', status:row.status };
+  staffSet(row._row, 'last_seen', nowIso());
+  return { ok:true, csv: readDataCsv(), is_owner: row.is_owner };
 }
 
-// ----------------------- TELEGRAM -----------------------
-function notifyOwner(requestId, idFore, name){
-  if (!CFG.TG_BOT_TOKEN || CFG.TG_BOT_TOKEN.indexOf('PASTE') === 0) return null;
-  const text =
-    '🔔 *Permintaan akses baru*\n\n' +
-    '👤 Nama: *' + tgEsc(name) + '*\n' +
-    '🆔 ID Fore: `' + tgEsc(idFore) + '`\n' +
-    '🕒 ' + Utilities.formatDate(new Date(), 'Asia/Jakarta', 'dd MMM yyyy HH:mm') +
-    '\n\nDurasi akses bila disetujui: *' + CFG.SESSION_MIN + ' menit*';
-  const reply = {
-    inline_keyboard: [[
-      { text:'✅ Setujui', callback_data:'approve:' + requestId },
-      { text:'❌ Tolak',   callback_data:'reject:'  + requestId }
-    ]]
-  };
-  const res = tgApi('sendMessage', {
-    chat_id: CFG.TG_OWNER_CHAT,
-    text: text,
-    parse_mode: 'Markdown',
-    reply_markup: JSON.stringify(reply)
-  });
-  return res && res.result ? res.result.message_id : null;
+// Session restore / isOwner.
+function apiMe(token){
+  const row = callerRow(token);
+  if(!row) return { ok:false, error:'no_session' };
+  return { ok:true, fore_id:row.fore_id, status:row.status, is_owner:row.is_owner };
 }
 
-function handleTelegramUpdate(update){
-  if (update.message && update.message.text) {
-    const chatId = update.message.chat.id;
-    const t = update.message.text.trim().split(' ')[0].toLowerCase();
-
-    if (t === '/start' || t === '/id') {
-      tgApi('sendMessage', { chat_id: chatId, text: 'Chat ID kamu: ' + chatId });
-
-    } else if (t === '/siapa') {
-      if (String(chatId) !== String(CFG.TG_OWNER_CHAT)) {
-        tgApi('sendMessage', { chat_id: chatId, text: 'Hanya owner.' });
-        return;
-      }
-      var users = getOnlineUsers(3);
-      if (!users.length) {
-        tgApi('sendMessage', { chat_id: chatId, text: '📭 Tidak ada user yang sedang online.' });
-        return;
-      }
-      var lines = ['👥 *User Online Sekarang* (' + users.length + '):\n'];
-      var buttons = [];
-      users.forEach(function(u, idx){
-        var sisa = u.expiresAt ? Math.max(0, Math.round((u.expiresAt-Date.now())/60000)) : '∞';
-        lines.push((idx+1) + '. *' + tgEsc(u.name) + '* (ID: `' + u.idFore + '`) — sisa ' + sisa + ' mnt');
-        buttons.push([{ text: '🦵 Kick ' + u.name, callback_data: 'kick:' + u.idFore }]);
-      });
-      tgApi('sendMessage', {
-        chat_id: chatId,
-        text: lines.join('\n'),
-        parse_mode: 'Markdown',
-        reply_markup: JSON.stringify({ inline_keyboard: buttons })
-      });
-    }
-    return;
-  }
-
-  const cq = update.callback_query;
-  if (!cq || !cq.data) return;
-
-  // Only the owner may approve/reject.
-  if (String(cq.from.id) !== String(CFG.TG_OWNER_CHAT)) {
-    try { tgApi('answerCallbackQuery', { callback_query_id: cq.id,
-      text: 'Hanya owner yang bisa menyetujui.', show_alert: true }); } catch (e) {}
-    return;
-  }
-
-  const parts = cq.data.split(':');
-  const decision = parts[0], requestId = parts[1];
-  const editMsgId = cq.message && cq.message.message_id;
-
-  // Handle kick button from /siapa.
-  if (decision === 'kick') {
-    const targetId = requestId; // reused field = idFore to kick
-    const sh = accessSheet();
-    const data = sh.getDataRange().getValues();
-    var kickedName = targetId, kickCount = 0;
-    for (var i = 1; i < data.length; i++) {
-      if (String(data[i][1]) === String(targetId) && data[i][3] === 'approved') {
-        sh.getRange(i+1, 4).setValue('revoked');
-        kickedName = data[i][2];
-        kickCount++;
-      }
-    }
-    try { tgApi('answerCallbackQuery', { callback_query_id: cq.id,
-      text: kickCount ? 'Kicked ' + kickedName : 'Tidak ditemukan.', show_alert: true }); } catch(e){}
-    if (editMsgId && kickCount) {
-      try { tgApi('editMessageText', { chat_id: CFG.TG_OWNER_CHAT,
-        message_id: editMsgId,
-        text: '🦵 *' + tgEsc(kickedName) + '* (ID: `' + targetId + '`) sudah di-kick.',
-        parse_mode: 'Markdown' }); } catch(e){}
-    }
-    return;
-  }
-
-  // NO LockService here — see comment in git history.
-  const row = findRow(requestId);
-
-  // Fast path for retries / stale taps.
-  if (!row || row.status !== 'pending') {
-    try { tgApi('answerCallbackQuery', { callback_query_id: cq.id,
-      text: row ? 'Sudah diproses.' : 'Tak ditemukan.' }); } catch (e) {}
-    return;
-  }
-
-  const sh = accessSheet();
-  let banner;
-  if (decision === 'approve') {
-    const token = makeToken();
-    const now   = new Date();
-    const exp   = new Date(now.getTime() + CFG.SESSION_MIN*60000);
-    // One setValues write for status..expiresAt (cols 4-8) instead of 4 ops.
-    sh.getRange(row.rowIndex, 4, 1, 5)
-      .setValues([['approved', token, row.createdAt, now, exp]]);
-    banner = '✅ *DISETUJUI* - ' + tgEsc(row.name) + ' (`' + tgEsc(row.idFore) + '`)\n' +
-             'Akses ' + CFG.SESSION_MIN + ' menit, sampai ' +
-             Utilities.formatDate(exp, 'Asia/Jakarta', 'HH:mm');
-  } else {
-    sh.getRange(row.rowIndex, 4).setValue('rejected');
-    banner = '❌ *DITOLAK* - ' + tgEsc(row.name) + ' (`' + tgEsc(row.idFore) + '`)';
-  }
-
-  // Stop the spinner, then update the message. Two quick calls, once only.
-  try { tgApi('answerCallbackQuery', { callback_query_id: cq.id,
-    text: decision === 'approve' ? 'Disetujui' : 'Ditolak' }); } catch (e) {}
-  if (editMsgId) {
-    try { tgApi('editMessageText', { chat_id: CFG.TG_OWNER_CHAT,
-      message_id: editMsgId, text: banner, parse_mode: 'Markdown' }); } catch (e) {}
-  }
+// Owner: full staff list with an "online" flag.
+function apiListStaff(token){
+  requireOwner(token);
+  const cut = Date.now() - CFG.ONLINE_MIN*60*1000;
+  const staff = staffAll().map(r=>({
+    fore_id:r.fore_id, email:r.email, status:r.status, is_owner:r.is_owner,
+    created_at:r.created_at, approved_at:r.approved_at, last_seen:r.last_seen,
+    online: r.last_seen ? (new Date(r.last_seen).getTime() >= cut) : false
+  }));
+  return { ok:true, staff };
 }
 
-function tgApi(method, payload){
-  if (!CFG.TG_BOT_TOKEN || CFG.TG_BOT_TOKEN.indexOf('PASTE') === 0) return null;
-  const url = 'https://api.telegram.org/bot' + CFG.TG_BOT_TOKEN + '/' + method;
-  const res = UrlFetchApp.fetch(url, {
-    method: 'post',
-    contentType: 'application/json',
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
-  });
-  try { return JSON.parse(res.getContentText()); } catch (e) { return null; }
+// Owner: pending → active (approve) / active → disabled / re-enable.
+function apiSetStatus(token, fore_id, status){
+  requireOwner(token);
+  status = String(status||'').trim().toLowerCase();
+  if(['pending','active','disabled'].indexOf(status)===-1) return { ok:false, error:'bad_status' };
+  const row = staffByForeId(String(fore_id||'').trim());
+  if(!row) return { ok:false, error:'not_found' };
+  if(row.is_owner) return { ok:false, error:'cannot_change_owner' };
+  staffSet(row._row, 'status', status);
+  if(status==='active' && !row.approved_at) staffSet(row._row, 'approved_at', nowIso());
+  return { ok:true };
 }
 
-// ----------------------- DATA -----------------------
+// Owner: remove the staff row (revokes access — the orphaned Supabase account
+// can no longer map to a Fore ID and is rejected by the data gate).
+function apiDeleteStaff(token, fore_id){
+  requireOwner(token);
+  const row = staffByForeId(String(fore_id||'').trim());
+  if(!row) return { ok:false, error:'not_found' };
+  if(row.is_owner) return { ok:false, error:'cannot_delete_owner' };
+  staffDelete(row._row);
+  return { ok:true };
+}
+
+/* ── Data CSV (sheet "bacot") ───────────────────────────────────────────── */
 function readDataCsv(){
   const ss = SpreadsheetApp.openById(CFG.SPREADSHEET_ID);
   const sh = ss.getSheetByName(CFG.DATA_SHEET);
-  if (!sh) return '';
-  const values = sh.getDataRange().getDisplayValues();
-  return values.map(function(r){
-    return r.map(csvCell).join(',');
-  }).join('\n');
+  if(!sh) return '';
+  const vals = sh.getDataRange().getValues();
+  return vals.map(row => row.map(csvCell).join(',')).join('\n');
 }
 function csvCell(v){
-  v = (v == null) ? '' : String(v);
-  if (/[",\n]/.test(v)) v = '"' + v.replace(/"/g,'""') + '"';
-  return v;
+  const s = (v===null||v===undefined) ? '' : String(v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
 }
 
-// ----------------------- TOKEN -----------------------
-function makeToken(){
-  return (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g,'');
-}
-function validateToken(token){
-  if (!token) return { ok:false, error:'no_token' };
-  const data = accessSheet().getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][4]) === String(token)) {  // token col
-      const status = data[i][3];
-      const exp = data[i][7] ? new Date(data[i][7]).getTime() : 0;
-      if (status !== 'approved') return { ok:false, error:'revoked' };
-      if (exp && exp < Date.now()) return { ok:false, error:'expired' };
-      const idFore = String(data[i][1]);
-      return { ok:true, name:data[i][2], idFore:idFore,
-               isOwner: isOwner(idFore, data[i][2]), expiresAt:exp };
-    }
-  }
-  return { ok:false, error:'invalid_token' };
-}
-
-// ----------------------- SHEET HELPERS -----------------------
-function accessSheet(){
-  const ss = SpreadsheetApp.openById(CFG.SPREADSHEET_ID);
-  let sh = ss.getSheetByName(CFG.ACCESS_SHEET);
-  if (!sh) {
-    sh = ss.insertSheet(CFG.ACCESS_SHEET);
-    sh.appendRow(ACCESS_HEADERS);
-    sh.setFrozenRows(1);
-  }
-  return sh;
-}
-function findRow(requestId){
-  const data = accessSheet().getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(requestId)) {
-      return {
-        rowIndex:i+1, requestId:data[i][0], idFore:data[i][1], name:data[i][2],
-        status:data[i][3], token:data[i][4], createdAt:data[i][5],
-        approvedAt:data[i][6], expiresAt:data[i][7], tgMsgId:data[i][8]
-      };
-    }
-  }
-  return null;
-}
-function setCell(sh, requestId, header, value){
-  const col = ACCESS_HEADERS.indexOf(header) + 1;
-  if (col < 1) return;
-  const data = sh.getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (String(data[i][0]) === String(requestId)) {
-      sh.getRange(i+1, col).setValue(value);
-      return;
-    }
-  }
-}
-
-// ----------------------- UTIL -----------------------
-function sanitizeName(name){
-  return String(name || '')
-    .replace(/[\x00-\x1F\x7F]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 60);
-}
-function tgEsc(s){ return String(s).replace(/([_*`\[\]])/g, '\\$1'); }
+/* ── JSONP ──────────────────────────────────────────────────────────────── */
 function jsonp(obj, cb){
-  const body = JSON.stringify(obj);
-  if (cb) {
-    return ContentService
-      .createTextOutput(cb + '(' + body + ')')
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
-  return ContentService.createTextOutput(body)
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-// ----------------------- POLLING ENGINE -----------------------
-// Called by a 1-minute time-driven trigger (set up via setupPollTrigger).
-// Fetches pending Telegram updates and processes approve/reject button taps.
-function pollTelegram(){
-  // Lock so concurrent callers (multiple waiting users via apiPoll, plus the
-  // 1-min trigger) can't pull getUpdates at the same time — that would race on
-  // the offset and silently drop approvals. Whoever can't get the lock just
-  // skips; the update is still picked up on the next poll.
-  const lock = LockService.getScriptLock();
-  if (!lock.tryLock(200)) return;
-  try {
-    const props = PropertiesService.getScriptProperties();
-    let offset  = parseInt(props.getProperty('tgOffset') || '0', 10);
-
-    const res = tgApi('getUpdates', {
-      offset           : offset,
-      limit            : 100,
-      timeout          : 0,
-      allowed_updates  : ['callback_query', 'message']
-    });
-
-    if (!res || !res.ok || !res.result || !res.result.length) return;
-
-    res.result.forEach(function(update){
-      try { handleTelegramUpdate(update); } catch(e) {}
-      offset = update.update_id + 1;
-    });
-
-    props.setProperty('tgOffset', String(offset));
-  } finally {
-    lock.releaseLock();
-  }
-}
-
-// Run ONCE to create the 1-minute polling trigger.
-// Safe to run again — deletes existing fore-poll triggers first.
-function setupPollTrigger(){
-  // Remove stale triggers
-  ScriptApp.getProjectTriggers().forEach(function(t){
-    if (t.getHandlerFunction() === 'pollTelegram') ScriptApp.deleteTrigger(t);
-  });
-  ScriptApp.newTrigger('pollTelegram')
-    .timeBased().everyMinutes(1).create();
-
-  // Also delete the Telegram webhook so getUpdates works (can't use both).
-  const delRes = UrlFetchApp.fetch(
-    'https://api.telegram.org/bot' + CFG.TG_BOT_TOKEN +
-    '/deleteWebhook?drop_pending_updates=true',
-    { muteHttpExceptions: true }
-  );
-  Logger.log('deleteWebhook: ' + delRes.getContentText());
-  Logger.log('Polling trigger created. pollTelegram runs every 1 minute.');
-}
-
-// Run ONCE after first deploy to authorize all permissions (Spreadsheet +
-// UrlFetch + LockService). Must complete without error before webhook works.
-function initSetup(){
-  // 1. Touch spreadsheet (creates "access" sheet if missing)
-  const sh = accessSheet();
-  Logger.log('Sheet rows: ' + sh.getLastRow());
-
-  // 2. Touch LockService
-  const lock = LockService.getScriptLock();
-  lock.waitLock(3000);
-  lock.releaseLock();
-  Logger.log('LockService OK');
-
-  // 3. Touch UrlFetchApp via Telegram
-  const r = tgApi('sendMessage', {
-    chat_id: CFG.TG_OWNER_CHAT,
-    text: '✅ initSetup selesai — semua permission aktif, webhook siap dipakai.'
-  });
-  Logger.log('Telegram: ' + JSON.stringify(r));
-}
-
-// Run once manually to verify the bot token + chat id are correct.
-function testTelegram(){
-  const r = tgApi('sendMessage', { chat_id: CFG.TG_OWNER_CHAT,
-    text: 'Bot tersambung. Setup berhasil.' });
-  Logger.log(JSON.stringify(r));
-}
-
-// Check current Telegram webhook/polling state.
-function checkWebhook(){
-  const url = 'https://api.telegram.org/bot' + CFG.TG_BOT_TOKEN + '/getWebhookInfo';
-  const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-  Logger.log(res.getContentText());
-}
-
-// Debug: simulate heartbeat for the first approved token in the sheet.
-// Run this manually to verify column J gets written without needing the frontend.
-function testHeartbeat(){
-  const data = accessSheet().getDataRange().getValues();
-  for (var i = 1; i < data.length; i++) {
-    if (data[i][3] === 'approved') {
-      const token = String(data[i][4]);
-      Logger.log('Testing heartbeat for: ' + data[i][2] + ' token=' + token.slice(0,8) + '...');
-      const result = apiHeartbeat(token);
-      Logger.log('Result: ' + JSON.stringify(result));
-      // Verify column J was written.
-      const sh = accessSheet();
-      const written = sh.getRange(i+1, 10).getValue();
-      Logger.log('Column J value after write: ' + written);
-      // Also test getOnlineUsers.
-      const online = getOnlineUsers(3);
-      Logger.log('getOnlineUsers result: ' + JSON.stringify(online));
-      return;
-    }
-  }
-  Logger.log('No approved rows found in access sheet.');
+  return ContentService
+    .createTextOutput(cb + '(' + JSON.stringify(obj) + ')')
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
