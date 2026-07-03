@@ -123,11 +123,7 @@
   --r5: 18px;
   --r6: 22px;
   --r7: 28px;
-  /* Semantic radius aliases (consistent scale, Linear/Vercel) */
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-xl: 20px;
+  /* Single radius scale — legacy --r-sm/md/lg/xl removed; use --r2..r7. */
 
   /* Elevation — layered shadows (Linear/Vercel), softer & more diffuse */
   --e0: none;
@@ -247,7 +243,7 @@ body {
 :focus-visible {
   outline: 2px solid var(--gold);
   outline-offset: 2px;
-  border-radius: var(--r-sm);
+  border-radius: var(--r3);
 }
 button:focus-visible, a:focus-visible, [tabindex]:focus-visible,
 input:focus-visible, select:focus-visible, textarea:focus-visible {
@@ -1282,7 +1278,12 @@ body.dr-animating .reveal {
 /* ── End desktop sidebar ─────────────────────────────────────────────────── */
 
 .compare-body { display: flex; flex-direction: column; gap: 1.5rem; }
-.compare-empty { color: var(--t3); text-align: center; padding: 3rem 1rem; font-size: 0.95rem; }
+/* Unified blank/empty-state look (compare + staff share one system). */
+.compare-empty, .staff-empty {
+  color: var(--t3); text-align: center; line-height: 1.6;
+  padding: clamp(32px, 6vw, 56px) 20px; font-size: var(--fs-body, 14px);
+  max-width: 420px; margin-inline: auto;
+}
 .compare-cols { display: flex; gap: 1rem; flex-wrap: wrap; }
 .compare-store-col { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.75rem; }
 .compare-store-name { font-size: 1rem; font-weight: 600; color: var(--t1); padding: 0.25rem 0; border-bottom: 1px solid var(--t4); }
@@ -1337,7 +1338,7 @@ body.dr-animating .reveal {
   backdrop-filter: blur(20px) saturate(150%);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
   border: 1px solid var(--border);
-  border-radius: var(--r-lg);
+  border-radius: var(--r5);
   padding: 20px 24px;
   position: relative; overflow: hidden;
   isolation: isolate;   /* own stacking context — keeps ::before below content */
@@ -1862,7 +1863,7 @@ body.dr-animating .reveal {
 .btn {
   height: 34px;
   background: var(--gold); color: #15100a; border: none;
-  padding: 0 18px; border-radius: var(--r-sm);
+  padding: 0 18px; border-radius: var(--r3);
   font-size: 12px; font-weight: 700;
   font-family: var(--font); letter-spacing: 0.3px;
   cursor: pointer; white-space: nowrap;
@@ -1886,7 +1887,7 @@ body.dr-animating .reveal {
   background: transparent;
   border: 1px solid var(--border-md);
   color: var(--t2);
-  padding: 0 14px; border-radius: var(--r-sm); height: 34px;
+  padding: 0 14px; border-radius: var(--r3); height: 34px;
   font-size: 12px; font-weight: 600;
   cursor: pointer; white-space: nowrap;
   display: inline-flex; align-items: center; gap: 5px;
@@ -2081,7 +2082,8 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   box-shadow: var(--e3), 0 0 30px rgba(201,168,76,0.10);
 }
 .fldt-card:hover::after  { opacity: 1; }
-.fc-icon { font-size: 20px; margin-bottom: 10px; position: relative; z-index: 2; }
+.fc-icon { margin-bottom: 10px; position: relative; z-index: 2; color: var(--fc-color, var(--gold)); line-height: 0; }
+.fc-icon svg { width: 22px; height: 22px; display: inline-block; }
 .fc-name {
   font-size: 12px; font-weight: 700; color: var(--fc-color, var(--cyan));
   letter-spacing: 1.8px; text-transform: uppercase; margin-bottom: 6px;
@@ -4147,13 +4149,27 @@ body.dashboard-locking .card {
 .owner-only { display:none !important; }
 body.is-owner .owner-only { display:flex !important; }
 
+/* Red pending-count badge on the Kelola Staff nav button. */
+.nav-btn { position:relative; }
+.nav-badge {
+  position:absolute; top:3px; right:7px; z-index:2;
+  min-width:18px; height:18px; padding:0 5px; box-sizing:border-box;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--red); color:#fff; font-size:var(--fs-caption,12px);
+  font-weight:800; line-height:1; border-radius:999px; pointer-events:none;
+  border:2px solid var(--bg1); box-shadow:0 1px 4px rgba(0,0,0,0.3);
+}
+.nav-badge[hidden] { display:none; }
+[data-theme="light"] .nav-badge { border-color:#fff; }
+
 /* ── Kelola Staff list ── */
 #staff-list { display:flex; flex-direction:column; gap:10px; }
-.staff-empty { padding:24px; text-align:center; color:var(--t3); font-size:var(--fs-body,14px); }
 .staff-row {
   display:flex; align-items:center; gap:12px; padding:14px 16px;
   background:var(--bg2); border:1px solid var(--bg4); border-radius:var(--r4,14px);
+  transition:background .2s var(--ease-out), border-color .2s var(--ease-out);
 }
+.staff-row:hover { background:var(--bg3); border-color:var(--border-md); }
 .staff-dot { width:9px; height:9px; border-radius:50%; background:var(--t4); flex:none; }
 .staff-dot.online { background:var(--success,#22c55e); box-shadow:0 0 0 3px color-mix(in srgb, var(--success,#22c55e) 22%, transparent); }
 .staff-main { flex:1; min-width:0; }
@@ -4177,10 +4193,42 @@ body.is-owner .owner-only { display:flex !important; }
 .staff-act.approve:hover { color:var(--success,#22c55e); border-color:var(--success,#22c55e); }
 .staff-act.danger:hover  { color:var(--red); border-color:var(--red); }
 .staff-act:disabled { opacity:0.5; cursor:default; }
+.staff-act:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+
+/* Tactile press-feedback on the newer controls — brings auth tabs, staff
+   actions and the confirm dialog up to the same standard as .btn/.reg-btn.
+   Transform-only, and disabled under reduced-motion. */
+@media (prefers-reduced-motion: no-preference){
+  .auth-tab, .staff-act, #confirm-actions .reg-btn {
+    transition: background .2s, color .2s, border-color .2s, transform .12s var(--ease-out);
+  }
+  .auth-tab:active, .staff-act:active, #confirm-actions .reg-btn:active { transform: scale(0.96); }
+}
 @media (max-width:600px){
   .staff-row { flex-wrap:wrap; }
   .staff-actions { width:100%; }
 }
+/* Online/offline label next to the dot — text so it's not colour-only. */
+.staff-online-txt { font-size:var(--fs-caption,12px); font-weight:700; }
+.staff-online-txt.on  { color:var(--success,#22c55e); }
+.staff-online-txt.off { color:var(--t3); }
+
+/* In-app confirm dialog */
+#confirm-overlay {
+  position:fixed; inset:0; z-index:9000; display:flex; align-items:center; justify-content:center;
+  padding:20px; background:rgba(0,0,0,0.55); backdrop-filter:blur(3px);
+}
+#confirm-overlay[hidden] { display:none; }
+#confirm-box {
+  width:100%; max-width:360px; background:var(--bg2); border:1px solid var(--bg4);
+  border-radius:var(--r5,16px); padding:22px; box-shadow:0 20px 60px rgba(0,0,0,0.45);
+}
+#confirm-msg { font-size:var(--fs-body,14px); line-height:1.55; color:var(--t1); margin-bottom:18px; }
+#confirm-actions { display:flex; gap:10px; }
+#confirm-actions .reg-btn { flex:1; margin-top:0; }
+#confirm-ok { background:linear-gradient(135deg,#ef6b6b,#dc4c4c); color:#fff; box-shadow:0 6px 18px rgba(220,76,76,0.3); }
+#confirm-ok:hover { box-shadow:0 10px 26px rgba(220,76,76,0.42); }
+[data-theme="light"] #confirm-box { background:#fff; }
 
 /* ── Session countdown chip in header ── */
 #sess-chip {
@@ -4318,6 +4366,17 @@ body.is-owner .owner-only { display:flex !important; }
 <!-- ═══ SPLASH SCREEN ═══ -->
 <div id="screen-guard" aria-hidden="true"></div>
 <div id="toast-host" aria-live="polite"></div>
+
+<!-- In-app confirm dialog (replaces native confirm()) -->
+<div id="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-msg" hidden>
+  <div id="confirm-box">
+    <div id="confirm-msg"></div>
+    <div id="confirm-actions">
+      <button class="reg-btn reg-btn-ghost" id="confirm-cancel" type="button">Batal</button>
+      <button class="reg-btn" id="confirm-ok" type="button">Hapus</button>
+    </div>
+  </div>
+</div>
 <div id="splash-screen" style="display:none;" aria-hidden="true">
   <div id="splash-inner" style="position:relative;z-index:1;">
     <div id="splash-logo-mark">
@@ -4450,6 +4509,7 @@ body.is-owner .owner-only { display:flex !important; }
   </button>
   <button class="nav-btn owner-only" data-page="staff" onclick="showPage('staff',this)" aria-label="Kelola Staff">
     <span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-label">Kelola Staff</span>
+    <span class="nav-badge" id="staff-badge" aria-label="staf menunggu persetujuan" hidden></span>
   </button>
 </nav>
 
@@ -5194,13 +5254,17 @@ const TC = {
 const FLDT_COLORS = ['#9a958c','#7d9bb5','#b78fb0','#d4a05a','#9a958c','#c9a84c'];
 const FLDT_KEYS   = ['food_off','large_off','diary_off','topping_off','rtd_off','seasonal_sold'];
 const FLDT_LABELS = ['Food','Large','Diary','Topping','RTD','Seasonal'];
+/* Line-icons (SVG, matches the nav set) for the FLDT category cards. `icon`
+   (emoji) is kept only for the Excel export's "Icon" column, never rendered as
+   a UI icon. `svg` is the on-screen icon. */
+const _fi = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const FLDT_META   = [
-  {key:'food_off',    label:'Food',    icon:'☕', color:'#9a958c'},
-  {key:'large_off',   label:'Large',   icon:'🧋', color:'#7d9bb5'},
-  {key:'diary_off',   label:'Diary',   icon:'📔', color:'#b78fb0'},
-  {key:'topping_off', label:'Topping', icon:'✨', color:'#d4a05a'},
-  {key:'rtd_off',     label:'RTD',     icon:'🥤', color:'#9a958c'},
-  {key:'seasonal_sold',label:'Seasonal',icon:'🌸',color:'#c9a84c'},
+  {key:'food_off',    label:'Food',    icon:'☕', color:'#9a958c', svg:_fi('<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/>')},
+  {key:'large_off',   label:'Large',   icon:'🧋', color:'#7d9bb5', svg:_fi('<path d="M6 3h12l-1.2 15.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8Z"/><path d="M5 3h14"/><path d="M7.5 9h9"/>')},
+  {key:'diary_off',   label:'Diary',   icon:'📔', color:'#b78fb0', svg:_fi('<path d="M8 2h8"/><path d="M9 2v3a2 2 0 0 1-.5 1.3L7 8.2A3 3 0 0 0 6 10.4V20a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9.6a3 3 0 0 0-1-2.2L15.5 6.3A2 2 0 0 1 15 5V2"/><path d="M6 13h12"/>')},
+  {key:'topping_off', label:'Topping', icon:'✨', color:'#d4a05a', svg:_fi('<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"/><path d="M19 3v3"/><path d="M20.5 4.5h-3"/>')},
+  {key:'rtd_off',     label:'RTD',     icon:'🥤', color:'#9a958c', svg:_fi('<path d="M9 2h6"/><path d="M14 2v3.3l1.4 1.5A3 3 0 0 1 16 8.9V20a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V8.9a3 3 0 0 1 .6-2.1L10 5.3V2"/><path d="M8 12h8"/>')},
+  {key:'seasonal_sold',label:'Seasonal',icon:'🌸',color:'#c9a84c', svg:_fi('<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8a7 7 0 0 1-7 7Z"/><path d="M2 21c0-3 1.8-5.4 5-6"/>')},
 ];
 
 // Debounce Chart.js resize: during the sidebar push the content width changes
@@ -5909,6 +5973,21 @@ function renderPage(p){
 ═══════════════════════════════════════════════════ */
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+/* Red badge on the Kelola Staff nav = number of pending staff awaiting approval. */
+function setPendingBadge(n){
+  const b = document.getElementById('staff-badge');
+  if(!b) return;
+  if(n > 0){ b.textContent = n > 99 ? '99+' : String(n); b.hidden = false; }
+  else b.hidden = true;
+}
+async function refreshPendingBadge(){
+  if(!(SESS.isOwner && sessionValid())){ setPendingBadge(0); return; }
+  try{
+    const r = await gasCall('listStaff', { token: SESS.token||'' });
+    if(r && r.ok) setPendingBadge((r.staff||[]).filter(s=>s.status==='pending').length);
+  }catch(e){}
+}
+
 async function renderStaff(){
   const host = document.getElementById('staff-list');
   if(!host) return;
@@ -5921,6 +6000,7 @@ async function renderStaff(){
       return;
     }
     const staff = r.staff || [];
+    setPendingBadge(staff.filter(s=>s.status==='pending').length);   // keep nav badge in sync
     if(!staff.length){ host.innerHTML = '<div class="staff-empty">Belum ada staff.</div>'; return; }
     // Order: pending first (need action), then active, then disabled.
     const rank = { pending:0, active:1, disabled:2 };
@@ -5939,9 +6019,11 @@ async function renderStaff(){
           actions += '<button class="staff-act" onclick="staffSetStatus(\''+id+'\',\'disabled\')">Nonaktifkan</button>';
         actions += '<button class="staff-act danger" onclick="staffDelete(\''+id+'\')">Hapus</button>';
       }
+      const onlineTxt = '<span class="staff-online-txt '+(s.online?'on':'off')+'">'+(s.online?'Online':'Offline')+'</span>';
       return '<div class="staff-row">'
-        + '<span class="staff-dot'+(s.online?' online':'')+'" title="'+(s.online?'Online':'Offline')+'"></span>'
+        + '<span class="staff-dot'+(s.online?' online':'')+'" aria-hidden="true"></span>'
         + '<div class="staff-main"><div class="staff-id">'+id+'</div><div class="staff-email">'+esc(s.email)+'</div></div>'
+        + onlineTxt
         + badge
         + '<div class="staff-actions">'+actions+'</div>'
         + '</div>';
@@ -5960,8 +6042,33 @@ async function staffSetStatus(foreId, status){
   }catch(e){ toast('Gagal mengubah status.', 'error'); }
 }
 
+/* Promise-based in-app confirm (replaces native confirm()). Resolves true/false. */
+function confirmModal(msg, okLabel){
+  return new Promise(resolve=>{
+    const ov = document.getElementById('confirm-overlay');
+    const ok = document.getElementById('confirm-ok');
+    const cancel = document.getElementById('confirm-cancel');
+    if(!ov || !ok || !cancel){ resolve(false); return; }
+    document.getElementById('confirm-msg').textContent = msg;
+    ok.textContent = okLabel || 'Hapus';
+    ov.hidden = false;
+    const done = (val)=>{
+      ov.hidden = true;
+      ok.onclick = cancel.onclick = null;
+      document.removeEventListener('keydown', onKey);
+      resolve(val);
+    };
+    const onKey = (e)=>{ if(e.key==='Escape') done(false); };
+    ok.onclick = ()=>done(true);
+    cancel.onclick = ()=>done(false);
+    ov.onclick = (e)=>{ if(e.target===ov) done(false); };
+    document.addEventListener('keydown', onKey);
+    cancel.focus();
+  });
+}
+
 async function staffDelete(foreId){
-  if(!confirm('Hapus staff '+foreId+'? Akses mereka dicabut permanen.')) return;
+  if(!(await confirmModal('Hapus staff '+foreId+'? Akses mereka dicabut permanen.'))) return;
   try{
     const r = await gasCall('deleteStaff', { token: SESS.token||'', fore_id: foreId });
     if(!r || !r.ok){ toast('Gagal menghapus: '+((r&&r.error)||'error'), 'error'); return; }
@@ -6263,10 +6370,10 @@ function calcKpi(skipCharts){
   // Quiet Ledger: value stays neutral; the status SUB carries a small colour
   // signal — green = good, red = warning, grey = non-status (neutral).
   const stripItems=[
-    {l:'Target GMV',    v:fmtRp(target),      s:'bulan ini',       sc:'var(--t3)'},
-    {l:'Gap to Target', v:fmtRp(Math.abs(target-data.gmv)), s:target-data.gmv<=0?'✓ Tercapai':'Kurang', sc:target-data.gmv<=0?'var(--green)':'var(--red)'},
-    {l:'Daily Target',  v:fmtRp(dailyTarget),  s:'per hari',        sc:'var(--t3)'},
-    {l:'Forecast EOM',  v:fmtRp(forecastEom),  s:forecastEom>=target?'✓ On track':'⚠ Risk', sc:forecastEom>=target?'var(--green)':'var(--red)'},
+    {l:'Target GMV',    v:fmtRp(target),      n:target,                     s:'bulan ini',       sc:'var(--t3)'},
+    {l:'Gap to Target', v:fmtRp(Math.abs(target-data.gmv)), n:Math.abs(target-data.gmv), s:target-data.gmv<=0?'✓ Tercapai':'Kurang', sc:target-data.gmv<=0?'var(--green)':'var(--red)'},
+    {l:'Daily Target',  v:fmtRp(dailyTarget),  n:dailyTarget,               s:'per hari',        sc:'var(--t3)'},
+    {l:'Forecast EOM',  v:fmtRp(forecastEom),  n:forecastEom,               s:forecastEom>=target?'✓ On track':'⚠ Risk', sc:forecastEom>=target?'var(--green)':'var(--red)'},
   ];
   /* Plain-language explanation shown on hover (native title tooltip). */
   const METRIC_TIPS={
@@ -6282,8 +6389,9 @@ function calcKpi(skipCharts){
     stripItems.forEach((k,i)=>{
       const card = existingCards[i];
       card.style.setProperty('--mc', k.sc);
-      card.querySelector('.mc-val').textContent = k.v;
-      card.querySelector('.mc-val').style.color = '';        // neutral (CSS controls)
+      const valEl = card.querySelector('.mc-val');
+      valEl.style.color = '';                                // neutral (CSS controls)
+      animateCounter(valEl, k.n, v=>fmtRp(v), 900);          // count-up on (re)render
       const subEl = card.querySelector('.mc-sub');
       subEl.textContent = k.s; subEl.style.color = k.sc;     // small status colour
     });
@@ -6297,13 +6405,17 @@ function calcKpi(skipCharts){
       </div>`).join('');
     /* attach spotlight listener to newly created cards */
     if(window.attachGhostGlow) stripEl.querySelectorAll('.metric-card').forEach(window.attachGhostGlow);
+    /* count-up the freshly-built values */
+    stripEl.querySelectorAll('.metric-card .mc-val').forEach((el,i)=>{
+      if(stripItems[i]) animateCounter(el, stripItems[i].n, v=>fmtRp(v), 900);
+    });
   }
 
   /* Micro-stats inside hero */
   const trxEl=document.getElementById('h-total-trx');
-  if(trxEl) trxEl.textContent=fmtNum(sum(rows,'adt_store'));
+  if(trxEl) animateCounter(trxEl, sum(rows,'adt_store'), v=>fmtNum(v), 900);
   const iptEl=document.getElementById('h-avg-ipt');
-  if(iptEl) iptEl.textContent=avg(rows,'ipt').toFixed(2);
+  if(iptEl) animateCounter(iptEl, avg(rows,'ipt'), v=>v.toFixed(2), 900);
 
   if(!skipCharts) buildGauge(achPct);
 
@@ -6706,7 +6818,7 @@ function renderFldtWeekly(){
     const isTarget=TARGET_KEYS.includes(m.key);
     const weeks=[{l:'W1',v:v1,w:bw1,p:getKont(m,v1,p1)},{l:'W2',v:v2,w:bw2,p:getKont(m,v2,p2)},{l:'W3',v:v3,w:bw3,p:getKont(m,v3,p3)}];
     return`<div class="fldt-card reveal reveal-delay-${(mi%3)+1}" style="--fc-color:${m.color}">
-      <div class="fc-icon">${m.icon}</div>
+      <div class="fc-icon">${m.svg}</div>
       <div class="fc-name">${m.label}</div>
       <div class="fc-big">${fmtNum(v3)}</div>
       <div class="fc-meta">
@@ -6861,7 +6973,7 @@ function renderAllSumm(d1,d2){
     const pct1=(v1/pctDen*100).toFixed(1);
     const wow=v2!==null?safePct(v1,v2):null;
     return`<div class="fldt-card reveal" style="--fc-color:${m.color}">
-      <div class="fc-icon">${m.icon}</div>
+      <div class="fc-icon">${m.svg}</div>
       <div class="fc-name">${m.label}</div>
       <div class="fc-big">${fmtNum(v1)}</div>
       <div class="fc-meta"><span style="color:var(--t3)">${pct1}%</span>${wow!==null?`<span class="badge ${wow>=0?'up':'dn'}">${wow>=0?'↑':'↓'}${Math.abs(wow).toFixed(1)}%</span>`:''}</div>
@@ -9718,6 +9830,7 @@ async function exportKpiPDF(){
 (function(){
   function syncOwnerUI(){
     document.body.classList.toggle('is-owner', SESS.isOwner && sessionValid());
+    refreshPendingBadge();   // owner: show pending count; non-owner: clears itself
   }
   document.addEventListener('fore-session-change', syncOwnerUI);
   syncOwnerUI();

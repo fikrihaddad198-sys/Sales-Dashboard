@@ -215,7 +215,7 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 
 **Rule**: Gold accent for data/KPIs only. Chrome/nav/borders stay neutral Zinc/Slate.
 
-**Design tokens** (`:root` + `[data-theme="light"]`): colour ramp `--bg..bg4`, `--t1..t4`, single accent `--gold`/`--cyan` (aliased), semantic `--red`/`--amber`/**`--success`**, channel `--tc-*`; **type scale `--fs-caption(12)/label(13)/body(14)/data(15)/h3(18)/h2(22)/hero`** + `--lh-*`; spacing `--sp1..8`; radius `--r2..r7` (dominant) + `--r-sm..xl` (legacy, ~4 uses — don't grow); elevation `--e0..e4`; motion `--ease-out/smooth/bar/inout`.
+**Design tokens** (`:root` + `[data-theme="light"]`): colour ramp `--bg..bg4`, `--t1..t4`, single accent `--gold`/`--cyan` (aliased), semantic `--red`/`--amber`/**`--success`**, channel `--tc-*`; **type scale `--fs-caption(12)/label(13)/body(14)/data(15)/h3(18)/h2(22)/hero`** + `--lh-*`; spacing `--sp1..8`; radius **single scale `--r2(6)/r3(10)/r4(14)/r5(18)/r6(22)/r7(28)`** (legacy `--r-sm..xl` removed); elevation `--e0..e4`; motion `--ease-out/smooth/bar/inout`.
 
 ### Component inventory (de-facto design system — vanilla classes, no framework)
 
@@ -226,7 +226,7 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v114`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v118`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -293,7 +293,7 @@ Full audit artifact: https://claude.ai/code/artifact/bc0ba79f-aca3-435f-a2b1-47f
 - **Empty-range state** — `#range-empty` message on KPI, Channel, All Summary, Race (single-range pages) when a valid range has no rows (`showRangeEmpty()`), cleared on page switch. (Period = 3 ranges, Compare has own empty → intentionally excluded.)
 - **Metric tooltips** — plain-language `title=` on Achievement / Daily Pace / the 4 strip cards (Target GMV, Gap, Daily Target, Forecast EOM) via `METRIC_TIPS`. Hover-only (owner declined tap affordance).
 
-**⏳ Deferred (risky or own project — need owner decision):** enforce `var(--sp*)` (mass refactor, layout-regression risk), collapse dual radius scale (values differ → visual shift, low ROI), ≥44px touch targets (density trade-off), Cmd-K palette (feature), build-split + Playwright (deploy/infra), per-chart empty overlays for the other pages.
+**⏳ Deferred (risky or own project — need owner decision):** enforce `var(--sp*)` (mass refactor, layout-regression risk), ≥44px touch targets (density trade-off), Cmd-K palette (feature), build-split + Playwright (deploy/infra), per-chart empty overlays for the other pages.
 
 Current audit composite ≈ **7.0/10** (was 6.3); heuristics ≈ **70/100** (was 62).
 
@@ -301,7 +301,7 @@ Current audit composite ≈ **7.0/10** (was 6.3); heuristics ≈ **70/100** (was
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v114` → increment to `fore-v115`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v118` → increment to `fore-v119`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
