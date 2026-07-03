@@ -53,6 +53,13 @@ Login screen has two tabs (`switchAuth('login'|'register')`):
   `sb.auth.signUp({email,password})` sends the confirm email. New accounts stay
   `pending` until the owner approves — email-confirmed alone does NOT grant access.
 
+**Password reset** (`#recovery-form`): Supabase's reset email links back to the app
+with a recovery token in the URL hash. On load, `isRecoveryLink()` detects it →
+`enterRecoveryMode()` shows a "buat password baru" form (tabs hidden); `submitRecovery()`
+calls `sb.auth.updateUser({password})`, then signs out + clears the hash so the recovery
+session never becomes a real login (forces a clean re-login). Requires the Supabase
+**Site URL / Redirect URLs** to point at the deployed dashboard, else the email link 404s.
+
 **Three independent gates:** (1) password [Supabase], (2) email confirmation [Supabase],
 (3) owner approval [`status==='active'` in the staff sheet]. The **real data gate** is
 the GAS `data` endpoint — it returns rows only when the caller's status is `active`,
@@ -219,7 +226,7 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v111`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v113`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -294,7 +301,7 @@ Current audit composite ≈ **7.0/10** (was 6.3); heuristics ≈ **70/100** (was
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v111` → increment to `fore-v112`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v113` → increment to `fore-v114`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
