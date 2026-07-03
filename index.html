@@ -8878,8 +8878,11 @@ async function submitLogin(){
         ? 'Fore ID atau password salah.'
         : msg.includes('Email not confirmed')
         ? 'Email belum dikonfirmasi. Cek inbox kamu dulu.'
-        : 'Tidak bisa masuk. Coba lagi.'
+        : msg.includes('Email logins are disabled') || msg.includes('email_provider_disabled')
+        ? 'Login email dimatikan di Supabase (aktifkan Email provider).'
+        : ('Tidak bisa masuk: ' + (msg || 'error tak dikenal'))
     );
+    console.error('[login]', e);
   }finally{
     btn.disabled = false; btn.textContent = 'Masuk';
   }
