@@ -252,7 +252,8 @@ Full audit artifact: https://claude.ai/code/artifact/bc0ba79f-aca3-435f-a2b1-47f
 - **Colour-blind status** — all delta badges carry ↑/↓ shape cue (D2D `pFmt` made consistent).
 - **Component inventory + token index** — documented in Design System section above.
 - **Chart a11y** — `role="img"` + Indonesian `aria-label` on all chart canvases (`CHART_LABELS` + `labelCharts()` at load).
-- **Empty-range state** — `#range-empty` message on KPI + Channel when a valid range has no rows (`showRangeEmpty()`), cleared on page switch.
+- **Empty-range state** — `#range-empty` message on KPI, Channel, All Summary, Race (single-range pages) when a valid range has no rows (`showRangeEmpty()`), cleared on page switch. (Period = 3 ranges, Compare has own empty → intentionally excluded.)
+- **Metric tooltips** — plain-language `title=` on Achievement / Daily Pace / the 4 strip cards (Target GMV, Gap, Daily Target, Forecast EOM) via `METRIC_TIPS`. Hover-only (owner declined tap affordance).
 
 **⏳ Deferred (risky or own project — need owner decision):** enforce `var(--sp*)` (mass refactor, layout-regression risk), collapse dual radius scale (values differ → visual shift, low ROI), ≥44px touch targets (density trade-off), Cmd-K palette (feature), build-split + Playwright (deploy/infra), per-chart empty overlays for the other pages.
 
