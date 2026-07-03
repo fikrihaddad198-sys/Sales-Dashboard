@@ -4147,6 +4147,19 @@ body.dashboard-locking .card {
 .owner-only { display:none !important; }
 body.is-owner .owner-only { display:flex !important; }
 
+/* Red pending-count badge on the Kelola Staff nav button. */
+.nav-btn { position:relative; }
+.nav-badge {
+  position:absolute; top:3px; right:7px; z-index:2;
+  min-width:18px; height:18px; padding:0 5px; box-sizing:border-box;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--red); color:#fff; font-size:var(--fs-caption,12px);
+  font-weight:800; line-height:1; border-radius:999px; pointer-events:none;
+  border:2px solid var(--bg1); box-shadow:0 1px 4px rgba(0,0,0,0.3);
+}
+.nav-badge[hidden] { display:none; }
+[data-theme="light"] .nav-badge { border-color:#fff; }
+
 /* ── Kelola Staff list ── */
 #staff-list { display:flex; flex-direction:column; gap:10px; }
 .staff-empty { padding:24px; text-align:center; color:var(--t3); font-size:var(--fs-body,14px); }
@@ -4450,6 +4463,7 @@ body.is-owner .owner-only { display:flex !important; }
   </button>
   <button class="nav-btn owner-only" data-page="staff" onclick="showPage('staff',this)" aria-label="Kelola Staff">
     <span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-label">Kelola Staff</span>
+    <span class="nav-badge" id="staff-badge" aria-label="staf menunggu persetujuan" hidden></span>
   </button>
 </nav>
 
@@ -5909,6 +5923,21 @@ function renderPage(p){
 ═══════════════════════════════════════════════════ */
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+/* Red badge on the Kelola Staff nav = number of pending staff awaiting approval. */
+function setPendingBadge(n){
+  const b = document.getElementById('staff-badge');
+  if(!b) return;
+  if(n > 0){ b.textContent = n > 99 ? '99+' : String(n); b.hidden = false; }
+  else b.hidden = true;
+}
+async function refreshPendingBadge(){
+  if(!(SESS.isOwner && sessionValid())){ setPendingBadge(0); return; }
+  try{
+    const r = await gasCall('listStaff', { token: SESS.token||'' });
+    if(r && r.ok) setPendingBadge((r.staff||[]).filter(s=>s.status==='pending').length);
+  }catch(e){}
+}
+
 async function renderStaff(){
   const host = document.getElementById('staff-list');
   if(!host) return;
@@ -5921,6 +5950,7 @@ async function renderStaff(){
       return;
     }
     const staff = r.staff || [];
+    setPendingBadge(staff.filter(s=>s.status==='pending').length);   // keep nav badge in sync
     if(!staff.length){ host.innerHTML = '<div class="staff-empty">Belum ada staff.</div>'; return; }
     // Order: pending first (need action), then active, then disabled.
     const rank = { pending:0, active:1, disabled:2 };
@@ -9718,6 +9748,7 @@ async function exportKpiPDF(){
 (function(){
   function syncOwnerUI(){
     document.body.classList.toggle('is-owner', SESS.isOwner && sessionValid());
+    refreshPendingBadge();   // owner: show pending count; non-owner: clears itself
   }
   document.addEventListener('fore-session-change', syncOwnerUI);
   syncOwnerUI();
