@@ -32,20 +32,38 @@ All GAS calls use JSONP (avoids CORS with static hosting). Pattern: append `?act
 
 These are cross-origin and never cached by the service worker (network only).
 
-## Authentication (Supabase, sessionStorage)
+## Authentication (Fore ID + Supabase, sessionStorage)
 
-Auth is fully handled by **Supabase** (email + password). No Telegram approval flow.
+Login is by **Fore ID (numeric, 3–8 digits) + password**, NOT email. Email is used
+only for verification (Supabase confirmation email). Supabase still owns the hard
+parts (password hashing, sessions, email confirmation); the GAS `staff` sheet owns
+identity (Fore ID ↔ email) + the approval `status`. No Telegram flow.
 
 ```javascript
-const SUPA_URL   = 'https://umarsaninyxepfgscjts.supabase.co';
-const OWNER_EMAIL = 'fikrihaddad198@gmail.com';
+const SUPA_URL = 'https://umarsaninyxepfgscjts.supabase.co';
+// Owner status comes from the staff sheet (is_owner), NOT a hardcoded email.
 ```
 
-- `submitLogin()` → `sb.auth.signInWithPassword({ email, password })` → `SESS.set(token, exp, email, isOwner)`
-- **Owner** = email matches `OWNER_EMAIL` → session never expires, no countdown chip
-- **Normal users** → session expires per Supabase token `expires_at`, countdown chip shown
-- Tokens stored in `sessionStorage` — closing tab logs out (intentional)
-- `SESS.clear()` also wipes `localStorage` (legacy cleanup)
+Login screen has two tabs (`switchAuth('login'|'register')`):
+- **Masuk** (`#login-form`): Fore ID + password. `submitLogin()` → `gasCall('resolveLogin',{fore_id})`
+  → `{email,status,is_owner}`; guards `pending`/`disabled` with messages; then
+  `sb.auth.signInWithPassword({email,password})` → `SESS.set(token, exp, email, isOwner)`.
+- **Daftar** (`#register-form`): Fore ID + email + password ×2. `submitRegister()` validates,
+  `gasCall('register',{fore_id,email})` reserves a **pending** staff row, then
+  `sb.auth.signUp({email,password})` sends the confirm email. New accounts stay
+  `pending` until the owner approves — email-confirmed alone does NOT grant access.
+
+**Three independent gates:** (1) password [Supabase], (2) email confirmation [Supabase],
+(3) owner approval [`status==='active'` in the staff sheet]. The **real data gate** is
+the GAS `data` endpoint — it returns rows only when the caller's status is `active`,
+so bypassing the login UI still yields no data.
+
+- **Owner** = staff row `is_owner=TRUE` → `SESS.isOwner` → session never expires, no
+  countdown chip. `body.is-owner` (toggled on `fore-session-change`) reveals the
+  owner-only **Kelola Staff** nav item (`.owner-only`).
+- **Normal users** → session expires per Supabase token `expires_at`, countdown chip shown.
+- Tokens stored in `sessionStorage` — closing tab logs out (intentional).
+- `SESS.clear()` also wipes `localStorage` (legacy cleanup).
 
 ### Client timers (all `setInterval`)
 
@@ -55,12 +73,25 @@ const OWNER_EMAIL = 'fikrihaddad198@gmail.com';
 
 A `fore-session-change` DOM event fires on login/logout; the screenshot guard listens for it.
 
-## GAS Backend (Code.gs) — Data only
+## GAS Backend (Code.gs) — Data + staff identity/approval
 
-GAS is used **only for data**, not auth. Spreadsheet ID: `1Y49X7Gj2Zy8XaX85ONHQTXnd3ItrmwPZHA2MXlRy4gU`, sheet: `bacot`.
+GAS owns the sales CSV (sheet `bacot`) **and** the `staff` sheet (identity + status
+source of truth). Spreadsheet ID: `1Y49X7Gj2Zy8XaX85ONHQTXnd3ItrmwPZHA2MXlRy4gU`.
+**No `service_role`/master key** lives here — only the public anon key (safe). GAS
+verifies callers via Supabase `GET /auth/v1/user` with the caller's token → email →
+staff row. See `backend/SETUP.md`.
+
+`staff` sheet columns: `fore_id | email | status | is_owner | created_at | approved_at | last_seen`.
+Status flow: `pending` → `active` → `disabled`. "Online" = `last_seen` within 3 min.
 
 GAS endpoints (`doGet` only, JSONP — append `?action=…&callback=cb` to `GAS_URL`):
-- `data` — return CSV rows from the spreadsheet (token passed for legacy compat, not enforced)
+- `register`(fore_id,email) — reserve a **pending** row (client then does Supabase signUp)
+- `resolveLogin`(fore_id) — → `{email,status,is_owner}` (no secrets); drives login
+- `data`(token) — **the real gate**: rows only if caller status `active`; updates `last_seen`
+- `me`(token) — session restore / isOwner
+- `listStaff`(token) — owner-only: full list + `online` flag
+- `setStatus`(token,fore_id,status) — owner-only: approve / disable / re-enable
+- `deleteStaff`(token,fore_id) — owner-only: remove staff row (revokes access)
 
 All GAS calls go through `gasCall(action, params)` which injects a JSONP `<script>` tag (avoids CORS).
 
@@ -188,7 +219,7 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v93`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v111`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -263,7 +294,7 @@ Current audit composite ≈ **7.0/10** (was 6.3); heuristics ≈ **70/100** (was
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v106` → increment to `fore-v107`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v111` → increment to `fore-v112`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
