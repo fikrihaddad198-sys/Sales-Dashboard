@@ -6370,10 +6370,10 @@ function calcKpi(skipCharts){
   // Quiet Ledger: value stays neutral; the status SUB carries a small colour
   // signal — green = good, red = warning, grey = non-status (neutral).
   const stripItems=[
-    {l:'Target GMV',    v:fmtRp(target),      s:'bulan ini',       sc:'var(--t3)'},
-    {l:'Gap to Target', v:fmtRp(Math.abs(target-data.gmv)), s:target-data.gmv<=0?'✓ Tercapai':'Kurang', sc:target-data.gmv<=0?'var(--green)':'var(--red)'},
-    {l:'Daily Target',  v:fmtRp(dailyTarget),  s:'per hari',        sc:'var(--t3)'},
-    {l:'Forecast EOM',  v:fmtRp(forecastEom),  s:forecastEom>=target?'✓ On track':'⚠ Risk', sc:forecastEom>=target?'var(--green)':'var(--red)'},
+    {l:'Target GMV',    v:fmtRp(target),      n:target,                     s:'bulan ini',       sc:'var(--t3)'},
+    {l:'Gap to Target', v:fmtRp(Math.abs(target-data.gmv)), n:Math.abs(target-data.gmv), s:target-data.gmv<=0?'✓ Tercapai':'Kurang', sc:target-data.gmv<=0?'var(--green)':'var(--red)'},
+    {l:'Daily Target',  v:fmtRp(dailyTarget),  n:dailyTarget,               s:'per hari',        sc:'var(--t3)'},
+    {l:'Forecast EOM',  v:fmtRp(forecastEom),  n:forecastEom,               s:forecastEom>=target?'✓ On track':'⚠ Risk', sc:forecastEom>=target?'var(--green)':'var(--red)'},
   ];
   /* Plain-language explanation shown on hover (native title tooltip). */
   const METRIC_TIPS={
@@ -6389,8 +6389,9 @@ function calcKpi(skipCharts){
     stripItems.forEach((k,i)=>{
       const card = existingCards[i];
       card.style.setProperty('--mc', k.sc);
-      card.querySelector('.mc-val').textContent = k.v;
-      card.querySelector('.mc-val').style.color = '';        // neutral (CSS controls)
+      const valEl = card.querySelector('.mc-val');
+      valEl.style.color = '';                                // neutral (CSS controls)
+      animateCounter(valEl, k.n, v=>fmtRp(v), 900);          // count-up on (re)render
       const subEl = card.querySelector('.mc-sub');
       subEl.textContent = k.s; subEl.style.color = k.sc;     // small status colour
     });
@@ -6404,13 +6405,17 @@ function calcKpi(skipCharts){
       </div>`).join('');
     /* attach spotlight listener to newly created cards */
     if(window.attachGhostGlow) stripEl.querySelectorAll('.metric-card').forEach(window.attachGhostGlow);
+    /* count-up the freshly-built values */
+    stripEl.querySelectorAll('.metric-card .mc-val').forEach((el,i)=>{
+      if(stripItems[i]) animateCounter(el, stripItems[i].n, v=>fmtRp(v), 900);
+    });
   }
 
   /* Micro-stats inside hero */
   const trxEl=document.getElementById('h-total-trx');
-  if(trxEl) trxEl.textContent=fmtNum(sum(rows,'adt_store'));
+  if(trxEl) animateCounter(trxEl, sum(rows,'adt_store'), v=>fmtNum(v), 900);
   const iptEl=document.getElementById('h-avg-ipt');
-  if(iptEl) iptEl.textContent=avg(rows,'ipt').toFixed(2);
+  if(iptEl) animateCounter(iptEl, avg(rows,'ipt'), v=>v.toFixed(2), 900);
 
   if(!skipCharts) buildGauge(achPct);
 
