@@ -8949,12 +8949,18 @@ async function submitRegister(){
   }
 }
 
-/* Password recovery: the reset link from email lands here with a recovery token
-   in the URL hash. Supabase (detectSessionInUrl, default on) exchanges it for a
-   temporary session on createClient; we then let the user set a new password. */
+/* Password recovery: the reset link from email lands back on the app carrying a
+   recovery token. Supabase sends it one of two ways depending on the project's
+   auth flow: implicit → in the URL HASH (#access_token=…&type=recovery); PKCE →
+   in the QUERY string (?code=…). Detect + handle both. */
 function isRecoveryLink(){
   const h = location.hash || '';
-  return h.indexOf('type=recovery') !== -1 || h.indexOf('access_token=') !== -1;
+  const q = location.search || '';
+  // A signup-confirmation link also carries ?code / type=signup — not a reset.
+  if(h.indexOf('type=signup') !== -1 || q.indexOf('type=signup') !== -1) return false;
+  return h.indexOf('type=recovery') !== -1 || h.indexOf('access_token=') !== -1
+      || /[?&]code=/.test(q) || q.indexOf('type=recovery') !== -1
+      || /[?&]error=/.test(q) || h.indexOf('error=') !== -1;
 }
 async function enterRecoveryMode(){
   const sub = document.getElementById('pin-subtitle');
@@ -8967,12 +8973,27 @@ async function enterRecoveryMode(){
   // Make sure the login screen is visible (not the standby/dashboard).
   const pin = document.getElementById('pin-screen');
   if(pin){ pin.style.display='flex'; pin.style.opacity='1'; pin.classList.remove('unlocked'); }
+  // Capture the PKCE code before createClient's detectSessionInUrl consumes/clears it.
+  const code = new URLSearchParams(location.search).get('code');
+  const errDesc = new URLSearchParams(location.search).get('error_description')
+               || new URLSearchParams((location.hash||'').replace(/^#/,'')).get('error_description');
   try{
-    // createClient with the recovery hash present exchanges it for a session.
-    await ensureSupabase();
+    const sb = await ensureSupabase();
+    if(errDesc){ regMsg('Link reset bermasalah: ' + errDesc + '. Minta link baru.'); return; }
+    // PKCE flow: exchange the ?code for a session explicitly.
+    if(code){
+      const { error } = await sb.auth.exchangeCodeForSession(code);
+      if(error) throw error;
+    }
+    // Implicit flow: detectSessionInUrl already turned the hash into a session.
+    const { data } = await sb.auth.getSession();
+    if(!data || !data.session){
+      regMsg('Link reset tidak valid atau sudah kedaluwarsa. Minta link baru dari layar login.');
+      return;
+    }
     regMsg('Masukkan password baru kamu di bawah.', true);
   }catch(e){
-    regMsg('Gagal memproses link reset. Buka link dari email sekali lagi.');
+    regMsg('Gagal memproses link reset: ' + (e.message || 'error') + '. Minta link baru.');
   }
 }
 async function submitRecovery(){
