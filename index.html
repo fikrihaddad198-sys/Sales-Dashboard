@@ -4190,10 +4190,32 @@ body.is-owner .owner-only { display:flex !important; }
 .staff-act.approve:hover { color:var(--success,#22c55e); border-color:var(--success,#22c55e); }
 .staff-act.danger:hover  { color:var(--red); border-color:var(--red); }
 .staff-act:disabled { opacity:0.5; cursor:default; }
+.staff-act:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
 @media (max-width:600px){
   .staff-row { flex-wrap:wrap; }
   .staff-actions { width:100%; }
 }
+/* Online/offline label next to the dot — text so it's not colour-only. */
+.staff-online-txt { font-size:var(--fs-caption,12px); font-weight:700; }
+.staff-online-txt.on  { color:var(--success,#22c55e); }
+.staff-online-txt.off { color:var(--t3); }
+
+/* In-app confirm dialog */
+#confirm-overlay {
+  position:fixed; inset:0; z-index:9000; display:flex; align-items:center; justify-content:center;
+  padding:20px; background:rgba(0,0,0,0.55); backdrop-filter:blur(3px);
+}
+#confirm-overlay[hidden] { display:none; }
+#confirm-box {
+  width:100%; max-width:360px; background:var(--bg2); border:1px solid var(--bg4);
+  border-radius:var(--r5,16px); padding:22px; box-shadow:0 20px 60px rgba(0,0,0,0.45);
+}
+#confirm-msg { font-size:var(--fs-body,14px); line-height:1.55; color:var(--t1); margin-bottom:18px; }
+#confirm-actions { display:flex; gap:10px; }
+#confirm-actions .reg-btn { flex:1; margin-top:0; }
+#confirm-ok { background:linear-gradient(135deg,#ef6b6b,#dc4c4c); color:#fff; box-shadow:0 6px 18px rgba(220,76,76,0.3); }
+#confirm-ok:hover { box-shadow:0 10px 26px rgba(220,76,76,0.42); }
+[data-theme="light"] #confirm-box { background:#fff; }
 
 /* ── Session countdown chip in header ── */
 #sess-chip {
@@ -4331,6 +4353,17 @@ body.is-owner .owner-only { display:flex !important; }
 <!-- ═══ SPLASH SCREEN ═══ -->
 <div id="screen-guard" aria-hidden="true"></div>
 <div id="toast-host" aria-live="polite"></div>
+
+<!-- In-app confirm dialog (replaces native confirm()) -->
+<div id="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-msg" hidden>
+  <div id="confirm-box">
+    <div id="confirm-msg"></div>
+    <div id="confirm-actions">
+      <button class="reg-btn reg-btn-ghost" id="confirm-cancel" type="button">Batal</button>
+      <button class="reg-btn" id="confirm-ok" type="button">Hapus</button>
+    </div>
+  </div>
+</div>
 <div id="splash-screen" style="display:none;" aria-hidden="true">
   <div id="splash-inner" style="position:relative;z-index:1;">
     <div id="splash-logo-mark">
@@ -5969,9 +6002,11 @@ async function renderStaff(){
           actions += '<button class="staff-act" onclick="staffSetStatus(\''+id+'\',\'disabled\')">Nonaktifkan</button>';
         actions += '<button class="staff-act danger" onclick="staffDelete(\''+id+'\')">Hapus</button>';
       }
+      const onlineTxt = '<span class="staff-online-txt '+(s.online?'on':'off')+'">'+(s.online?'Online':'Offline')+'</span>';
       return '<div class="staff-row">'
-        + '<span class="staff-dot'+(s.online?' online':'')+'" title="'+(s.online?'Online':'Offline')+'"></span>'
+        + '<span class="staff-dot'+(s.online?' online':'')+'" aria-hidden="true"></span>'
         + '<div class="staff-main"><div class="staff-id">'+id+'</div><div class="staff-email">'+esc(s.email)+'</div></div>'
+        + onlineTxt
         + badge
         + '<div class="staff-actions">'+actions+'</div>'
         + '</div>';
@@ -5990,8 +6025,33 @@ async function staffSetStatus(foreId, status){
   }catch(e){ toast('Gagal mengubah status.', 'error'); }
 }
 
+/* Promise-based in-app confirm (replaces native confirm()). Resolves true/false. */
+function confirmModal(msg, okLabel){
+  return new Promise(resolve=>{
+    const ov = document.getElementById('confirm-overlay');
+    const ok = document.getElementById('confirm-ok');
+    const cancel = document.getElementById('confirm-cancel');
+    if(!ov || !ok || !cancel){ resolve(false); return; }
+    document.getElementById('confirm-msg').textContent = msg;
+    ok.textContent = okLabel || 'Hapus';
+    ov.hidden = false;
+    const done = (val)=>{
+      ov.hidden = true;
+      ok.onclick = cancel.onclick = null;
+      document.removeEventListener('keydown', onKey);
+      resolve(val);
+    };
+    const onKey = (e)=>{ if(e.key==='Escape') done(false); };
+    ok.onclick = ()=>done(true);
+    cancel.onclick = ()=>done(false);
+    ov.onclick = (e)=>{ if(e.target===ov) done(false); };
+    document.addEventListener('keydown', onKey);
+    cancel.focus();
+  });
+}
+
 async function staffDelete(foreId){
-  if(!confirm('Hapus staff '+foreId+'? Akses mereka dicabut permanen.')) return;
+  if(!(await confirmModal('Hapus staff '+foreId+'? Akses mereka dicabut permanen.'))) return;
   try{
     const r = await gasCall('deleteStaff', { token: SESS.token||'', fore_id: foreId });
     if(!r || !r.ok){ toast('Gagal menghapus: '+((r&&r.error)||'error'), 'error'); return; }
