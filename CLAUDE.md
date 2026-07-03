@@ -92,7 +92,7 @@ staff row. See `backend/SETUP.md`.
 Status flow: `pending` → `active` → `disabled`. "Online" = `last_seen` within 3 min.
 
 GAS endpoints (`doGet` only, JSONP — append `?action=…&callback=cb` to `GAS_URL`):
-- `register`(fore_id,email) — reserve a **pending** row (client then does Supabase signUp)
+- `register`(fore_id,email) — reserve a **pending** row (client then does Supabase signUp); also emails all owners (`is_owner=TRUE`) via `MailApp.sendEmail` so the owner knows to approve (best-effort, never blocks registration — needs the GAS Gmail scope re-authorized on deploy)
 - `resolveLogin`(fore_id) — → `{email,status,is_owner}` (no secrets); drives login
 - `data`(token) — **the real gate**: rows only if caller status `active`; updates `last_seen`
 - `me`(token) — session restore / isOwner

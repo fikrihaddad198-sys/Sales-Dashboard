@@ -127,7 +127,29 @@ function apiRegister(fore_id, email){
   if(staffByForeId(fore_id)) return { ok:false, error:'fore_id_exists' };
   if(staffByEmail(email))    return { ok:false, error:'email_exists' };
   staffAppend({ fore_id, email, status:'pending', is_owner:'', created_at:nowIso() });
+  notifyOwnersOfRegistration(fore_id, email);   // email the owner(s); never blocks registration
   return { ok:true };
+}
+
+// Email every owner that a new staff registered and is waiting for approval.
+// Best-effort: any mail failure is swallowed so it never breaks registration.
+function notifyOwnersOfRegistration(fore_id, email){
+  try{
+    const owners = staffAll().filter(r=>r.is_owner && r.email);
+    if(!owners.length) return;
+    const to = owners.map(o=>o.email).join(',');
+    MailApp.sendEmail({
+      to: to,
+      subject: 'Staff baru menunggu persetujuan — Fore Dashboard',
+      body:
+        'Ada pendaftaran staff baru di Fore Coffee Sales Dashboard.\n\n' +
+        'Fore ID : ' + fore_id + '\n' +
+        'Email   : ' + email + '\n' +
+        'Waktu   : ' + nowIso() + '\n\n' +
+        'Buka menu "Kelola Staff" di dashboard untuk mengaktifkan atau menolak akun ini.\n' +
+        'Akun tetap terkunci (tidak bisa lihat data) sampai kamu aktifkan.'
+    });
+  }catch(err){ /* mail quota / auth issue — ignore, registration still succeeds */ }
 }
 
 // Fore ID → the email to sign in with + its status. No secrets returned.
