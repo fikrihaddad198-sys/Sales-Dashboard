@@ -46,6 +46,11 @@ Setelah deploy, kirim ke saya **URL Web App** (`/exec`) kalau berubah dari yang 
    → URL `/exec` **tetap sama** (jadi tidak perlu kirim ulang ke saya).
    *(Kalau belum pernah deploy: Deploy → New deployment → Web app → Execute as: **Me**, Who has access: **Anyone** → Deploy → salin URL `/exec`.)*
 6. Kalau diminta **Authorize** → pilih akun Google → Allow.
+   ⚠️ Versi ini kirim **email notifikasi ke owner** tiap ada staff baru daftar, jadi
+   Apps Script minta izin **kirim email atas nama kamu** (scope Gmail baru). Kalau
+   deploy tidak memunculkan prompt authorize, jalankan sekali fungsi `apiRegister`
+   dari editor (Run) supaya prompt-nya muncul, lalu **Allow**. Tanpa izin ini,
+   pendaftaran tetap jalan tapi email notifikasi tidak terkirim.
 
 ## 4. Tes backend (checklist — buka URL di browser)
 
