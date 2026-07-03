@@ -2081,7 +2081,8 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   box-shadow: var(--e3), 0 0 30px rgba(201,168,76,0.10);
 }
 .fldt-card:hover::after  { opacity: 1; }
-.fc-icon { font-size: 20px; margin-bottom: 10px; position: relative; z-index: 2; }
+.fc-icon { margin-bottom: 10px; position: relative; z-index: 2; color: var(--fc-color, var(--gold)); line-height: 0; }
+.fc-icon svg { width: 22px; height: 22px; display: inline-block; }
 .fc-name {
   font-size: 12px; font-weight: 700; color: var(--fc-color, var(--cyan));
   letter-spacing: 1.8px; text-transform: uppercase; margin-bottom: 6px;
@@ -5241,13 +5242,17 @@ const TC = {
 const FLDT_COLORS = ['#9a958c','#7d9bb5','#b78fb0','#d4a05a','#9a958c','#c9a84c'];
 const FLDT_KEYS   = ['food_off','large_off','diary_off','topping_off','rtd_off','seasonal_sold'];
 const FLDT_LABELS = ['Food','Large','Diary','Topping','RTD','Seasonal'];
+/* Line-icons (SVG, matches the nav set) for the FLDT category cards. `icon`
+   (emoji) is kept only for the Excel export's "Icon" column, never rendered as
+   a UI icon. `svg` is the on-screen icon. */
+const _fi = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const FLDT_META   = [
-  {key:'food_off',    label:'Food',    icon:'☕', color:'#9a958c'},
-  {key:'large_off',   label:'Large',   icon:'🧋', color:'#7d9bb5'},
-  {key:'diary_off',   label:'Diary',   icon:'📔', color:'#b78fb0'},
-  {key:'topping_off', label:'Topping', icon:'✨', color:'#d4a05a'},
-  {key:'rtd_off',     label:'RTD',     icon:'🥤', color:'#9a958c'},
-  {key:'seasonal_sold',label:'Seasonal',icon:'🌸',color:'#c9a84c'},
+  {key:'food_off',    label:'Food',    icon:'☕', color:'#9a958c', svg:_fi('<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/>')},
+  {key:'large_off',   label:'Large',   icon:'🧋', color:'#7d9bb5', svg:_fi('<path d="M6 3h12l-1.2 15.2a2 2 0 0 1-2 1.8H9.2a2 2 0 0 1-2-1.8Z"/><path d="M5 3h14"/><path d="M7.5 9h9"/>')},
+  {key:'diary_off',   label:'Diary',   icon:'📔', color:'#b78fb0', svg:_fi('<path d="M8 2h8"/><path d="M9 2v3a2 2 0 0 1-.5 1.3L7 8.2A3 3 0 0 0 6 10.4V20a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9.6a3 3 0 0 0-1-2.2L15.5 6.3A2 2 0 0 1 15 5V2"/><path d="M6 13h12"/>')},
+  {key:'topping_off', label:'Topping', icon:'✨', color:'#d4a05a', svg:_fi('<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z"/><path d="M19 3v3"/><path d="M20.5 4.5h-3"/>')},
+  {key:'rtd_off',     label:'RTD',     icon:'🥤', color:'#9a958c', svg:_fi('<path d="M9 2h6"/><path d="M14 2v3.3l1.4 1.5A3 3 0 0 1 16 8.9V20a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V8.9a3 3 0 0 1 .6-2.1L10 5.3V2"/><path d="M8 12h8"/>')},
+  {key:'seasonal_sold',label:'Seasonal',icon:'🌸',color:'#c9a84c', svg:_fi('<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8a7 7 0 0 1-7 7Z"/><path d="M2 21c0-3 1.8-5.4 5-6"/>')},
 ];
 
 // Debounce Chart.js resize: during the sidebar push the content width changes
@@ -6796,7 +6801,7 @@ function renderFldtWeekly(){
     const isTarget=TARGET_KEYS.includes(m.key);
     const weeks=[{l:'W1',v:v1,w:bw1,p:getKont(m,v1,p1)},{l:'W2',v:v2,w:bw2,p:getKont(m,v2,p2)},{l:'W3',v:v3,w:bw3,p:getKont(m,v3,p3)}];
     return`<div class="fldt-card reveal reveal-delay-${(mi%3)+1}" style="--fc-color:${m.color}">
-      <div class="fc-icon">${m.icon}</div>
+      <div class="fc-icon">${m.svg}</div>
       <div class="fc-name">${m.label}</div>
       <div class="fc-big">${fmtNum(v3)}</div>
       <div class="fc-meta">
@@ -6951,7 +6956,7 @@ function renderAllSumm(d1,d2){
     const pct1=(v1/pctDen*100).toFixed(1);
     const wow=v2!==null?safePct(v1,v2):null;
     return`<div class="fldt-card reveal" style="--fc-color:${m.color}">
-      <div class="fc-icon">${m.icon}</div>
+      <div class="fc-icon">${m.svg}</div>
       <div class="fc-name">${m.label}</div>
       <div class="fc-big">${fmtNum(v1)}</div>
       <div class="fc-meta"><span style="color:var(--t3)">${pct1}%</span>${wow!==null?`<span class="badge ${wow>=0?'up':'dn'}">${wow>=0?'↑':'↓'}${Math.abs(wow).toFixed(1)}%</span>`:''}</div>
