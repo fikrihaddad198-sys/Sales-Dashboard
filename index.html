@@ -1278,7 +1278,12 @@ body.dr-animating .reveal {
 /* ── End desktop sidebar ─────────────────────────────────────────────────── */
 
 .compare-body { display: flex; flex-direction: column; gap: 1.5rem; }
-.compare-empty { color: var(--t3); text-align: center; padding: 3rem 1rem; font-size: 0.95rem; }
+/* Unified blank/empty-state look (compare + staff share one system). */
+.compare-empty, .staff-empty {
+  color: var(--t3); text-align: center; line-height: 1.6;
+  padding: clamp(32px, 6vw, 56px) 20px; font-size: var(--fs-body, 14px);
+  max-width: 420px; margin-inline: auto;
+}
 .compare-cols { display: flex; gap: 1rem; flex-wrap: wrap; }
 .compare-store-col { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 0.75rem; }
 .compare-store-name { font-size: 1rem; font-weight: 600; color: var(--t1); padding: 0.25rem 0; border-bottom: 1px solid var(--t4); }
@@ -4159,7 +4164,6 @@ body.is-owner .owner-only { display:flex !important; }
 
 /* ── Kelola Staff list ── */
 #staff-list { display:flex; flex-direction:column; gap:10px; }
-.staff-empty { padding:24px; text-align:center; color:var(--t3); font-size:var(--fs-body,14px); }
 .staff-row {
   display:flex; align-items:center; gap:12px; padding:14px 16px;
   background:var(--bg2); border:1px solid var(--bg4); border-radius:var(--r4,14px);
