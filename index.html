@@ -4163,7 +4163,9 @@ body.is-owner .owner-only { display:flex !important; }
 .staff-row {
   display:flex; align-items:center; gap:12px; padding:14px 16px;
   background:var(--bg2); border:1px solid var(--bg4); border-radius:var(--r4,14px);
+  transition:background .2s var(--ease-out), border-color .2s var(--ease-out);
 }
+.staff-row:hover { background:var(--bg3); border-color:var(--border-md); }
 .staff-dot { width:9px; height:9px; border-radius:50%; background:var(--t4); flex:none; }
 .staff-dot.online { background:var(--success,#22c55e); box-shadow:0 0 0 3px color-mix(in srgb, var(--success,#22c55e) 22%, transparent); }
 .staff-main { flex:1; min-width:0; }
@@ -4188,6 +4190,16 @@ body.is-owner .owner-only { display:flex !important; }
 .staff-act.danger:hover  { color:var(--red); border-color:var(--red); }
 .staff-act:disabled { opacity:0.5; cursor:default; }
 .staff-act:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+
+/* Tactile press-feedback on the newer controls — brings auth tabs, staff
+   actions and the confirm dialog up to the same standard as .btn/.reg-btn.
+   Transform-only, and disabled under reduced-motion. */
+@media (prefers-reduced-motion: no-preference){
+  .auth-tab, .staff-act, #confirm-actions .reg-btn {
+    transition: background .2s, color .2s, border-color .2s, transform .12s var(--ease-out);
+  }
+  .auth-tab:active, .staff-act:active, #confirm-actions .reg-btn:active { transform: scale(0.96); }
+}
 @media (max-width:600px){
   .staff-row { flex-wrap:wrap; }
   .staff-actions { width:100%; }
