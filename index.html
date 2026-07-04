@@ -1738,23 +1738,15 @@ body.dr-animating .reveal {
   flex-shrink: 0;
 }
 
-.stacked-card-hdr {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 10px; margin-bottom: 6px; flex-wrap: wrap;
+/* Channel Contribution header: title + Total/Per-Hari segmented toggle */
+.contrib-hdr { justify-content: space-between; }
+.contrib-toggle {
+  display: inline-flex; gap: 2px; padding: 3px;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r3);
+  text-transform: none; letter-spacing: 0;
 }
-.stacked-card-title {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12px; font-weight: 700; color: var(--t2); letter-spacing: 0.3px;
-}
-.stacked-card-period {
-  font-size: 12px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase;
-  color: var(--t3);
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 20px; padding: 2px 8px;
-}
-.stacked-legend {
-  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+.contrib-daily-legend {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
 }
 .sl-pill {
   display: flex; align-items: center; gap: 4px;
@@ -1772,19 +1764,6 @@ body.dr-animating .reveal {
 .sl-pill[data-ch="gofood"] .sl-dot   { background: var(--tc-gofood); }
 .sl-pill[data-ch="grabfood"] .sl-dot { background: var(--tc-grabfood); }
 .sl-pill[data-ch="shopee"] .sl-dot   { background: var(--tc-shopee); }
-.stacked-total-row {
-  display: flex; align-items: baseline; gap: 8px;
-  margin-bottom: 14px; padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-}
-.stacked-total-label {
-  font-size: 12px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 1px; color: var(--t3);
-}
-.stacked-total-val {
-  font-size: 15px; font-weight: 800; color: var(--t1);
-  font-family: var(--mono); letter-spacing: -0.5px;
-}
 
 .card-hdr {
   font-size: 12px; font-weight: 600; color: var(--t2);
@@ -4620,38 +4599,32 @@ body.is-owner .owner-only { display:flex !important; }
       <!-- 8-metric strip -->
       <div class="metric-grid mb18" id="kpi-strip-grid"></div>
 
-      <!-- Channel Contribution — full width -->
+      <!-- Channel Contribution — full width, Total / Per Hari -->
       <div class="card reveal mb14" id="contrib-card-el">
-        <div class="card-hdr"><div class="card-hdr-dot"></div>Channel Contribution</div>
+        <div class="card-hdr contrib-hdr">
+          <span>Channel Contribution</span>
+          <div class="contrib-toggle">
+            <button class="toggle-btn active" id="contrib-mode-total" onclick="setContribMode('total')" type="button">Total</button>
+            <button class="toggle-btn" id="contrib-mode-daily" onclick="setContribMode('daily')" type="button">Per Hari</button>
+          </div>
+        </div>
         <div class="chan-bars" id="kpi-contrib"></div>
+        <div id="kpi-contrib-daily" style="display:none">
+          <div class="contrib-daily-legend" id="contrib-daily-legend">
+            <span class="sl-pill" data-ch="offline"><span class="sl-dot"></span>Offline</span>
+            <span class="sl-pill" data-ch="online"><span class="sl-dot"></span>Online</span>
+            <span class="sl-pill" data-ch="grabfood"><span class="sl-dot"></span>GrabFood</span>
+            <span class="sl-pill" data-ch="gofood"><span class="sl-dot"></span>GoFood</span>
+            <span class="sl-pill" data-ch="shopee"><span class="sl-dot"></span>ShopeeFood</span>
+          </div>
+          <div class="chart-wrap h260"><canvas id="kpi-contrib-daily-chart" role="img" aria-label="Grafik GMV per channel (bertumpuk) per hari"></canvas></div>
+        </div>
       </div>
 
-      <!-- Charts -->
-      <div class="g2 mb0">
-        <div class="card reveal card-glow">
-          <div class="card-hdr"><div class="card-hdr-dot"></div>Daily GMV Trend + 7D MA</div>
-          <div class="chart-wrap h260"><canvas id="kpi-trend-chart"></canvas></div>
-        </div>
-        <div class="card reveal reveal-delay-1 card-glow stacked-card">
-          <div class="stacked-card-hdr">
-            <div class="stacked-card-title">
-              <div class="card-hdr-dot"></div>
-              <span>Channel Stacked</span>
-              <span class="stacked-card-period">Daily</span>
-            </div>
-            <div class="stacked-legend" id="stacked-legend">
-              <span class="sl-pill" data-ch="offline"><span class="sl-dot"></span>Offline</span>
-              <span class="sl-pill" data-ch="gofood"><span class="sl-dot"></span>GoFood</span>
-              <span class="sl-pill" data-ch="grabfood"><span class="sl-dot"></span>GrabFood</span>
-              <span class="sl-pill" data-ch="shopee"><span class="sl-dot"></span>Shopee</span>
-            </div>
-          </div>
-          <div class="stacked-total-row" id="stacked-total-row">
-            <span class="stacked-total-label">Total periode</span>
-            <span class="stacked-total-val" id="stacked-total-val">—</span>
-          </div>
-          <div class="chart-wrap h240"><canvas id="kpi-stacked-chart"></canvas></div>
-        </div>
+      <!-- Bottom analytics (Bulan Ini vs Bulan Lalu + Sorotan land here in commit 2) -->
+      <div class="card reveal card-glow mb0">
+        <div class="card-hdr"><div class="card-hdr-dot"></div>Daily GMV Trend + 7D MA</div>
+        <div class="chart-wrap h260"><canvas id="kpi-trend-chart"></canvas></div>
       </div>
     </div>
   </div>
@@ -5234,6 +5207,7 @@ let _chartAnim = true;
    switch (see showPage). Cleared when data reloads or the theme changes. */
 let _renderedPages = new Set();
 let _kpiRows=[];  /* stored after calcKpi for popup use */
+let _contribMode='total', _kpiDailyRows=[];  /* Channel Contribution Total/Per-Hari toggle */
 let _weeklyChan='gmv', _customChan='gmv', _fldtChan='cup_total', _chTrendKey='offline';
 let _racePrevVals = {}; // stores prev frame values for counter animation
 let _periodMode='weekly', _fldtMode='weekly';
@@ -5924,7 +5898,7 @@ function initDockMagnify() {
    readers announce what it shows instead of "canvas". Invisible to sighted
    users. Canvases exist in the static HTML, so one pass at load covers them. */
 const CHART_LABELS = {
-  'kpi-trend-chart':'Grafik tren GMV harian','kpi-stacked-chart':'Grafik GMV per channel (bertumpuk) harian',
+  'kpi-trend-chart':'Grafik tren GMV harian','kpi-contrib-daily-chart':'Grafik GMV per channel (bertumpuk) per hari',
   'ch-pie-chart':'Grafik proporsi GMV per channel','ch-bar-chart':'Grafik GMV per channel',
   'ch-adt-chart':'Grafik ADT per channel','ch-trend-chart':'Grafik tren channel',
   'period-chart-1':'Grafik tren GMV periode 1','period-chart-2':'Grafik tren GMV periode 2',
@@ -6450,9 +6424,10 @@ function calcKpi(skipCharts){
       .map(x=>`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;"><div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:3px;">${x.l}</div><div style="font-size:12px;font-weight:700;color:var(--t1);font-family:var(--mono);">${x.v}</div></div>`).join('')}
     </div>`;
 
+  _kpiDailyRows = rows;   // for the Channel Contribution "Per Hari" view
   if(!skipCharts){
     buildKpiTrend(rows,ma7);
-    buildKpiStacked(rows);
+    if(_contribMode==='daily') buildKpiContribDaily(rows);
   }
   setTimeout(()=>window.attachReveal&&window.attachReveal(), 80);
 }
@@ -6491,55 +6466,59 @@ function buildKpiTrend(rows,ma7){
   });
   requestAnimationFrame(()=>addPeakMarkers(document.getElementById('kpi-trend-chart')));
 }
-function buildKpiStacked(rows){
-  destroyChart('kpiStacked');
-  // Update legend dot colors from TC
-  const chMap={offline:TC.offline,gofood:TC.gofood,grabfood:TC.grabfood,shopee:TC.shopee};
-  document.querySelectorAll('#stacked-legend .sl-pill').forEach(p=>{
-    const c=chMap[p.dataset.ch]; if(c) p.querySelector('.sl-dot').style.background=c;
-    p.querySelector('.sl-dot').style.boxShadow='0 0 4px '+c+'88';
+/* Channel Contribution "Per Hari" — daily stacked bar across ALL FIVE channels
+   (Offline, Online, GrabFood, GoFood, ShopeeFood). Replaces the old 4-channel
+   Channel Stacked card; the per-day breakdown now lives inside the Contribution
+   card via the Total / Per Hari toggle. */
+function setContribMode(m){
+  _contribMode = m;
+  const t=document.getElementById('contrib-mode-total'), d=document.getElementById('contrib-mode-daily');
+  if(t) t.classList.toggle('active', m==='total');
+  if(d) d.classList.toggle('active', m==='daily');
+  const tv=document.getElementById('kpi-contrib'), dv=document.getElementById('kpi-contrib-daily');
+  if(tv) tv.style.display = m==='total' ? '' : 'none';
+  if(dv) dv.style.display = m==='daily' ? '' : 'none';
+  if(m==='daily') buildKpiContribDaily(_kpiDailyRows);   // (re)build + re-animate on show
+}
+const CONTRIB_DAILY_CH=[
+  {label:'Offline',   key:'offline',  color:TC.offline},
+  {label:'Online',    key:'online',   color:TC.online},
+  {label:'GrabFood',  key:'grabfood', color:TC.grabfood},
+  {label:'GoFood',    key:'gofood',   color:TC.gofood},
+  {label:'ShopeeFood',key:'shopee',   color:TC.shopee},
+];
+function buildKpiContribDaily(rows){
+  destroyChart('kpiContribDaily');
+  rows = rows || [];
+  const CH = CONTRIB_DAILY_CH, keys = CH.map(c=>c.key);
+  // legend dots from TC
+  const cmap={}; CH.forEach(c=>cmap[c.key]=c.color);
+  document.querySelectorAll('#contrib-daily-legend .sl-pill').forEach(p=>{
+    const c=cmap[p.dataset.ch]; if(c){ const dot=p.querySelector('.sl-dot'); dot.style.background=c; dot.style.boxShadow='0 0 4px '+c+'88'; }
   });
-  // Update total
-  const total=(rows.reduce((s,r)=>(s+(r.offline||0)+(r.gofood||0)+(r.grabfood||0)+(r.shopee||0)),0));
-  const tvEl=document.getElementById('stacked-total-val');
-  if(tvEl) tvEl.textContent=fmtRp(total);
-  // Dataset builder
-  const mk=(label,key,color,isTop)=>({
-    label, data:rows.map(r=>r[key]||0),
-    backgroundColor:color+'cc',
-    hoverBackgroundColor:color,
-    borderRadius: isTop?{topLeft:4,topRight:4}:{topLeft:0,topRight:0},
-    borderSkipped:false, barPercentage:.75, categoryPercentage:.85,
-  });
-  const datasets=[mk('Offline','offline',TC.offline,false),mk('GoFood','gofood',TC.gofood,false),mk('GrabFood','grabfood',TC.grabfood,false),mk('Shopee','shopee',TC.shopee,true)];
+  const datasets = CH.map((c,i)=>({
+    label:c.label, data:rows.map(r=>r[c.key]||0),
+    backgroundColor:c.color+'d9', hoverBackgroundColor:c.color,
+    borderRadius: i===CH.length-1 ? {topLeft:5,topRight:5} : 0,
+    borderSkipped:false, barPercentage:.72, categoryPercentage:.86,
+  }));
   const base=baseOptions();
-  const customTooltip={
-    backgroundColor:'rgba(10,12,16,0.97)',
-    titleColor:TC.text2, bodyColor:'#e8ead8',
-    borderColor:'rgba(201,168,76,0.20)', borderWidth:1,
-    usePointStyle:true,
+  const tooltip={
+    backgroundColor:'rgba(10,12,16,0.97)', titleColor:TC.text2, bodyColor:'#e8ead8',
+    borderColor:'rgba(201,168,76,0.20)', borderWidth:1, usePointStyle:true,
     callbacks:{
       title:ctx=>{ const r=rows[ctx[0].dataIndex]; return r?fmtShortDate(r.date):''; },
-      label:ctx=>{
-        const val=ctx.parsed.y||0;
-        const tot=rows[ctx.dataIndex]&&(['offline','gofood','grabfood','shopee'].reduce((s,k)=>s+(rows[ctx.dataIndex][k]||0),0))||1;
-        const pct=((val/tot)*100).toFixed(1);
-        return '  '+ctx.dataset.label+': '+fmtRp(val)+' ('+pct+'%)';
-      },
-      footer:ctx=>{
-        const r=rows[ctx[0].dataIndex]; if(!r) return '';
-        const tot=(r.offline||0)+(r.gofood||0)+(r.grabfood||0)+(r.shopee||0);
-        return 'Total: '+fmtRp(tot);
-      }
+      label:ctx=>{ const v=ctx.parsed.y||0; const r=rows[ctx.dataIndex]; const tot=r?keys.reduce((s,k)=>s+(r[k]||0),0):0; const pct=tot?((v/tot)*100).toFixed(1):'0'; return '  '+ctx.dataset.label+': '+fmtRp(v)+' ('+pct+'%)'; },
+      footer:ctx=>{ const r=rows[ctx[0].dataIndex]; if(!r) return ''; return 'Total: '+fmtRp(keys.reduce((s,k)=>s+(r[k]||0),0)); }
     }
   };
-  charts.kpiStacked=new Chart(document.getElementById('kpi-stacked-chart'),{
+  charts.kpiContribDaily=new Chart(document.getElementById('kpi-contrib-daily-chart'),{
     type:'bar',
     data:{ labels:rows.map(r=>fmtShortDate(r.date)), datasets },
     options:{
       ...base,
       interaction:{mode:'index',intersect:false},
-      plugins:{...base.plugins, tooltip:{...base.plugins?.tooltip,...customTooltip}, legend:{display:false}},
+      plugins:{...base.plugins, tooltip:{...base.plugins?.tooltip,...tooltip}, legend:{display:false}},
       scales:{
         ...base.scales,
         x:{...base.scales?.x, stacked:true, grid:{...base.scales?.x?.grid, display:false}, ticks:{...base.scales?.x?.ticks, maxRotation:0, maxTicksLimit:10}},
