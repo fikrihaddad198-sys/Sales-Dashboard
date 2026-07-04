@@ -1775,6 +1775,17 @@ body.dr-animating .reveal {
 .split-chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700;
   color:var(--t2); font-variant-numeric:tabular-nums; }
 .split-chip::before { content:''; width:9px; height:9px; border-radius:3px; background:var(--c); flex:none; }
+/* Insight stat grids (attach ratios + product health) */
+.ins-stat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.ins-stat { background:var(--bg2); border:1px solid var(--border); border-radius:var(--r3); padding:14px 13px;
+  transition:background .2s var(--ease-out), border-color .2s var(--ease-out); }
+.ins-stat:hover { background:var(--bg3); border-color:var(--border-md); }
+.ins-stat-val { font-size:22px; font-weight:800; color:var(--t1); line-height:1;
+  letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+.ins-stat-lbl { font-size:var(--fs-caption,12px); font-weight:700; color:var(--t2); margin-top:9px;
+  text-transform:uppercase; letter-spacing:0.06em; }
+.ins-stat-sub { font-size:var(--fs-caption,12px); color:var(--t3); margin-top:3px; line-height:1.35; }
+@media (max-width:600px){ .ins-stat-grid { grid-template-columns:1fr; } }
 
 /* Card B — Sorotan (auto insights): prominent value + muted description */
 .insight-list { display:flex; flex-direction:column; gap:8px; }
@@ -5032,6 +5043,24 @@ body.is-owner .owner-only { display:flex !important; }
       <div class="chart-wrap h220"><canvas id="ins-split-chart" role="img" aria-label="Tren Offline, Online, dan Delivery dari waktu ke waktu"></canvas></div>
     </div>
   </div>
+
+  <!-- Section 2 — Produk & Upsell -->
+  <div class="g2 mb14">
+    <div class="card reveal">
+      <div class="card-hdr"><div class="card-hdr-dot"></div>Attach Rate (Upsell)</div>
+      <div class="ins-stat-grid" id="ins-attach"></div>
+    </div>
+    <div class="card reveal reveal-delay-1">
+      <div class="card-hdr"><div class="card-hdr-dot"></div>Kesehatan Produk</div>
+      <div class="ins-stat-grid" id="ins-product"></div>
+    </div>
+  </div>
+
+  <!-- Section 3 — Pola Waktu -->
+  <div class="card reveal mb0">
+    <div class="card-hdr"><div class="card-hdr-dot"></div>Performa per Hari — rata-rata GMV (weekend disorot)</div>
+    <div class="chart-wrap h240"><canvas id="ins-weekday-chart" role="img" aria-label="Rata-rata GMV per hari dalam seminggu"></canvas></div>
+  </div>
 </div>
 
 <!-- ════════════════════ KELOLA STAFF (owner-only) ════════════════════ -->
@@ -6742,7 +6771,62 @@ function renderInsight(){
   const d=aggregateData(rows);
   buildInsAtv(d);
   buildInsSplit(rows,d);
+  renderInsAttach(d);
+  renderInsProduct(d);
+  buildInsWeekday(rows);
   setTimeout(()=>window.attachReveal&&window.attachReveal(), 80);
+}
+
+/* Section 3 — average GMV by day-of-week (weekend bars highlighted). */
+function buildInsWeekday(rows){
+  destroyChart('insWeekday');
+  const names=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const sums=new Array(7).fill(0), cnts=new Array(7).fill(0);
+  rows.forEach(r=>{ const dow=new Date(r.date).getDay(); sums[dow]+=(r.gmv||0); cnts[dow]++; });
+  const order=[1,2,3,4,5,6,0];   // Mon..Sun
+  const labels=order.map(i=>names[i]);
+  const avg=order.map(i=>cnts[i]>0 ? sums[i]/cnts[i] : 0);
+  const colors=order.map(i=>(i===0||i===6) ? TC.amber : TC.gmv);
+  const base=baseOptions();
+  charts.insWeekday=new Chart(document.getElementById('ins-weekday-chart'),{
+    type:'bar',
+    data:{ labels, datasets:[{ data:avg, backgroundColor:colors.map(c=>c+'d9'), hoverBackgroundColor:colors,
+      borderRadius:5, borderSkipped:false, barPercentage:.68, categoryPercentage:.8 }] },
+    options:{ ...base,
+      plugins:{ ...base.plugins, legend:{display:false},
+        tooltip:{ ...base.plugins?.tooltip, callbacks:{ label:ctx=>'  '+fmtRp(ctx.parsed.y||0)+' /hari (rata-rata)' }}},
+      scales:{ ...base.scales,
+        x:{ ...base.scales?.x, grid:{display:false} },
+        y:{ ...base.scales?.y, ticks:{ ...base.scales?.y?.ticks, callback:v=>v>=1e9?(v/1e9).toFixed(1)+'B':v>=1e6?(v/1e6).toFixed(0)+'M':v } } }
+    }
+  });
+}
+
+/* Section 2a — attach ratios (upsell health). */
+function renderInsAttach(d){
+  const host=document.getElementById('ins-attach'); if(!host) return;
+  const items=[
+    {n: d.cup_total>0 ? d.topping_off/d.cup_total : 0, l:'Topping / cup',      s:'rata-rata topping tiap gelas'},
+    {n: d.adt_store>0 ? d.food_qty_all/d.adt_store : 0, l:'Food / transaksi',   s:'porsi makanan tiap transaksi'},
+    {n: d.adt_store>0 ? d.rtd_qty_all/d.adt_store : 0,  l:'RTD / transaksi',    s:'botol RTD tiap transaksi'},
+  ];
+  host.innerHTML=items.map(x=>`<div class="ins-stat"><div class="ins-stat-val">0,00</div><div class="ins-stat-lbl">${x.l}</div><div class="ins-stat-sub">${x.s}</div></div>`).join('');
+  const vals=host.querySelectorAll('.ins-stat-val');
+  items.forEach((x,i)=>{ if(vals[i]) animateCounter(vals[i], x.n, v=>v.toFixed(2), 900); });
+}
+
+/* Section 2b — product health (Food is the only rupiah line; RTD/Seasonal = qty). */
+function renderInsProduct(d){
+  const host=document.getElementById('ins-product'); if(!host) return;
+  const foodPct = d.gmv>0 ? d.food_sales/d.gmv*100 : 0;
+  const items=[
+    {n:d.food_sales,   fmt:v=>fmtRpJt(v), l:'Food revenue',    s:fmtPct(foodPct)+' dari GMV'},
+    {n:d.rtd_qty_all,  fmt:v=>fmtNum(v),  l:'RTD terjual',     s:'jumlah botol (qty)'},
+    {n:d.seasonal_sold,fmt:v=>fmtNum(v),  l:'Seasonal terjual',s:'jumlah item (qty)'},
+  ];
+  host.innerHTML=items.map(x=>`<div class="ins-stat"><div class="ins-stat-val">—</div><div class="ins-stat-lbl">${x.l}</div><div class="ins-stat-sub">${x.s}</div></div>`).join('');
+  const vals=host.querySelectorAll('.ins-stat-val');
+  items.forEach((x,i)=>{ if(vals[i]) animateCounter(vals[i], x.n, x.fmt, 900); });
 }
 
 /* Section 1a — average transaction value per channel (sales / transactions). */
