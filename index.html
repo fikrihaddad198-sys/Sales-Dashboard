@@ -4608,6 +4608,8 @@ body.is-owner .owner-only { display:flex !important; }
           <span class="hms-item"><span class="hms-val" id="h-total-trx">—</span> <span class="hms-lbl">transaksi</span></span>
           <span class="hms-dot">·</span>
           <span class="hms-item"><span class="hms-val" id="h-avg-ipt">—</span> <span class="hms-lbl">item/trx</span></span>
+          <span class="hms-dot">·</span>
+          <span class="hms-item"><span class="hms-val" id="h-avg-atv">—</span> <span class="hms-lbl">per trx</span></span>
         </div>
         <div class="progress-wrap">
           <div class="progress-track">
@@ -6418,10 +6420,14 @@ function calcKpi(skipCharts){
   }
 
   /* Micro-stats inside hero */
+  const totalTrx=sum(rows,'adt_store');
   const trxEl=document.getElementById('h-total-trx');
-  if(trxEl) animateCounter(trxEl, sum(rows,'adt_store'), v=>fmtNum(v), 900);
+  if(trxEl) animateCounter(trxEl, totalTrx, v=>fmtNum(v), 900);
   const iptEl=document.getElementById('h-avg-ipt');
   if(iptEl) animateCounter(iptEl, avg(rows,'ipt'), v=>v.toFixed(2), 900);
+  // Average per transaksi = total GMV / total transaksi
+  const atvEl=document.getElementById('h-avg-atv');
+  if(atvEl) animateCounter(atvEl, totalTrx>0 ? data.gmv/totalTrx : 0, v=>fmtRp(v), 900);
 
   if(!skipCharts) buildGauge(achPct);
 
