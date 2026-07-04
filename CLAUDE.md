@@ -177,6 +177,19 @@ Uses `@property --p` (registered CSS custom property) so `transition: --p` works
 
 The indicator dot is counter-scaled: `transform: scaleX(calc(1 / max(var(--p, 0.15), 0.15)))` so it stays circular as the bar grows.
 
+## Insight Page (`#page-insight`)
+
+Deeper behavioral analytics — the "why/patterns" layer beyond Channel/FLDT/D2D. Own
+date picker (`insight-start/end`, DRP pattern). `renderInsight()` (deduped by
+`_renderedPages`) filters via `filterData` → `aggregateData` and builds 3 sections:
+- **Perilaku Channel:** `buildInsAtv` (basket value = channel sales ÷ channel transactions,
+  horizontal bar) + `buildInsSplit` (Offline · Online · **Delivery = Grab+Go+Shopee**, 3-way
+  stacked-area trend + % share chips).
+- **Produk & Upsell:** `renderInsAttach` (Topping/cup, Food/trx, RTD/trx ratios) +
+  `renderInsProduct` (**Food revenue in Rp + % of GMV** — the only rupiah product line; RTD &
+  Seasonal are **qty only**, a real data limit).
+- **Pola Waktu:** `buildInsWeekday` (avg GMV by day-of-week, Mon→Sun, weekend bars in amber).
+
 ## Navigation (`#main-nav`)
 
 Mobile (`≤768px`): fixed **bottom tab bar**, icon-only (labels hidden), gold pill behind active icon.

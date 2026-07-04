@@ -5055,6 +5055,12 @@ body.is-owner .owner-only { display:flex !important; }
       <div class="ins-stat-grid" id="ins-product"></div>
     </div>
   </div>
+
+  <!-- Section 3 — Pola Waktu -->
+  <div class="card reveal mb0">
+    <div class="card-hdr"><div class="card-hdr-dot"></div>Performa per Hari — rata-rata GMV (weekend disorot)</div>
+    <div class="chart-wrap h240"><canvas id="ins-weekday-chart" role="img" aria-label="Rata-rata GMV per hari dalam seminggu"></canvas></div>
+  </div>
 </div>
 
 <!-- ════════════════════ KELOLA STAFF (owner-only) ════════════════════ -->
@@ -6767,7 +6773,33 @@ function renderInsight(){
   buildInsSplit(rows,d);
   renderInsAttach(d);
   renderInsProduct(d);
+  buildInsWeekday(rows);
   setTimeout(()=>window.attachReveal&&window.attachReveal(), 80);
+}
+
+/* Section 3 — average GMV by day-of-week (weekend bars highlighted). */
+function buildInsWeekday(rows){
+  destroyChart('insWeekday');
+  const names=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const sums=new Array(7).fill(0), cnts=new Array(7).fill(0);
+  rows.forEach(r=>{ const dow=new Date(r.date).getDay(); sums[dow]+=(r.gmv||0); cnts[dow]++; });
+  const order=[1,2,3,4,5,6,0];   // Mon..Sun
+  const labels=order.map(i=>names[i]);
+  const avg=order.map(i=>cnts[i]>0 ? sums[i]/cnts[i] : 0);
+  const colors=order.map(i=>(i===0||i===6) ? TC.amber : TC.gmv);
+  const base=baseOptions();
+  charts.insWeekday=new Chart(document.getElementById('ins-weekday-chart'),{
+    type:'bar',
+    data:{ labels, datasets:[{ data:avg, backgroundColor:colors.map(c=>c+'d9'), hoverBackgroundColor:colors,
+      borderRadius:5, borderSkipped:false, barPercentage:.68, categoryPercentage:.8 }] },
+    options:{ ...base,
+      plugins:{ ...base.plugins, legend:{display:false},
+        tooltip:{ ...base.plugins?.tooltip, callbacks:{ label:ctx=>'  '+fmtRp(ctx.parsed.y||0)+' /hari (rata-rata)' }}},
+      scales:{ ...base.scales,
+        x:{ ...base.scales?.x, grid:{display:false} },
+        y:{ ...base.scales?.y, ticks:{ ...base.scales?.y?.ticks, callback:v=>v>=1e9?(v/1e9).toFixed(1)+'B':v>=1e6?(v/1e6).toFixed(0)+'M':v } } }
+    }
+  });
 }
 
 /* Section 2a — attach ratios (upsell health). */
