@@ -65,3 +65,9 @@ No backend changes.
 ## Open detail (confirm on review)
 Per-day Channel view = stacked bar (recommended). Alternative: small per-day table. Spec
 assumes stacked bar.
+
+## Locked decisions (owner, 2026-07-04)
+- Per-day Channel view = **stacked bar** (not table).
+- Sorotan uses the **selected KPI date range** (default = month-to-date).
+- MoM card = **calendar month** (this month 1..today vs last month 1..sameday).
+- Owner taste: **premium, smooth, good chart/entrance animation** — hold this bar.
