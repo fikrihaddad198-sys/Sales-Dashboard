@@ -66,3 +66,9 @@ use the existing `.card-hdr` style. All charts: `role="img"` + Indonesian aria-l
 
 ## Files
 `index.html` (nav + page HTML + CSS + render logic), `sw.js`, `CLAUDE.md`. No backend.
+
+## Locked decisions (owner, 2026-07-04)
+- Section 1b grouping = **3-way**: Offline · Online · Delivery (GrabFood+GoFood+Shopee).
+- Section 2b = **Food revenue only** (Rp, food_sales) + % of GMV; RTD & Seasonal shown as
+  **qty terjual** (rtd_qty_all, seasonal_sold), not rupiah.
+- Page name = **Insight**. Build section-by-section, each committed + checkpoint-guarded.
