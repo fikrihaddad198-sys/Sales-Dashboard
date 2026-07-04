@@ -1772,6 +1772,9 @@ body.dr-animating .reveal {
 .mom-delta.down { color:var(--red); }
 .mom-cap { font-size:12px; color:var(--t3); }
 .mom-empty { color:var(--t3); font-size:13px; padding:24px 8px; text-align:center; }
+.split-chip { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700;
+  color:var(--t2); font-variant-numeric:tabular-nums; }
+.split-chip::before { content:''; width:9px; height:9px; border-radius:3px; background:var(--c); flex:none; }
 
 /* Card B — Sorotan (auto insights): prominent value + muted description */
 .insight-list { display:flex; flex-direction:column; gap:8px; }
@@ -4511,6 +4514,9 @@ body.is-owner .owner-only { display:flex !important; }
   <button class="nav-btn" data-page="compare" onclick="showPage('compare',this)" aria-label="Compare">
     <span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 9l9-6 9 6M5 20h14M8 12H5l-2 5h6zm11 0h3l2 5h-6z"/></svg></span><span class="nav-label">Compare</span>
   </button>
+  <button class="nav-btn" data-page="insight" onclick="showPage('insight',this)" aria-label="Insight">
+    <span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2Z"/></svg></span><span class="nav-label">Insight</span>
+  </button>
   <button class="nav-btn owner-only" data-page="staff" onclick="showPage('staff',this)" aria-label="Kelola Staff">
     <span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="nav-label">Kelola Staff</span>
     <span class="nav-badge" id="staff-badge" aria-label="staf menunggu persetujuan" hidden></span>
@@ -5004,6 +5010,27 @@ body.is-owner .owner-only { display:flex !important; }
   </div>
   <div id="compare-body" class="compare-body">
     <div class="compare-empty">Belum ada data toko lain.</div>
+  </div>
+</div>
+
+<!-- ════════════════════ INSIGHT ════════════════════ -->
+<div class="page" id="page-insight">
+  <div class="filter-bar">
+    <input type="hidden" id="insight-start"/><input type="hidden" id="insight-end"/>
+    <button class="drp-btn" id="drp-btn-insight" onclick="openDRP(event,'insight-start','insight-end','drp-btn-insight')"><span class="drp-btn-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><span class="drp-btn-text" id="drp-lbl-insight">Pilih tanggal</span><span class="drp-btn-arrow">▾</span></button>
+  </div>
+
+  <!-- Section 1 — Perilaku Channel -->
+  <div class="g2 mb14">
+    <div class="card reveal">
+      <div class="card-hdr"><div class="card-hdr-dot"></div>Basket Value / Transaksi per Channel</div>
+      <div class="chart-wrap h260"><canvas id="ins-atv-chart" role="img" aria-label="Rata-rata nilai transaksi per channel"></canvas></div>
+    </div>
+    <div class="card reveal reveal-delay-1">
+      <div class="card-hdr"><div class="card-hdr-dot"></div>Offline · Online · Delivery</div>
+      <div class="mom-headline" id="ins-split-headline"></div>
+      <div class="chart-wrap h220"><canvas id="ins-split-chart" role="img" aria-label="Tren Offline, Online, dan Delivery dari waktu ke waktu"></canvas></div>
+    </div>
   </div>
 </div>
 
@@ -5619,6 +5646,7 @@ function initDefaults(){
   setIfEmpty('kpi-days',String(new Date(now.getFullYear(),now.getMonth()+1,0).getDate()));
   setIfEmpty('kpi-target','700000000');
   setIfEmpty('ch-start',monthStart); setIfEmpty('ch-end',yesterday);
+  setIfEmpty('insight-start',monthStart); setIfEmpty('insight-end',yesterday);
   setIfEmpty('range1s',toInputDate(monW1)); setIfEmpty('range1e',toInputDate(endW1));
   setIfEmpty('range2s',toInputDate(monW2)); setIfEmpty('range2e',toInputDate(endW2));
   setIfEmpty('range3s',toInputDate(monW3)); setIfEmpty('range3e',yesterday);
@@ -5934,6 +5962,8 @@ function initDockMagnify() {
    users. Canvases exist in the static HTML, so one pass at load covers them. */
 const CHART_LABELS = {
   'kpi-mom-chart':'Grafik GMV kumulatif bulan ini vs bulan lalu','kpi-contrib-daily-chart':'Grafik GMV per channel (bertumpuk) per hari',
+  'ins-atv-chart':'Rata-rata nilai transaksi per channel','ins-split-chart':'Tren Offline, Online, Delivery',
+  'ins-attach-chart':'Rasio attach produk','ins-weekday-chart':'Rata-rata GMV per hari dalam seminggu',
   'ch-pie-chart':'Grafik proporsi GMV per channel','ch-bar-chart':'Grafik GMV per channel',
   'ch-adt-chart':'Grafik ADT per channel','ch-trend-chart':'Grafik tren channel',
   'period-chart-1':'Grafik tren GMV periode 1','period-chart-2':'Grafik tren GMV periode 2',
@@ -5975,6 +6005,7 @@ function renderPage(p){
   else if(p==='fldt') initFldtPage();
   else if(p==='race'){ if(!_raceRows.length) initRacePage(); }
   else if(p==='compare') renderCompare();
+  else if(p==='insight') renderInsight();
 }
 
 /* ═══════════════════════════════════════════════════
@@ -6695,6 +6726,78 @@ function buildKpiContribDaily(rows){
         x:{...base.scales?.x, stacked:true, grid:{...base.scales?.x?.grid, display:false}, ticks:{...base.scales?.x?.ticks, maxRotation:0, maxTicksLimit:10}},
         y:{...base.scales?.y, stacked:true, grid:{color:TC.grid, drawBorder:false}, ticks:{...base.scales?.y?.ticks, callback:v=>v>=1e9?(v/1e9).toFixed(1)+'B':v>=1e6?(v/1e6).toFixed(0)+'M':v}}
       }
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGE: INSIGHT — deeper behavioral analytics
+═══════════════════════════════════════════════════ */
+function renderInsight(){
+  const s=getVal('insight-start'), e=getVal('insight-end');
+  if(!s||!e||!allData.length) return;
+  const rows=filterData(s,e);
+  if(!rows.length){ showRangeEmpty(true); return; }
+  showRangeEmpty(false);
+  const d=aggregateData(rows);
+  buildInsAtv(d);
+  buildInsSplit(rows,d);
+  setTimeout(()=>window.attachReveal&&window.attachReveal(), 80);
+}
+
+/* Section 1a — average transaction value per channel (sales / transactions). */
+function buildInsAtv(d){
+  destroyChart('insAtv');
+  const CH=[
+    {n:'Offline',   s:d.offline,  t:d.adt_offline,  c:TC.offline},
+    {n:'Online',    s:d.online,   t:d.adt_online,   c:TC.online},
+    {n:'GrabFood',  s:d.grabfood, t:d.adt_grabfood, c:TC.grabfood},
+    {n:'GoFood',    s:d.gofood,   t:d.adt_gofood,   c:TC.gofood},
+    {n:'ShopeeFood',s:d.shopee,   t:d.adt_shopee,   c:TC.shopee},
+  ].map(x=>({...x, atv: x.t>0 ? x.s/x.t : 0})).sort((a,b)=>b.atv-a.atv);
+  const base=baseOptions();
+  charts.insAtv=new Chart(document.getElementById('ins-atv-chart'),{
+    type:'bar',
+    data:{ labels:CH.map(x=>x.n), datasets:[{ data:CH.map(x=>x.atv),
+      backgroundColor:CH.map(x=>x.c+'d9'), hoverBackgroundColor:CH.map(x=>x.c),
+      borderRadius:5, borderSkipped:false, barPercentage:.7, categoryPercentage:.8 }] },
+    options:{ ...base, indexAxis:'y',
+      plugins:{ ...base.plugins, legend:{display:false},
+        tooltip:{ ...base.plugins?.tooltip, callbacks:{
+          label:ctx=>{ const x=CH[ctx.dataIndex]; return '  '+fmtRp(x.atv)+' / transaksi  ·  '+fmtNum(x.t)+' trx'; } }}},
+      scales:{ ...base.scales,
+        x:{ ...base.scales?.x, grid:{color:TC.grid,drawBorder:false}, ticks:{ ...base.scales?.x?.ticks, callback:v=>v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?(v/1e3).toFixed(0)+'rb':v } },
+        y:{ ...base.scales?.y, grid:{display:false} } }
+    }
+  });
+}
+
+/* Section 1b — Offline vs Online vs Delivery (Grab+Go+Shopee) stacked over time. */
+function buildInsSplit(rows,d){
+  destroyChart('insSplit');
+  const off=rows.map(r=>r.offline||0);
+  const onl=rows.map(r=>r.online||0);
+  const del=rows.map(r=>(r.gofood||0)+(r.grabfood||0)+(r.shopee||0));
+  const totOff=d.offline, totOnl=d.online, totDel=d.gofood+d.grabfood+d.shopee;
+  const g=totOff+totOnl+totDel||1;
+  const head=document.getElementById('ins-split-headline');
+  if(head) head.innerHTML=
+    `<span class="split-chip" style="--c:${TC.offline}">Offline ${fmtPct(totOff/g*100)}</span>`+
+    `<span class="split-chip" style="--c:${TC.online}">Online ${fmtPct(totOnl/g*100)}</span>`+
+    `<span class="split-chip" style="--c:${TC.grabfood}">Delivery ${fmtPct(totDel/g*100)}</span>`;
+  const base=baseOptions();
+  const mk=(label,data,color)=>({ label, data, borderColor:color, backgroundColor:color+'33',
+    fill:true, tension:.35, borderWidth:2, pointRadius:0, pointHoverRadius:5, pointBackgroundColor:color });
+  charts.insSplit=new Chart(document.getElementById('ins-split-chart'),{
+    type:'line',
+    data:{ labels:rows.map(r=>fmtShortDate(r.date)), datasets:[
+      mk('Offline',off,TC.offline), mk('Online',onl,TC.online), mk('Delivery',del,TC.grabfood) ] },
+    options:{ ...base, interaction:{mode:'index',intersect:false},
+      plugins:{ ...base.plugins, legend:{display:false},
+        tooltip:{ ...base.plugins?.tooltip, callbacks:{ label:ctx=>'  '+ctx.dataset.label+': '+fmtRp(ctx.parsed.y||0) }}},
+      scales:{ ...base.scales,
+        x:{ ...base.scales?.x, stacked:true, grid:{display:false}, ticks:{ ...base.scales?.x?.ticks, maxRotation:0, maxTicksLimit:8 } },
+        y:{ ...base.scales?.y, stacked:true, ticks:{ ...base.scales?.y?.ticks, callback:v=>v>=1e9?(v/1e9).toFixed(1)+'B':v>=1e6?(v/1e6).toFixed(0)+'M':v } } }
     }
   });
 }
@@ -7745,6 +7848,7 @@ const DRP = {
   labelMap: {
     'kpi-start':'drp-lbl-kpi',
     'ch-start':'drp-lbl-ch',
+    'insight-start':'drp-lbl-insight',
     'range1s':'drp-lbl-r1','range2s':'drp-lbl-r2','range3s':'drp-lbl-r3',
     'crange1s':'drp-lbl-cr1','crange2s':'drp-lbl-cr2',
     'fldt-c1s':'drp-lbl-fc1','fldt-c2s':'drp-lbl-fc2',
@@ -7759,6 +7863,7 @@ const DRP = {
 const DRP_TRIGGERS = {
   'kpi-start':      ()=>calcKpi(),
   'ch-start':       ()=>applyChannelFilter(),
+  'insight-start':  ()=>renderInsight(),
   'range1s':        ()=>loadPeriod(1),
   'range2s':        ()=>loadPeriod(2),
   'range3s':        ()=>loadPeriod(3),
