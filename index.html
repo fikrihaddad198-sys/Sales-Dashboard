@@ -6493,16 +6493,26 @@ function monthCumGmv(year, month, upToDay){
 }
 function buildKpiMoM(){
   destroyChart('kpiMoM');
-  const now=new Date(), y=now.getFullYear(), m=now.getMonth(), today=now.getDate();
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  // Data always lags a day (H-1): today's row is absent/partial, so compare
+  // through YESTERDAY's day-of-month on both months (apples-to-apples).
+  const effDay = now.getDate() - 1;
   const lm=new Date(y, m-1, 1);
-  const cur = monthCumGmv(y, m, today);
-  const last= monthCumGmv(lm.getFullYear(), lm.getMonth(), today);
   const headEl=document.getElementById('mom-headline');
   const emptyEl=document.getElementById('mom-empty');
   const wrapEl=document.getElementById('mom-chart-wrap');
+  if(effDay < 1){   // it's the 1st — no complete day this month yet
+    if(headEl) headEl.style.display='none';
+    if(wrapEl) wrapEl.style.display='none';
+    if(emptyEl){ emptyEl.style.display=''; emptyEl.textContent='Bulan baru — belum ada hari penuh untuk dibandingkan.'; }
+    return;
+  }
+  const cur = monthCumGmv(y, m, effDay);
+  const last= monthCumGmv(lm.getFullYear(), lm.getMonth(), effDay);
   // compare current cumulative to last month at the same number of elapsed days
   const lastComparable = last.cum.length ? last.cum[Math.min(cur.limit, last.cum.length)-1] : 0;
   if(!last.total){   // no prior-month data → clean empty state, no broken chart
+    if(emptyEl) emptyEl.textContent='Belum ada data bulan lalu untuk dibandingkan.';
     if(headEl) headEl.style.display='none';
     if(wrapEl) wrapEl.style.display='none';
     if(emptyEl) emptyEl.style.display='';
