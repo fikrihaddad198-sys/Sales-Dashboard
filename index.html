@@ -1738,23 +1738,15 @@ body.dr-animating .reveal {
   flex-shrink: 0;
 }
 
-.stacked-card-hdr {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 10px; margin-bottom: 6px; flex-wrap: wrap;
+/* Channel Contribution header: title + Total/Per-Hari segmented toggle */
+.contrib-hdr { justify-content: space-between; }
+.contrib-toggle {
+  display: inline-flex; gap: 2px; padding: 3px;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r3);
+  text-transform: none; letter-spacing: 0;
 }
-.stacked-card-title {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 12px; font-weight: 700; color: var(--t2); letter-spacing: 0.3px;
-}
-.stacked-card-period {
-  font-size: 12px; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase;
-  color: var(--t3);
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 20px; padding: 2px 8px;
-}
-.stacked-legend {
-  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+.contrib-daily-legend {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
 }
 .sl-pill {
   display: flex; align-items: center; gap: 4px;
@@ -1772,19 +1764,26 @@ body.dr-animating .reveal {
 .sl-pill[data-ch="gofood"] .sl-dot   { background: var(--tc-gofood); }
 .sl-pill[data-ch="grabfood"] .sl-dot { background: var(--tc-grabfood); }
 .sl-pill[data-ch="shopee"] .sl-dot   { background: var(--tc-shopee); }
-.stacked-total-row {
-  display: flex; align-items: baseline; gap: 8px;
-  margin-bottom: 14px; padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-}
-.stacked-total-label {
-  font-size: 12px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 1px; color: var(--t3);
-}
-.stacked-total-val {
-  font-size: 15px; font-weight: 800; color: var(--t1);
-  font-family: var(--mono); letter-spacing: -0.5px;
-}
+
+/* Card A — Bulan Ini vs Bulan Lalu */
+.mom-headline { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.mom-delta { font-size:22px; font-weight:800; font-family:var(--mono); letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+.mom-delta.up { color:var(--success); }
+.mom-delta.down { color:var(--red); }
+.mom-cap { font-size:12px; color:var(--t3); }
+.mom-empty { color:var(--t3); font-size:13px; padding:24px 8px; text-align:center; }
+
+/* Card B — Sorotan (auto insights) */
+.insight-list { display:flex; flex-direction:column; gap:8px; }
+.insight { display:flex; align-items:flex-start; gap:10px; font-size:13px; line-height:1.45;
+  color:var(--t2); padding:10px 12px; border-radius:var(--r3); background:var(--bg2); border:1px solid var(--border); }
+.insight b { color:var(--t1); font-weight:700; }
+.insight-ic { flex:none; width:16px; height:16px; margin-top:1px; }
+.insight-ic svg { width:16px; height:16px; display:block; }
+.insight.good .insight-ic { color:var(--success); }
+.insight.warn .insight-ic { color:var(--amber); }
+.insight.bad  .insight-ic { color:var(--red); }
+.insight-empty { color:var(--t3); font-size:13px; padding:12px 4px; }
 
 .card-hdr {
   font-size: 12px; font-weight: 600; color: var(--t2);
@@ -4620,37 +4619,39 @@ body.is-owner .owner-only { display:flex !important; }
       <!-- 8-metric strip -->
       <div class="metric-grid mb18" id="kpi-strip-grid"></div>
 
-      <!-- Channel Contribution — full width -->
+      <!-- Channel Contribution — full width, Total / Per Hari -->
       <div class="card reveal mb14" id="contrib-card-el">
-        <div class="card-hdr"><div class="card-hdr-dot"></div>Channel Contribution</div>
+        <div class="card-hdr contrib-hdr">
+          <span>Channel Contribution</span>
+          <div class="contrib-toggle">
+            <button class="toggle-btn active" id="contrib-mode-total" onclick="setContribMode('total')" type="button">Total</button>
+            <button class="toggle-btn" id="contrib-mode-daily" onclick="setContribMode('daily')" type="button">Per Hari</button>
+          </div>
+        </div>
         <div class="chan-bars" id="kpi-contrib"></div>
+        <div id="kpi-contrib-daily" style="display:none">
+          <div class="contrib-daily-legend" id="contrib-daily-legend">
+            <span class="sl-pill" data-ch="offline"><span class="sl-dot"></span>Offline</span>
+            <span class="sl-pill" data-ch="online"><span class="sl-dot"></span>Online</span>
+            <span class="sl-pill" data-ch="grabfood"><span class="sl-dot"></span>GrabFood</span>
+            <span class="sl-pill" data-ch="gofood"><span class="sl-dot"></span>GoFood</span>
+            <span class="sl-pill" data-ch="shopee"><span class="sl-dot"></span>ShopeeFood</span>
+          </div>
+          <div class="chart-wrap h260"><canvas id="kpi-contrib-daily-chart" role="img" aria-label="Grafik GMV per channel (bertumpuk) per hari"></canvas></div>
+        </div>
       </div>
 
-      <!-- Charts -->
+      <!-- Bottom analytics: Bulan Ini vs Bulan Lalu + Sorotan -->
       <div class="g2 mb0">
         <div class="card reveal card-glow">
-          <div class="card-hdr"><div class="card-hdr-dot"></div>Daily GMV Trend + 7D MA</div>
-          <div class="chart-wrap h260"><canvas id="kpi-trend-chart"></canvas></div>
+          <div class="card-hdr"><div class="card-hdr-dot"></div>Bulan Ini vs Bulan Lalu</div>
+          <div class="mom-headline" id="mom-headline"></div>
+          <div class="mom-empty" id="mom-empty" style="display:none">Belum ada data bulan lalu untuk dibandingkan.</div>
+          <div class="chart-wrap h220" id="mom-chart-wrap"><canvas id="kpi-mom-chart" role="img" aria-label="Grafik GMV kumulatif bulan ini vs bulan lalu"></canvas></div>
         </div>
-        <div class="card reveal reveal-delay-1 card-glow stacked-card">
-          <div class="stacked-card-hdr">
-            <div class="stacked-card-title">
-              <div class="card-hdr-dot"></div>
-              <span>Channel Stacked</span>
-              <span class="stacked-card-period">Daily</span>
-            </div>
-            <div class="stacked-legend" id="stacked-legend">
-              <span class="sl-pill" data-ch="offline"><span class="sl-dot"></span>Offline</span>
-              <span class="sl-pill" data-ch="gofood"><span class="sl-dot"></span>GoFood</span>
-              <span class="sl-pill" data-ch="grabfood"><span class="sl-dot"></span>GrabFood</span>
-              <span class="sl-pill" data-ch="shopee"><span class="sl-dot"></span>Shopee</span>
-            </div>
-          </div>
-          <div class="stacked-total-row" id="stacked-total-row">
-            <span class="stacked-total-label">Total periode</span>
-            <span class="stacked-total-val" id="stacked-total-val">—</span>
-          </div>
-          <div class="chart-wrap h240"><canvas id="kpi-stacked-chart"></canvas></div>
+        <div class="card reveal reveal-delay-1">
+          <div class="card-hdr"><div class="card-hdr-dot"></div>Sorotan</div>
+          <div class="insight-list" id="kpi-insights"></div>
         </div>
       </div>
     </div>
@@ -5234,6 +5235,7 @@ let _chartAnim = true;
    switch (see showPage). Cleared when data reloads or the theme changes. */
 let _renderedPages = new Set();
 let _kpiRows=[];  /* stored after calcKpi for popup use */
+let _contribMode='total', _kpiDailyRows=[];  /* Channel Contribution Total/Per-Hari toggle */
 let _weeklyChan='gmv', _customChan='gmv', _fldtChan='cup_total', _chTrendKey='offline';
 let _racePrevVals = {}; // stores prev frame values for counter animation
 let _periodMode='weekly', _fldtMode='weekly';
@@ -5651,7 +5653,7 @@ function moveNavPill(btn, instant){
    Only operates on dataset[0] — call only for single-series daily trend line charts. */
 /* Only single-series daily trend line charts — multi-series (weekly-trend, custom-daily, compare-trend)
    have overlapping datasets so markers on dataset[0] alone would be misleading. */
-const PEAK_TREND_IDS = new Set(['kpi-trend-chart','ch-trend-chart']);
+const PEAK_TREND_IDS = new Set(['ch-trend-chart']);
 function addPeakMarkers(canvas){
   if(!canvas || !PEAK_TREND_IDS.has(canvas.id)) return;
   const chart = Chart.getChart(canvas);
@@ -5924,7 +5926,7 @@ function initDockMagnify() {
    readers announce what it shows instead of "canvas". Invisible to sighted
    users. Canvases exist in the static HTML, so one pass at load covers them. */
 const CHART_LABELS = {
-  'kpi-trend-chart':'Grafik tren GMV harian','kpi-stacked-chart':'Grafik GMV per channel (bertumpuk) harian',
+  'kpi-mom-chart':'Grafik GMV kumulatif bulan ini vs bulan lalu','kpi-contrib-daily-chart':'Grafik GMV per channel (bertumpuk) per hari',
   'ch-pie-chart':'Grafik proporsi GMV per channel','ch-bar-chart':'Grafik GMV per channel',
   'ch-adt-chart':'Grafik ADT per channel','ch-trend-chart':'Grafik tren channel',
   'period-chart-1':'Grafik tren GMV periode 1','period-chart-2':'Grafik tren GMV periode 2',
@@ -6311,7 +6313,6 @@ function calcKpi(skipCharts){
   const remaining=Math.max(0,totalDays-elapsed);
   const forecastEom=data.gmv+avgDaily*remaining;
   const achPct=target?pct(data.gmv,target):0;
-  const ma7=computeMA(rows,'gmv',7);
   const total=data.offline+data.online+data.gofood+data.grabfood+data.shopee||1;
   const contrib={offline:pct(data.offline,total),online:pct(data.online,total),gofood:pct(data.gofood,total),grabfood:pct(data.grabfood,total),shopee:pct(data.shopee,total)};
 
@@ -6450,13 +6451,14 @@ function calcKpi(skipCharts){
       .map(x=>`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;"><div style="font-size:12px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:1.1px;margin-bottom:3px;">${x.l}</div><div style="font-size:12px;font-weight:700;color:var(--t1);font-family:var(--mono);">${x.v}</div></div>`).join('')}
     </div>`;
 
+  _kpiDailyRows = rows;   // for the Channel Contribution "Per Hari" view
+  renderKpiInsights({ rows, dailyTarget, achPct, idealAch, avgDaily });
   if(!skipCharts){
-    buildKpiTrend(rows,ma7);
-    buildKpiStacked(rows);
+    buildKpiMoM();
+    if(_contribMode==='daily') buildKpiContribDaily(rows);
   }
   setTimeout(()=>window.attachReveal&&window.attachReveal(), 80);
 }
-function computeMA(rows,key,w){ return rows.map((d,i)=>{ const sl=rows.slice(Math.max(0,i-w+1),i+1); return{ date:d.date, value:sl.reduce((a,r)=>a+(r[key]||0),0)/sl.length }; }); }
 
 function buildGauge(pct2){
   destroyChart('gauge');
@@ -6475,71 +6477,161 @@ function buildGauge(pct2){
   gpct.style.color=color;
   gpct.style.textShadow=`0 0 18px ${color}55`;
 }
-function buildKpiTrend(rows,ma7){
-  destroyChart('kpiTrend');
-  charts.kpiTrend=new Chart(document.getElementById('kpi-trend-chart'),{
+/* Card A — "Bulan Ini vs Bulan Lalu": cumulative GMV this calendar month-to-date
+   vs last calendar month over the same day window. Computed straight from allData
+   (full history), independent of the KPI date picker. */
+function monthCumGmv(year, month, upToDay){
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const limit = Math.min(upToDay, daysInMonth);
+  const perDay = new Array(daysInMonth+1).fill(0);
+  allData.forEach(r=>{ const d=r._date;
+    if(d && d.getFullYear()===year && d.getMonth()===month) perDay[d.getDate()] += (+r['_n_GMV']||0);
+  });
+  const cum=[]; let s=0;
+  for(let day=1; day<=limit; day++){ s+=perDay[day]||0; cum.push(s); }
+  return { cum, total:s, limit };
+}
+function buildKpiMoM(){
+  destroyChart('kpiMoM');
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth(), today=now.getDate();
+  const lm=new Date(y, m-1, 1);
+  const cur = monthCumGmv(y, m, today);
+  const last= monthCumGmv(lm.getFullYear(), lm.getMonth(), today);
+  const headEl=document.getElementById('mom-headline');
+  const emptyEl=document.getElementById('mom-empty');
+  const wrapEl=document.getElementById('mom-chart-wrap');
+  // compare current cumulative to last month at the same number of elapsed days
+  const lastComparable = last.cum.length ? last.cum[Math.min(cur.limit, last.cum.length)-1] : 0;
+  if(!last.total){   // no prior-month data → clean empty state, no broken chart
+    if(headEl) headEl.style.display='none';
+    if(wrapEl) wrapEl.style.display='none';
+    if(emptyEl) emptyEl.style.display='';
+    return;
+  }
+  if(headEl) headEl.style.display='';
+  if(wrapEl) wrapEl.style.display='';
+  if(emptyEl) emptyEl.style.display='none';
+  const delta = cur.total - lastComparable;
+  const up = delta>=0;
+  const pctv = lastComparable ? (delta/lastComparable*100) : 0;
+  if(headEl) headEl.innerHTML =
+    `<span class="mom-delta ${up?'up':'down'}">${up?'↑ +':'↓ −'}${fmtRp(Math.abs(delta))}</span>`+
+    `<span class="mom-cap">${up?'+':'−'}${Math.abs(pctv).toFixed(1)}% vs bulan lalu di tanggal yang sama</span>`;
+  const labels = cur.cum.map((_,i)=>String(i+1));
+  charts.kpiMoM=new Chart(document.getElementById('kpi-mom-chart'),{
     type:'line',
-    data:{ labels:rows.map(r=>fmtShortDate(r.date)), datasets:[
-      { label:'Daily GMV', data:rows.map(r=>r.gmv), borderColor:TC.gmv, backgroundColor:ctx=>grad(ctx,'#c9a84c',0.2), fill:true, tension:.42, pointRadius:3, pointHoverRadius:7, pointBackgroundColor:TC.gmv, pointBorderColor:'rgba(8,12,20,0.8)', pointBorderWidth:2, pointHoverBorderWidth:2, borderWidth:2.5, cubicInterpolationMode:'monotone' },
-      { label:'7D MA',     data:ma7.map(m=>m.value), borderColor:TC.amber, backgroundColor:'transparent', fill:false, tension:.4, borderDash:[6,4], pointRadius:0, borderWidth:2 }
+    data:{ labels, datasets:[
+      { label:'Bulan lalu', data:last.cum, borderColor:TC.text3, backgroundColor:'transparent', fill:false, tension:.35, borderWidth:2, borderDash:[5,4], pointRadius:0, pointHoverRadius:5 },
+      { label:'Bulan ini',  data:cur.cum,  borderColor:TC.gmv, backgroundColor:ctx=>grad(ctx,'#c9a84c',0.22), fill:true, tension:.35, borderWidth:2.5, pointRadius:0, pointHoverRadius:6, pointBackgroundColor:TC.gmv }
     ]},
     options:{ ...baseOptions(), interaction:{mode:'index',intersect:false},
-      layout:{ padding:{ top:24, bottom:6 } },
-      plugins:{ ...baseOptions().plugins,
-        insightMarkers:{ enabled:true, formatter:fmtRp, color:TC.gmv } }
+      plugins:{ ...baseOptions().plugins, legend:{display:false},
+        tooltip:{ ...baseOptions().plugins?.tooltip, callbacks:{
+          title:items=>'Tanggal '+items[0].label,
+          label:ctx=>'  '+ctx.dataset.label+': '+fmtRp(ctx.parsed.y||0)
+        }}},
+      scales:{ ...baseOptions().scales,
+        x:{ ...baseOptions().scales?.x, grid:{display:false}, ticks:{ ...baseOptions().scales?.x?.ticks, maxRotation:0, maxTicksLimit:8 } },
+        y:{ ...baseOptions().scales?.y, ticks:{ ...baseOptions().scales?.y?.ticks, callback:v=>v>=1e9?(v/1e9).toFixed(1)+'B':v>=1e6?(v/1e6).toFixed(0)+'M':v } } }
     }
   });
-  requestAnimationFrame(()=>addPeakMarkers(document.getElementById('kpi-trend-chart')));
 }
-function buildKpiStacked(rows){
-  destroyChart('kpiStacked');
-  // Update legend dot colors from TC
-  const chMap={offline:TC.offline,gofood:TC.gofood,grabfood:TC.grabfood,shopee:TC.shopee};
-  document.querySelectorAll('#stacked-legend .sl-pill').forEach(p=>{
-    const c=chMap[p.dataset.ch]; if(c) p.querySelector('.sl-dot').style.background=c;
-    p.querySelector('.sl-dot').style.boxShadow='0 0 4px '+c+'88';
+
+/* Card B — "Sorotan": auto insights from the selected KPI range's daily rows +
+   pace context. SVG icons (never emoji). Skips any insight whose condition
+   doesn't hold. */
+function renderKpiInsights(o){
+  const host=document.getElementById('kpi-insights'); if(!host) return;
+  const rows=o.rows||[], items=[];
+  const ic={
+    star :_fi('<path d="M12 3l2.4 6.2L21 10l-5 4 1.4 7L12 17.6 6.6 21 8 14 3 10l6.6-.8Z"/>'),
+    alert:_fi('<path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.6 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"/>'),
+    flame:_fi('<path d="M12 2s5 4 5 9a5 5 0 0 1-10 0c0-1 .4-2 1-2.6C8 11 9 12 9 12s-1-4 3-10Z"/>'),
+    up   :_fi('<path d="M3 17l6-6 4 4 8-8"/><path d="M17 7h4v4"/>'),
+    down :_fi('<path d="M3 7l6 6 4-4 8 8"/><path d="M17 17h4v-4"/>'),
+    check:_fi('<path d="M20 6 9 17l-5-5"/>'),
+  };
+  if(rows.length){
+    let best=rows[0]; rows.forEach(r=>{ if((r.gmv||0)>(best.gmv||0)) best=r; });
+    items.push({t:'good', ic:ic.star, m:`Hari terbaik: <b>${fmtShortDate(best.date)}</b> — ${fmtRp(best.gmv||0)}`});
+  }
+  if(o.dailyTarget){
+    let worst=null, worstGap=0; rows.forEach(r=>{ const g=(r.gmv||0)-o.dailyTarget; if(g<worstGap){ worstGap=g; worst=r; } });
+    if(worst) items.push({t:'warn', ic:ic.alert, m:`Paling jauh dari target harian: <b>${fmtShortDate(worst.date)}</b> (−${fmtRp(Math.abs(worstGap))})`});
+  }
+  const g=rows.map(r=>r.gmv||0);
+  if(g.length>=3){
+    let dir='', st=0;
+    for(let i=g.length-1;i>0;i--){ const d=g[i]>=g[i-1]?'naik':'turun'; if(dir===''){dir=d;st=1;} else if(d===dir) st++; else break; }
+    if(st>=2) items.push({t: dir==='naik'?'good':'warn', ic: dir==='naik'?ic.flame:ic.down, m:`Sales <b>${dir} ${st} hari</b> berturut-turut`});
+  }
+  if(o.idealAch!=null){
+    const ahead=o.achPct>=o.idealAch;
+    items.push({t: ahead?'good':'bad', ic: ahead?ic.check:ic.down,
+      m:`${ahead?'Di atas':'Di bawah'} pace ideal — <b>${fmtPct(o.achPct)}</b> vs ${fmtPct(o.idealAch)}`});
+  }
+  if(o.dailyTarget){
+    const ok=o.avgDaily>=o.dailyTarget;
+    items.push({t: ok?'good':'warn', ic: ok?ic.up:ic.down,
+      m:`Rata-rata harian ${ok?'di atas':'di bawah'} target — <b>${fmtRp(o.avgDaily)}</b> / ${fmtRp(o.dailyTarget)}`});
+  }
+  host.innerHTML = items.length
+    ? items.map(a=>`<div class="insight ${a.t}"><span class="insight-ic">${a.ic}</span><span class="insight-tx">${a.m}</span></div>`).join('')
+    : '<div class="insight-empty">Belum ada sorotan untuk rentang ini.</div>';
+}
+/* Channel Contribution "Per Hari" — daily stacked bar across ALL FIVE channels
+   (Offline, Online, GrabFood, GoFood, ShopeeFood). Replaces the old 4-channel
+   Channel Stacked card; the per-day breakdown now lives inside the Contribution
+   card via the Total / Per Hari toggle. */
+function setContribMode(m){
+  _contribMode = m;
+  const t=document.getElementById('contrib-mode-total'), d=document.getElementById('contrib-mode-daily');
+  if(t) t.classList.toggle('active', m==='total');
+  if(d) d.classList.toggle('active', m==='daily');
+  const tv=document.getElementById('kpi-contrib'), dv=document.getElementById('kpi-contrib-daily');
+  if(tv) tv.style.display = m==='total' ? '' : 'none';
+  if(dv) dv.style.display = m==='daily' ? '' : 'none';
+  if(m==='daily') buildKpiContribDaily(_kpiDailyRows);   // (re)build + re-animate on show
+}
+const CONTRIB_DAILY_CH=[
+  {label:'Offline',   key:'offline',  color:TC.offline},
+  {label:'Online',    key:'online',   color:TC.online},
+  {label:'GrabFood',  key:'grabfood', color:TC.grabfood},
+  {label:'GoFood',    key:'gofood',   color:TC.gofood},
+  {label:'ShopeeFood',key:'shopee',   color:TC.shopee},
+];
+function buildKpiContribDaily(rows){
+  destroyChart('kpiContribDaily');
+  rows = rows || [];
+  const CH = CONTRIB_DAILY_CH, keys = CH.map(c=>c.key);
+  // legend dots from TC
+  const cmap={}; CH.forEach(c=>cmap[c.key]=c.color);
+  document.querySelectorAll('#contrib-daily-legend .sl-pill').forEach(p=>{
+    const c=cmap[p.dataset.ch]; if(c){ const dot=p.querySelector('.sl-dot'); dot.style.background=c; dot.style.boxShadow='0 0 4px '+c+'88'; }
   });
-  // Update total
-  const total=(rows.reduce((s,r)=>(s+(r.offline||0)+(r.gofood||0)+(r.grabfood||0)+(r.shopee||0)),0));
-  const tvEl=document.getElementById('stacked-total-val');
-  if(tvEl) tvEl.textContent=fmtRp(total);
-  // Dataset builder
-  const mk=(label,key,color,isTop)=>({
-    label, data:rows.map(r=>r[key]||0),
-    backgroundColor:color+'cc',
-    hoverBackgroundColor:color,
-    borderRadius: isTop?{topLeft:4,topRight:4}:{topLeft:0,topRight:0},
-    borderSkipped:false, barPercentage:.75, categoryPercentage:.85,
-  });
-  const datasets=[mk('Offline','offline',TC.offline,false),mk('GoFood','gofood',TC.gofood,false),mk('GrabFood','grabfood',TC.grabfood,false),mk('Shopee','shopee',TC.shopee,true)];
+  const datasets = CH.map((c,i)=>({
+    label:c.label, data:rows.map(r=>r[c.key]||0),
+    backgroundColor:c.color+'d9', hoverBackgroundColor:c.color,
+    borderRadius: i===CH.length-1 ? {topLeft:5,topRight:5} : 0,
+    borderSkipped:false, barPercentage:.72, categoryPercentage:.86,
+  }));
   const base=baseOptions();
-  const customTooltip={
-    backgroundColor:'rgba(10,12,16,0.97)',
-    titleColor:TC.text2, bodyColor:'#e8ead8',
-    borderColor:'rgba(201,168,76,0.20)', borderWidth:1,
-    usePointStyle:true,
+  const tooltip={
+    backgroundColor:'rgba(10,12,16,0.97)', titleColor:TC.text2, bodyColor:'#e8ead8',
+    borderColor:'rgba(201,168,76,0.20)', borderWidth:1, usePointStyle:true,
     callbacks:{
       title:ctx=>{ const r=rows[ctx[0].dataIndex]; return r?fmtShortDate(r.date):''; },
-      label:ctx=>{
-        const val=ctx.parsed.y||0;
-        const tot=rows[ctx.dataIndex]&&(['offline','gofood','grabfood','shopee'].reduce((s,k)=>s+(rows[ctx.dataIndex][k]||0),0))||1;
-        const pct=((val/tot)*100).toFixed(1);
-        return '  '+ctx.dataset.label+': '+fmtRp(val)+' ('+pct+'%)';
-      },
-      footer:ctx=>{
-        const r=rows[ctx[0].dataIndex]; if(!r) return '';
-        const tot=(r.offline||0)+(r.gofood||0)+(r.grabfood||0)+(r.shopee||0);
-        return 'Total: '+fmtRp(tot);
-      }
+      label:ctx=>{ const v=ctx.parsed.y||0; const r=rows[ctx.dataIndex]; const tot=r?keys.reduce((s,k)=>s+(r[k]||0),0):0; const pct=tot?((v/tot)*100).toFixed(1):'0'; return '  '+ctx.dataset.label+': '+fmtRp(v)+' ('+pct+'%)'; },
+      footer:ctx=>{ const r=rows[ctx[0].dataIndex]; if(!r) return ''; return 'Total: '+fmtRp(keys.reduce((s,k)=>s+(r[k]||0),0)); }
     }
   };
-  charts.kpiStacked=new Chart(document.getElementById('kpi-stacked-chart'),{
+  charts.kpiContribDaily=new Chart(document.getElementById('kpi-contrib-daily-chart'),{
     type:'bar',
     data:{ labels:rows.map(r=>fmtShortDate(r.date)), datasets },
     options:{
       ...base,
       interaction:{mode:'index',intersect:false},
-      plugins:{...base.plugins, tooltip:{...base.plugins?.tooltip,...customTooltip}, legend:{display:false}},
+      plugins:{...base.plugins, tooltip:{...base.plugins?.tooltip,...tooltip}, legend:{display:false}},
       scales:{
         ...base.scales,
         x:{...base.scales?.x, stacked:true, grid:{...base.scales?.x?.grid, display:false}, ticks:{...base.scales?.x?.ticks, maxRotation:0, maxTicksLimit:10}},
