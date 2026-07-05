@@ -2,6 +2,8 @@
 <html lang="id" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
+<!-- Apply the persisted theme before first paint (no flash) -->
+<script>try{var _t=localStorage.getItem('foreTheme');if(_t)document.documentElement.setAttribute('data-theme',_t);}catch(e){}</script>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <title>Fore Coffee — Sales Intelligence</title>
 <!-- PWA: installable app -->
@@ -4078,6 +4080,8 @@ body.dashboard-locking .card {
 #device-logo .header-logo-icon{ background-color:#c9a84c; }
 #device-title{ font-size:22px; font-weight:800; letter-spacing:-0.4px; color:var(--t1,#f5f0e6); }
 #device-sub{ margin-top:6px; font-size:13px; color:var(--t3,#8d978c); line-height:1.5; }
+#device-theme-row{ display:flex; align-items:center; justify-content:center; gap:10px; margin:16px 0 4px; }
+.device-theme-lbl{ font-size:12px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--t3,#8d978c); }
 #device-grid{ margin-top:26px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .device-opt{
   display:flex; flex-direction:column; align-items:center; gap:6px;
@@ -4269,6 +4273,12 @@ body.is-owner .owner-only { display:flex !important; }
     <div id="device-logo"><span class="header-logo-icon" style="width:26px;height:33px;display:block;"></span></div>
     <div id="device-title">Pilih Perangkat</div>
     <div id="device-sub">Sesuaikan kehalusan animasi dengan perangkat yang Anda gunakan</div>
+    <div id="device-theme-row">
+      <span class="device-theme-lbl">Tema</span>
+      <button class="theme-switch" id="device-theme-btn" onclick="toggleTheme()" title="Ganti tema terang/gelap" role="switch" aria-label="Ganti tema terang atau gelap">
+        <span class="theme-switch-track"><span class="theme-switch-stars"></span><span class="theme-switch-knob"></span></span>
+      </button>
+    </div>
     <div id="device-grid">
       <button class="device-opt" onclick="pickDevice('mobile')" aria-label="HP — performa paling ringan">
         <span class="device-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2" width="11" height="20" rx="2.5"/><path d="M11 18h2"/></svg></span><span class="device-lb">HP</span><span class="device-hint">Paling ringan</span>
@@ -6309,6 +6319,7 @@ updateClock(); setInterval(updateClock, 30000);
 function applyThemeSwap(isDark){
   const html=document.documentElement;
   html.setAttribute('data-theme',isDark?'light':'dark');
+  try{ localStorage.setItem('foreTheme', isDark?'light':'dark'); }catch(e){}   // persist choice
   // icon morph is CSS-driven via [data-theme] now
   TC.text2=isDark?'#52525b':'#a1a1aa';
   TC.text3=isDark?'#71717a':'#71717a';
@@ -6336,6 +6347,14 @@ function toggleTheme(){
   if(reduce || !document.startViewTransition){ swap(); return; }
   document.startViewTransition(swap);
 }
+
+/* On load, sync the runtime (TC colours) to the persisted theme. The <head>
+   inline script already set data-theme early to avoid a flash; here we just
+   align TC when it's light (no charts exist yet, so this is cheap). */
+function initTheme(){
+  if(document.documentElement.getAttribute('data-theme')==='light') applyThemeSwap(true);
+}
+initTheme();
 
 /* ═══════════════════════════════════════════════════
    PAGE: KPI SUMMARY
@@ -7027,7 +7046,7 @@ function loadPeriod(n){
   // Use CSS custom property so color adapts when theme changes
   const statEl = document.getElementById('period-stats-'+n);
   statEl.style.setProperty('--ps-color', color);
-  statEl.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;">${[{l:'Total GMV',v:fmtRp(d.gmv)},{l:'Avg Daily',v:fmtRp(d.gmv/rows.length)},{l:'ADT Store',v:fmtNum(d.adt_store)},{l:'AT Store',v:fmtRp(d.at_store)},{l:'ADT Offline',v:fmtNum(d.adt_offline)},{l:'AT Offline',v:fmtRp(d.at_offline)},{l:'Food Sold Qty',v:fmtNum(d.food_qty_all)},{l:'Food Offline',v:fmtNum(d.food_off)+(_foodKont!==null?' · '+_foodKont.toFixed(1)+'%':'')},{l:'Large Offline',v:fmtNum(d.large_off)+(_largeKont!==null?' · '+_largeKont.toFixed(1)+'%':'')},{l:'Diary Offline',v:fmtNum(d.diary_off)+(_diaryKont!==null?' · '+_diaryKont.toFixed(1)+'%':'')},{l:'Topping Offline',v:fmtNum(d.topping_off)+(_toppingKont!==null?' · '+_toppingKont.toFixed(1)+'%':'')}].map(x=>`<div class="ps-card"><div class="ps-label">${x.l}</div><div class="ps-val" style="color:var(--ps-color)">${x.v}</div></div>`).join('')}</div>`;
+  statEl.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px;">${[{l:'Total GMV',v:fmtRp(d.gmv)},{l:'Avg Daily',v:fmtRp(d.gmv/rows.length)},{l:'ADT Store',v:fmtNum(d.adt_store)},{l:'AT Store',v:fmtRp(d.at_store)},{l:'Offline Sales',v:fmtRp(d.offline)},{l:'ADT Offline',v:fmtNum(d.adt_offline)},{l:'AT Offline',v:fmtRp(d.at_offline)},{l:'Food Sold Qty',v:fmtNum(d.food_qty_all)},{l:'Food Offline',v:fmtNum(d.food_off)+(_foodKont!==null?' · '+_foodKont.toFixed(1)+'%':'')},{l:'Large Offline',v:fmtNum(d.large_off)+(_largeKont!==null?' · '+_largeKont.toFixed(1)+'%':'')},{l:'Diary Offline',v:fmtNum(d.diary_off)+(_diaryKont!==null?' · '+_diaryKont.toFixed(1)+'%':'')},{l:'Topping Offline',v:fmtNum(d.topping_off)+(_toppingKont!==null?' · '+_toppingKont.toFixed(1)+'%':'')}].map(x=>`<div class="ps-card"><div class="ps-label">${x.l}</div><div class="ps-val" style="color:var(--ps-color)">${x.v}</div></div>`).join('')}</div>`;
   if(window.attachGhostGlow) statEl.querySelectorAll('.ps-card').forEach(window.attachGhostGlow);
   if(periodData[1]&&periodData[2]&&periodData[3]) buildWeeklySummary();
 }
