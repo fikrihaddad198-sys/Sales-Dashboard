@@ -3610,9 +3610,21 @@ body:not(.dashboard-ready) .fc-big {
 body.dr-animating .header {
   animation: dr-slide-down 0.5s var(--ease-out) 0.00s both;
 }
+/* Glass nav: animate ONLY opacity on the container — transform on a
+   backdrop-filter element re-rasterises the blur every frame (the "tersendat"
+   stutter). The motion lives on the non-glass children (.nav-btn) instead. */
 body.dr-animating .nav {
-  animation: dr-nav-in 0.62s var(--ease-out) 0.18s both;
+  animation: dr-fade-in 0.55s ease 0.12s both;
 }
+body.dr-animating .nav-btn {
+  animation: dr-nav-in 0.5s var(--ease-out) both;
+}
+body.dr-animating .nav-btn:nth-child(3)  { animation-delay: 0.20s; }
+body.dr-animating .nav-btn:nth-child(4)  { animation-delay: 0.26s; }
+body.dr-animating .nav-btn:nth-child(5)  { animation-delay: 0.32s; }
+body.dr-animating .nav-btn:nth-child(6)  { animation-delay: 0.37s; }
+body.dr-animating .nav-btn:nth-child(7)  { animation-delay: 0.41s; }
+body.dr-animating .nav-btn:nth-child(n+8){ animation-delay: 0.45s; }
 /* Filter bar fades in quietly */
 body.dr-animating .kpi-filter-bar {
   animation: dr-fade-in 0.5s ease 0.10s both;
@@ -3667,11 +3679,11 @@ body.dr-animating .metric-card:nth-child(n+5) { animation-delay: 0.47s; }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes dr-rise-in {
-  from { opacity: 0; transform: translateY(22px) scale(0.985); }
+  from { opacity: 0; transform: translateY(30px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes dr-nav-in {
-  from { opacity: 0; transform: translateY(10px) scale(0.965); }
+  from { opacity: 0; transform: translateY(14px) scale(0.9); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes dr-fade-in {
