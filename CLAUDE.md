@@ -219,6 +219,8 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 
 **Light mode**: defined with `[data-theme="light"]` — every CSS color must have both dark and light variants.
 
+**Theme persistence**: `toggleTheme()` → `applyThemeSwap()` writes `localStorage 'foreTheme'`. A tiny inline `<head>` script applies the saved theme before first paint (no flash); `initTheme()` syncs the JS `TC` colours on load. Toggle available in the app header AND on the device-selection screen (`#device-theme-btn`). (localStorage is fine here — it's a UI pref, not an auth token.)
+
 **Single accent**: The entire chrome uses gold `#c9a84c`. `--cyan`, `--green`, `--pink`, `--violet`, `--blue`, `--teal` are all aliased to gold. Only `--red` and `--amber` differ (red for negative, amber for warnings).
 
 **Channel colors** (the one data-identity exception to gold-only, per owner request): each sales channel has a fixed hue used everywhere (tabs, dots, cards, charts). Defined as `--tc-*` CSS tokens in BOTH themes (light variants deepened for legibility on cream) AND mirrored in the JS `TC` object (charts can't read CSS vars) — **keep the two in sync**. Tab-pill tints derive from the tokens via `color-mix`, so each channel only needs its one token updated.
