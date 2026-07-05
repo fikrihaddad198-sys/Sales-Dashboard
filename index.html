@@ -3611,7 +3611,7 @@ body.dr-animating .header {
   animation: dr-slide-down 0.5s var(--ease-out) 0.00s both;
 }
 body.dr-animating .nav {
-  animation: dr-slide-down 0.5s var(--ease-out) 0.06s both;
+  animation: dr-nav-in 0.62s var(--ease-out) 0.18s both;
 }
 /* Filter bar fades in quietly */
 body.dr-animating .kpi-filter-bar {
@@ -3649,13 +3649,30 @@ body.dr-animating .card:nth-child(4) { animation-delay: 0.44s; }
 body.dr-animating .card:nth-child(5) { animation-delay: 0.50s; }
 body.dr-animating .card:nth-child(n+6) { animation-delay: 0.54s; }
 
+/* KPI metric-strip cards were the one visible group the rules above missed
+   (they carry neither .card nor .reveal), so the entrance read flat. Give them
+   the same staggered rise-in. (Other stat cards — .fldt-card, .kpi-mini,
+   .summ-kpi-card — already animate via .reveal on their own pages.) */
+body.dr-animating .metric-card {
+  animation: dr-rise-in 0.55s var(--ease-out) both;
+}
+body.dr-animating .metric-card:nth-child(1) { animation-delay: 0.24s; }
+body.dr-animating .metric-card:nth-child(2) { animation-delay: 0.30s; }
+body.dr-animating .metric-card:nth-child(3) { animation-delay: 0.36s; }
+body.dr-animating .metric-card:nth-child(4) { animation-delay: 0.42s; }
+body.dr-animating .metric-card:nth-child(n+5) { animation-delay: 0.47s; }
+
 @keyframes dr-slide-down {
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes dr-rise-in {
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(22px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes dr-nav-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.965); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes dr-fade-in {
   from { opacity: 0; }
