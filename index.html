@@ -3351,13 +3351,17 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Subtitle */
+/* Subtitle — reveals per-letter like the brand (same keyframe/easing), centered. */
 #splash-sub {
   font-size: 12px; font-weight: 500; letter-spacing: 3.5px;
   text-transform: uppercase; color: var(--t3); line-height: 1.8;
+  text-align: center;
+}
+#splash-sub .ssl {   /* stagger letter — mirrors #splash-brand .sl */
+  display: inline-block;
   opacity: 0;
-  transform: translateY(10px);
-  animation: splash-sub-in 0.55s var(--ease-smooth) 0.75s forwards;
+  transform: translateY(24px);
+  animation: splash-char-in 0.5s var(--ease-smooth) forwards;
 }
 @keyframes splash-sub-in {
   to { opacity: 1; transform: translateY(0); }
@@ -9732,6 +9736,25 @@ function grantAccess(){
     span.style.animationDelay = (0.38 + i * 0.038) + 's';
     brand.appendChild(span);
   });
+
+  // Subtitle reveals per-letter too (same keyframe), starting after the brand.
+  const sub = document.getElementById('splash-sub');
+  if(sub){
+    sub.innerHTML = '';
+    const lines = ['Brew with passion', 'made with love'];
+    let j = 0;
+    lines.forEach((line, li) => {
+      line.split('').forEach(ch => {
+        const span = document.createElement('span');
+        span.className = 'ssl';
+        span.textContent = ch===' ' ? ' ' : ch;
+        span.style.animationDelay = (0.9 + j * 0.02) + 's';
+        sub.appendChild(span);
+        j++;
+      });
+      if(li < lines.length-1) sub.appendChild(document.createElement('br'));
+    });
+  }
 
   // Prepare content BEHIND the splash so heavy work (Chart.js) finishes before
   // the reveal — this is what keeps the card entrance smooth.
