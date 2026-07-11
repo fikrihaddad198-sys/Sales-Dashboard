@@ -4647,17 +4647,17 @@ body.is-owner .owner-only { display:flex !important; }
       <!-- Hero Banner -->
       <div class="hero-banner reveal mb18" id="hero-banner-el">
         <div class="hero-3col">
-          <div class="h-col h-col-gmv kpi-clickable" onclick="openKpiModal('gmv',this)" title="Lihat breakdown GMV">
+          <div class="h-col h-col-gmv kpi-clickable" onclick="openKpiModal('gmv',this)" title="Lihat breakdown GMV" tabindex="0" role="button">
             <div class="hero-eyebrow">Current GMV</div>
             <div class="hero-num" id="h-gmv">—</div>
             <div class="hero-sub" id="h-gmv-sub"></div>
           </div>
-          <div class="h-col h-col-mid kpi-clickable" onclick="openKpiModal('achievement',this)" title="Achievement = persen GMV terhadap target bulanan. 'Ideal' = posisi seharusnya berdasarkan hari berjalan. Klik untuk detail.">
+          <div class="h-col h-col-mid kpi-clickable" onclick="openKpiModal('achievement',this)" title="Achievement = persen GMV terhadap target bulanan. 'Ideal' = posisi seharusnya berdasarkan hari berjalan. Klik untuk detail." tabindex="0" role="button">
             <div class="hero-kpi-label">Achievement</div>
             <div class="hero-kpi-val arr-up" id="h-ach">—</div>
             <div class="h-col-sub">Ideal: <span id="h-vsideal">—</span></div>
           </div>
-          <div class="h-col h-col-right kpi-clickable" onclick="openKpiModal('pace',this)" title="Daily Pace = rata-rata GMV harian dibanding target harian ideal. 100% = tepat sesuai target. Klik untuk detail.">
+          <div class="h-col h-col-right kpi-clickable" onclick="openKpiModal('pace',this)" title="Daily Pace = rata-rata GMV harian dibanding target harian ideal. 100% = tepat sesuai target. Klik untuk detail." tabindex="0" role="button">
             <div class="hero-kpi-label">Daily Pace</div>
             <div class="hero-kpi-val" id="h-pace">—</div>
             <div class="h-col-sub">Avg <span id="h-pace-sub">—</span> / hari</div>
@@ -6517,7 +6517,7 @@ function calcKpi(skipCharts){
   } else {
     const stripKeys=['target','gap','daily_target','forecast'];
   stripEl.innerHTML = stripItems.map((k,i)=>`
-      <div class="metric-card kpi-clickable" style="--mc:${k.sc}" onclick="openKpiModal('${stripKeys[i]}',this)" title="${(METRIC_TIPS[k.l]||'')} Klik untuk detail.">
+      <div class="metric-card kpi-clickable" style="--mc:${k.sc}" onclick="openKpiModal('${stripKeys[i]}',this)" title="${(METRIC_TIPS[k.l]||'')} Klik untuk detail." tabindex="0" role="button">
         <div class="mc-label">${k.l}</div>
         <div class="mc-val">${k.v}</div>
         <div class="mc-sub" style="color:${k.sc}">${k.s}</div>
@@ -6551,7 +6551,7 @@ function calcKpi(skipCharts){
     {name:'Shopee',   gmv:data.shopee,   val:contrib.shopee,   color:TC.shopee},
   ].sort((a,b)=>b.val-a.val);
   document.getElementById('kpi-contrib').innerHTML='<div class="contrib-grid">'+contribItems.map((c,i)=>
-    '<div class="contrib-ch-card" style="--ch-color:'+c.color+'" onclick="openChannelPopup(\''+c.name.toLowerCase()+'\',\''+c.name+'\',\''+c.color+'\',this)">'+
+    '<div class="contrib-ch-card" style="--ch-color:'+c.color+'" onclick="openChannelPopup(\''+c.name.toLowerCase()+'\',\''+c.name+'\',\''+c.color+'\',this)" tabindex="0" role="button">'+
       '<div class="contrib-rank">'+( i+1)+'</div>'+
       '<div class="contrib-ch-name">'+c.name+'</div>'+
       '<div class="contrib-ch-gmv" style="color:'+c.color+'">'+fmtRpJt(c.gmv)+'</div>'+
@@ -9234,6 +9234,13 @@ function closeChannelPopup(){
   _popupClose();
 }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeChannelPopup(); });
+
+/* Enter/Space activates keyboard-focused KPI/channel cards (mouse-only onclick fallback) */
+document.addEventListener('keydown', e=>{
+  if((e.key==='Enter'||e.key===' ') && e.target.matches('.kpi-clickable,.contrib-ch-card')){
+    e.preventDefault(); e.target.click();
+  }
+});
 
 /* ── Keyboard shortcuts 1–8: jump to page by number ── */
 const _NAV_PAGES = ['kpi','channel','period','fldt','allsumm','d2d','race','compare'];
