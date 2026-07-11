@@ -8752,6 +8752,7 @@ function _popupOpen(cardEl){
   setTimeout(_fireOnOpened, 680); /* fallback if transitionend doesn't fire */
 
   document.body.style.overflow = 'hidden';
+  activateFocusTrap(popup, cardEl);
 }
 
 function _popupClose(){
@@ -8795,6 +8796,7 @@ function _popupClose(){
     document.body.style.overflow = '';
     _chPopupCharts.forEach(c=>{try{c.destroy();}catch(e){}});
     _chPopupCharts=[];
+    deactivateFocusTrap();
   }
   popup.addEventListener('transitionend', function onClose(e){
     if(e.propertyName!=='transform') return;
@@ -9172,11 +9174,11 @@ function openKpiModal(type,cardEl){
   }));
 
   // Build chart
-  if(chartData && !modal.querySelector('#kpi-modal-chart')) return;
+  if(chartData && !modal.querySelector('#kpi-modal-chart')){ activateFocusTrap(modal, cardEl); return; }
   const isDark=document.documentElement.getAttribute('data-theme')!=='light';
   const base=baseOptions();
   const ctx=document.getElementById('kpi-modal-chart');
-  if(!ctx) return;
+  if(!ctx){ activateFocusTrap(modal, cardEl); return; }
   _kpiModalChart=new Chart(ctx,{
     type: chartData.type||'bar',
     data:{ labels, datasets: chartData.datasets },
@@ -9189,6 +9191,7 @@ function openKpiModal(type,cardEl){
       }
     }
   });
+  activateFocusTrap(modal, cardEl);
 }
 
 function closeKpiModal(){
@@ -9219,6 +9222,7 @@ function closeKpiModal(){
     modal.style.display='none'; modal.style.transform='none'; modal.style.transition=''; modal.style.opacity='0';
     document.body.style.overflow='';
     if(_kpiModalChart){ _kpiModalChart.destroy(); _kpiModalChart=null; }
+    deactivateFocusTrap();
   }
   modal.addEventListener('transitionend',function onDone(e){
     if(e.propertyName!=='transform') return;
@@ -9241,6 +9245,32 @@ document.addEventListener('keydown', e=>{
     e.preventDefault(); e.target.click();
   }
 });
+
+/* ── Focus trap for KPI modal + channel popup (shared — only one is ever open at a time) ── */
+let _focusTrapPrev = null;
+let _focusTrapHandler = null;
+
+function activateFocusTrap(containerEl, triggerEl){
+  _focusTrapPrev = triggerEl || document.activeElement;
+  const sel = 'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+  const first = containerEl.querySelector(sel);
+  if(first) first.focus();
+  _focusTrapHandler = (e)=>{
+    if(e.key!=='Tab') return;
+    const f = [...containerEl.querySelectorAll(sel)].filter(el=>el.offsetParent!==null);
+    if(!f.length) return;
+    const first=f[0], last=f[f.length-1];
+    if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+  };
+  document.addEventListener('keydown', _focusTrapHandler);
+}
+
+function deactivateFocusTrap(){
+  if(_focusTrapHandler){ document.removeEventListener('keydown', _focusTrapHandler); _focusTrapHandler=null; }
+  if(_focusTrapPrev?.focus) _focusTrapPrev.focus();
+  _focusTrapPrev = null;
+}
 
 /* ── Keyboard shortcuts 1–8: jump to page by number ── */
 const _NAV_PAGES = ['kpi','channel','period','fldt','allsumm','d2d','race','compare'];
