@@ -3162,6 +3162,17 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 #toast-host{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom,0));
   transform:translateX(-50%);z-index:var(--z-top);display:flex;flex-direction:column;gap:8px;
   pointer-events:none;width:max-content;max-width:min(92vw,420px)}
+
+/* ── Swipe-nav hint: a small bar that tracks the finger during a page swipe —
+   continuous feedback during the gesture, not just a commit at release. Only
+   this tiny pill moves/fades; the page content is never touched (translating
+   it was tried and removed — re-rasterises charts, causes shake). ── */
+#swipe-hint{
+  position:fixed; left:50%; bottom:calc(90px + env(safe-area-inset-bottom,0));
+  width:36px; height:4px; border-radius:99px; background:var(--gold);
+  transform:translateX(-50%); z-index:var(--z-chrome);
+  opacity:0; pointer-events:none; will-change:opacity,transform;
+}
 .toast{background:var(--bg2);border:1px solid var(--border-md);border-radius:12px;
   padding:11px 15px;font-size:var(--fs-body);color:var(--t1);box-shadow:var(--e3);
   opacity:0;transform:translateY(8px);
@@ -4460,6 +4471,7 @@ body.is-owner .owner-only { display:flex !important; }
 <!-- ═══ SPLASH SCREEN ═══ -->
 <div id="screen-guard" aria-hidden="true"></div>
 <div id="toast-host" aria-live="polite"></div>
+<div id="swipe-hint" aria-hidden="true"></div>
 
 <!-- In-app confirm dialog (replaces native confirm()) -->
 <div id="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-msg" hidden>
@@ -9326,12 +9338,29 @@ document.addEventListener('keydown', (e) => {
 
 /* ── Swipe navigation (mobile touch) ── */
 (function initSwipe() {
-  let _swipeStartX = null;
+  let _swipeStartX = null, _swipeDX = 0, _swipeRaf = null;
+  const hint = document.getElementById('swipe-hint');
+  const HINT_MAX = 22; // px — the hint itself never moves far; the page is never touched
+  const hintEnabled = () => hint && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const applyHint = () => {
+    _swipeRaf = null;
+    const clamped = Math.max(-HINT_MAX, Math.min(HINT_MAX, _swipeDX * 0.3));
+    hint.style.opacity = Math.min(1, Math.abs(_swipeDX) / 50) * 0.9;
+    hint.style.transform = `translateX(calc(-50% + ${clamped}px))`;
+  };
   document.addEventListener('touchstart', e => {
     if (e.touches.length > 1) { _swipeStartX = null; return; }  // ignore pinch
-    _swipeStartX = e.touches[0].clientX;
+    _swipeStartX = e.touches[0].clientX; _swipeDX = 0;
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    // Continuous feedback during the gesture (not just at release) — Apple's
+    // fluid-interface principle. Only this small pill tracks the finger.
+    if (_swipeStartX === null || e.touches.length > 1 || !hintEnabled()) return;
+    _swipeDX = e.touches[0].clientX - _swipeStartX;
+    if (_swipeRaf == null) _swipeRaf = requestAnimationFrame(applyHint);
   }, { passive: true });
   document.addEventListener('touchend', e => {
+    if (hint) hint.style.opacity = 0;
     if (_swipeStartX === null) return;
     if (e.changedTouches.length > 1) { _swipeStartX = null; return; }  // ignore pinch end
     const dx = e.changedTouches[0].clientX - _swipeStartX;
@@ -10041,7 +10070,13 @@ function enableMapZoom(svg){
   if(!svg) return;
   const VB = svg._vb || (svg._vb = {});
   VB.x=0; VB.y=0; VB.w=1000; VB.h=979;            // reset to full view each reveal
-  const apply = ()=> svg.setAttribute('viewBox', VB.x+' '+VB.y+' '+VB.w+' '+VB.h);
+  // Rubber-band: single-finger pan resists progressively past the edge instead
+  // of a hard stop (real things slow down before they stop). VB.x/y are allowed
+  // to accumulate past bounds during the drag; bounded() only affects what's
+  // rendered. snapBack() eases them back into range once the gesture ends.
+  const rubberband = (overshoot, dim, k=0.55) => (overshoot*dim*k)/(dim+k*Math.abs(overshoot));
+  const bounded = (v, dim, max) => v<0 ? -rubberband(-v,dim) : v>max ? max+rubberband(v-max,dim) : v;
+  const apply = ()=> svg.setAttribute('viewBox', bounded(VB.x,VB.w,1000-VB.w)+' '+bounded(VB.y,VB.h,979-VB.h)+' '+VB.w+' '+VB.h);
   apply();
   if(svg._zoomBound) return;                       // bind listeners only once
   svg._zoomBound = true;
@@ -10049,11 +10084,27 @@ function enableMapZoom(svg){
   const pts = new Map();
   let lastDist = 0, lastMid = null, moved = 0;
   const R = ()=> svg.getBoundingClientRect();
-  const clamp = ()=>{ VB.x = Math.max(0, Math.min(VB.x, 1000-VB.w)); VB.y = Math.max(0, Math.min(VB.y, 979-VB.h)); };
+  // Hard clamp — still used for pinch-zoom (combined zoom+pan) and wheel,
+  // where rubber-banding a compound gesture adds risk for little payoff.
+  const clampHard = ()=>{ VB.x = Math.max(0, Math.min(VB.x, 1000-VB.w)); VB.y = Math.max(0, Math.min(VB.y, 979-VB.h)); };
   const zoomTo = (cx, cy, newW)=>{
     const r = R(); newW = Math.max(MINW, Math.min(MAXW, newW)); const newH = newW*AR;
     const fx = (cx-r.left)/r.width, fy = (cy-r.top)/r.height;
     VB.x += fx*(VB.w-newW); VB.y += fy*(VB.h-newH); VB.w = newW; VB.h = newH;
+  };
+  // The "bounce back" half of rubber-banding — without this the view would
+  // stay resisted-but-stuck past the edge once the finger lifts.
+  const snapBack = ()=>{
+    const maxX=1000-VB.w, maxY=979-VB.h;
+    const toX=Math.max(0,Math.min(VB.x,maxX)), toY=Math.max(0,Math.min(VB.y,maxY));
+    if(toX===VB.x && toY===VB.y) return;
+    const fromX=VB.x, fromY=VB.y, t0=performance.now(), dur=280;
+    const step=(t)=>{
+      const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3); // ease-out cubic settle
+      VB.x=fromX+(toX-fromX)*e; VB.y=fromY+(toY-fromY)*e; apply();
+      if(p<1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   };
   svg.addEventListener('pointerdown', e=>{
     pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); moved=0; _mapPanned=false;
@@ -10068,19 +10119,19 @@ function enableMapZoom(svg){
       const dist=Math.hypot(a.x-b.x,a.y-b.y), mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
       if(lastDist){ zoomTo(mid.x, mid.y, VB.w*(lastDist/dist));
         if(lastMid){ VB.x -= (mid.x-lastMid.x)/r.width*VB.w; VB.y -= (mid.y-lastMid.y)/r.height*VB.h; } }
-      lastDist=dist; lastMid=mid; _mapPanned=true; clamp(); apply();
+      lastDist=dist; lastMid=mid; _mapPanned=true; clampHard(); apply();
       try{ svg.setPointerCapture(e.pointerId); }catch(_){}
     } else {
       const dx=e.clientX-prev.x, dy=e.clientY-prev.y; moved += Math.hypot(dx,dy);
-      if(moved>6){ _mapPanned=true; VB.x -= dx/r.width*VB.w; VB.y -= dy/r.height*VB.h; clamp(); apply();
+      if(moved>6){ _mapPanned=true; VB.x -= dx/r.width*VB.w; VB.y -= dy/r.height*VB.h; apply();
         try{ svg.setPointerCapture(e.pointerId); }catch(_){} }
     }
   });
-  const end = e=>{ pts.delete(e.pointerId); if(pts.size<2){ lastDist=0; lastMid=null; } };
+  const end = e=>{ pts.delete(e.pointerId); if(pts.size<2){ lastDist=0; lastMid=null; snapBack(); } };
   svg.addEventListener('pointerup', end);
   svg.addEventListener('pointercancel', end);
   svg.addEventListener('wheel', e=>{
-    e.preventDefault(); zoomTo(e.clientX, e.clientY, VB.w*(e.deltaY<0?0.85:1.18)); clamp(); apply();
+    e.preventDefault(); zoomTo(e.clientX, e.clientY, VB.w*(e.deltaY<0?0.85:1.18)); clampHard(); apply();
   }, {passive:false});
 }
 
