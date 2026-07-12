@@ -314,9 +314,7 @@ Full audit artifact: https://claude.ai/code/artifact/bc0ba79f-aca3-435f-a2b1-47f
 
 **⏳ Deferred (risky or own project — need owner decision):** enforce `var(--sp*)` (mass refactor, layout-regression risk), ≥44px touch targets (density trade-off), Cmd-K palette (feature), build-split + Playwright (deploy/infra).
 
-Current audit composite ≈ **7.0/10** (was 6.3); heuristics ≈ **70/100** (was 62).
-
-**✅ Medium / 💎 Polish (after review):** enforce `var(--sp*)` (only ~5% adopted; ~123 raw `padding` + 112 raw `gap`), collapse dual radius scale (`--r2..r7` vs `--r-sm..xl`), date presets, colour-blind ▲/▼ status, empty states, ≥44px touch targets, Cmd-K palette, chart `aria-label`/empty states, component index, build-split + Playwright smoke test.
+Re-audit 2026-07-12 (same rubric, methodology re-run against current source — full comparison: https://claude.ai/code/artifact/cad4f3b5-29bb-4f92-a1ee-a1c20ecd9c2b): composite **7.25/10** (was 6.3, then 7.0); heuristics **69/100** (was 62). Biggest movers: Typography 4.0→7.0 (12px floor now fully enforced, 0 sub-12px font-sizes left) and Accessibility 5.5→7.5 (keyboard access + focus-trap shipped, `aria-*`/`role=` usage nearly doubled). **Spacing token adoption has not moved at all** — still ~5% (~13 `var(--sp*)` vs ~246 raw `padding`/`gap`), the one system untouched since the original audit. Radius scale confirmed consolidated (legacy `--r-sm..xl` genuinely gone). `--success` token added and in use (11×). Native `alert()` fully gone (0 real calls left).
 
 ## Standing Rules
 
