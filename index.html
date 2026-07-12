@@ -19,7 +19,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-180.png"/>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900;1,14..32,400&family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Fira+Code:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- xlsx / html2canvas / jspdf are export-only — lazy-loaded on demand (see
      ensureExportLibs()) so they don't block first paint on every visit. -->
@@ -115,7 +115,7 @@
   --t4: #3f3f46;
 
   /* Typography */
-  --font: 'Inter', system-ui, -apple-system, sans-serif;
+  --font: 'Geist', system-ui, -apple-system, sans-serif;
   --mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
 
   /* Radius system */
@@ -2544,7 +2544,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   margin-bottom:18px;
 }
 .drp-month-label{
-  font-family:'Inter',sans-serif;font-size:17px;font-weight:700;
+  font-family:'Geist',sans-serif;font-size:17px;font-weight:700;
   color:#fff;letter-spacing:-.3px;
 }
 [data-theme="light"] .drp-month-label{color:#0f172a;}
@@ -2566,7 +2566,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 .drp-grid{display:grid !important;grid-template-columns:repeat(7,1fr) !important;gap:2px;}
 .drp-dow{
   text-align:center;
-  font-size:12px;font-family:'Inter',sans-serif;font-weight:600;
+  font-size:12px;font-family:'Geist',sans-serif;font-weight:600;
   color:rgba(255,255,255,0.35);
   padding:0 0 12px;text-transform:uppercase;letter-spacing:.5px;
 }
@@ -2581,7 +2581,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   display:flex;align-items:center;justify-content:center;
   margin:0 auto;border-radius:50%;
   transition:background .12s,color .12s,transform .1s;
-  font-family:'Inter',sans-serif;
+  font-family:'Geist',sans-serif;
 }
 [data-theme="light"] .drp-day{color:#0f172a;}
 .drp-day:hover:not(.drp-empty):not(.drp-disabled){
@@ -2625,7 +2625,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
 /* Hint */
 .drp-hint{
-  text-align:center;font-size:12px;font-family:'Inter',sans-serif;font-weight:500;
+  text-align:center;font-size:12px;font-family:'Geist',sans-serif;font-weight:500;
   color:rgba(255,255,255,0.45);min-height:18px;margin-top:14px;
   letter-spacing:.2px;
 }
@@ -2655,7 +2655,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   color:rgba(255,255,255,0.55);
   padding:8px 4px;border-radius:8px;
   font-size:14px;font-weight:500;cursor:pointer;
-  font-family:'Inter',sans-serif;
+  font-family:'Geist',sans-serif;
   transition:color .15s;
 }
 .drp-clear:hover{color:#fff;}
@@ -5397,7 +5397,7 @@ const FLDT_META   = [
 // the burst so charts redraw once after the motion settles.
 Chart.defaults.resizeDelay = 160;
 Chart.defaults.color = TC.text2;
-Chart.defaults.font  = { family:"'Inter',sans-serif", size:11 };
+Chart.defaults.font  = { family:"'Geist',sans-serif", size:11 };
 Chart.defaults.elements.line.borderCapStyle = 'round';
 Chart.defaults.elements.line.borderJoinStyle = 'round';
 Chart.defaults.elements.point.hoverRadius = 7;
@@ -5492,7 +5492,7 @@ const insightMarkerPlugin = {
       ctx.lineWidth=2; ctx.strokeStyle = isLight ? 'rgba(255,255,255,0.95)' : 'rgba(10,10,11,0.9)'; ctx.stroke();
       // label pill
       const text = label + '  ' + fmt(vals[idx]);
-      ctx.font = "700 9px 'Inter', sans-serif";
+      ctx.font = "700 9px 'Geist', sans-serif";
       const tw = ctx.measureText(text).width;
       const pw = tw + 14, ph = 17;
       let px = x - pw/2;
@@ -5538,7 +5538,7 @@ function baseOptions(yFmt='rp'){
         padding:{ top:11, bottom:11, left:14, right:14 },
         boxPadding:6,
         caretSize:6,
-        titleFont:{ family:"'Inter',sans-serif", size:10.5, weight:'700' },
+        titleFont:{ family:"'Geist',sans-serif", size:10.5, weight:'700' },
         titleMarginBottom:7,
         bodyFont:{ family:"'JetBrains Mono',monospace", size:11.5, weight:'500' },
         bodySpacing:5,

@@ -226,7 +226,7 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 **Channel colors** (the one data-identity exception to gold-only, per owner request): each sales channel has a fixed hue used everywhere (tabs, dots, cards, charts). Defined as `--tc-*` CSS tokens in BOTH themes (light variants deepened for legibility on cream) AND mirrored in the JS `TC` object (charts can't read CSS vars) — **keep the two in sync**. Tab-pill tints derive from the tokens via `color-mix`, so each channel only needs its one token updated.
 - `--tc-offline` = blue · `--tc-online` = yellow · `--tc-grabfood` = dark green · `--tc-gofood` = light green · `--tc-shopee` = orange
 
-**Typography**: Inter (UI), JetBrains Mono (numbers/code).
+**Typography**: Geist (UI, swapped from Inter 2026-07 — a motion/design audit flagged Inter as the generic "AI-default" font; Geist keeps the same neutral character with more presence), JetBrains Mono (numbers/code). `Fira Sans` was dropped from the Google Fonts load at the same time — it was loaded but never referenced anywhere in the CSS.
 
 **Rule**: Gold accent for data/KPIs only. Chrome/nav/borders stay neutral Zinc/Slate.
 
