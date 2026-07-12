@@ -313,10 +313,6 @@ body::after {
 /* ─────────────────────────────────────────────────────
    KEYFRAMES
 ───────────────────────────────────────────────────── */
-@keyframes pulse-live {
-  0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(201,168,76,0.6); }
-  60%     { opacity:0.7; box-shadow:0 0 0 7px rgba(201,168,76,0); }
-}
 @keyframes skeleton-shimmer {
   0%   { background-position: -400px 0; }
   100% { background-position:  400px 0; }
@@ -368,10 +364,6 @@ body::after {
 @keyframes float-orb {
   0%,100% { transform: translateY(0px) scale(1); }
   50%      { transform: translateY(-18px) scale(1.04); }
-}
-@keyframes gold-shimmer {
-  0%   { background-position: -300px 0; }
-  100% { background-position:  300px 0; }
 }
 @keyframes logo-pulse {
   0%,100% { box-shadow: 0 0 0 1px rgba(255,255,255,0.20) inset, 0 0 0 1px rgba(201,168,76,0.45), 0 0 0 3px rgba(201,168,76,0.10), 0 0 28px rgba(201,168,76,0.55), 0 2px 8px rgba(0,0,0,0.45); }
@@ -463,26 +455,6 @@ body::after {
     0 0 40px rgba(201,168,76,0.08),
     0 0 0 1px rgba(201,168,76,0.08);
   cursor: pointer;
-}
-
-/* Gold accent line for premium sections */
-.gold-line {
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, rgba(201,168,76,0.4) 70%, transparent 100%);
-  background-size: 300px 100%;
-  animation: gold-shimmer 3s linear infinite;
-  margin: 16px 0;
-  opacity: 0.5;
-}
-
-/* Premium badge */
-.badge-premium {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 10px; border-radius: 20px;
-  background: linear-gradient(135deg, rgba(201,168,76,0.15) 0%, rgba(201,168,76,0.08) 100%);
-  border: 1px solid rgba(201,168,76,0.25);
-  font-size: 12px; font-weight: 700; font-family: var(--mono);
-  color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase;
 }
 
 /* ─────────────────────────────────────────────────────
@@ -753,22 +725,6 @@ body.dr-animating .reveal {
   font-family: var(--mono); font-size: 12px; color: var(--t3);
   letter-spacing: 0.5px; padding: 0 var(--sp2);
   font-variant-numeric: tabular-nums;
-}
-.live-badge {
-  display: flex; align-items: center; gap: 6px;
-  background: linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.06) 100%);
-  border: 1px solid rgba(201,168,76,0.25);
-  padding: 4px 11px; border-radius: 20px;
-  font-size: 12px; font-weight: 700; font-family: var(--mono);
-  color: var(--green); letter-spacing: 1px;
-  box-shadow: 0 0 16px rgba(201,168,76,0.12), 0 0 0 1px rgba(201,168,76,0.06) inset;
-  backdrop-filter: blur(8px);
-}
-.live-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--green);
-  animation: pulse-live 2.5s ease-in-out infinite;
-  flex-shrink: 0;
 }
 .hdr-btn {
   height: 32px;
@@ -1392,7 +1348,7 @@ body.dr-animating .reveal {
 /* Chart wrappers */
 .chart-wrap { position: relative; }
 .chart-wrap canvas { width: 100% !important; display: block; }
-.h140 { height:140px; } .h160 { height:160px; } .h180 { height:180px; }
+.h180 { height:180px; }
 
 /* Peak/lowest markers on daily trend charts */
 .peak-marker {
@@ -1421,7 +1377,6 @@ body.dr-animating .reveal {
 .tcb-text { color: var(--t3); }
 .h200 { height:200px; } .h220 { height:220px; } .h240 { height:240px; }
 .h260 { height:260px; } .h280 { height:280px; } .h300 { height:300px; }
-.h320 { height:320px; }
 
 /* ─────────────────────────────────────────────────────
    CARD SYSTEM — Tier 2: KPI / Hero Page
@@ -1465,7 +1420,6 @@ body.dr-animating .reveal {
   font-size: 12px; font-weight: 700; color: var(--t3);
   letter-spacing: 1.4px; text-transform: uppercase; white-space: nowrap;
 }
-.filter-sep { display: none; }
 
 .kpi-scroll {
   padding: var(--sp6) max(var(--sp7), calc((100% - 1280px) / 2));
@@ -1891,7 +1845,6 @@ body.dr-animating .reveal {
   box-shadow: var(--e2), 0 0 20px rgba(46,107,69,0.07);
 }
 .inp-sm { min-width: 76px; }
-.inp-xs { min-width: 60px; }
 
 /* ─────────────────────────────────────────────────────
    BUTTONS
@@ -1952,26 +1905,10 @@ body.dr-animating .reveal {
    CHANNEL BARS
 ───────────────────────────────────────────────────── */
 .chan-bars { display: flex; flex-direction: column; gap: 10px; }
-.chan-bar-row { display: flex; align-items: center; gap: 10px; }
-.cbl { font-size: 12px; font-weight: 500; color: var(--t1); min-width: 70px; }
-.cbt { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
-.cbf { height: 100%; border-radius: 3px; transition: width 1.1s var(--ease-bar); }
-.cbp { font-size: 12px; font-weight: 700; font-family: var(--mono); min-width: 36px; text-align: right; }
 
 /* Pace bar */
 .pace-track { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-top: 8px; }
 .pace-fill  { height: 100%; border-radius: 3px; transition: width 1.1s var(--ease-bar); }
-
-/* ─────────────────────────────────────────────────────
-   GAUGE
-───────────────────────────────────────────────────── */
-.gauge-wrap { position: relative; display: flex; flex-direction: column; align-items: center; }
-.gauge-center {
-  position: absolute; bottom: 6px; left: 50%;
-  transform: translateX(-50%); text-align: center; pointer-events: none;
-}
-.gauge-pct  { font-size: 26px; font-weight: 800; line-height: 1; }
-.gauge-lbl  { font-size: 12px; color: var(--t3); margin-top: 2px; }
 
 /* ─────────────────────────────────────────────────────
    TOGGLE GROUP
@@ -2250,7 +2187,6 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 ───────────────────────────────────────────────────── */
 .g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 .g3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-.g4  { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 16px; }
 .mb0 { margin-bottom: 0 !important; }
 .mb8 { margin-bottom: 8px; }
 .mb12 { margin-bottom: 14px; }
@@ -6586,8 +6522,6 @@ function calcKpi(skipCharts){
   const atvEl=document.getElementById('h-avg-atv');
   if(atvEl) animateCounter(atvEl, totalTrx>0 ? data.gmv/totalTrx : 0, v=>fmtRp(v), 900);
 
-  if(!skipCharts) buildGauge(achPct);
-
   /* Contribution bars */
   const contribItems=[
     {name:'Offline',  gmv:data.offline,  val:contrib.offline,  color:TC.offline},
@@ -6628,23 +6562,6 @@ function calcKpi(skipCharts){
   setTimeout(()=>window.attachReveal&&window.attachReveal(), 80);
 }
 
-function buildGauge(pct2){
-  destroyChart('gauge');
-  const gaugeCanvas=document.getElementById('gaugeChart');
-  if(!gaugeCanvas) return;  /* element removed from KPI page */
-  const clamped=Math.min(pct2,100);
-  const color=pct2>=100?TC.accent2:pct2>=80?TC.amber:'#f87171';
-  charts.gauge=new Chart(gaugeCanvas,{
-    type:'doughnut',
-    data:{ datasets:[{ data:[clamped,100-clamped], backgroundColor:[color,'rgba(255,255,255,0.04)'], borderWidth:0, circumference:220, rotation:-110 }] },
-    options:{ responsive:true, cutout:'84%', animation: _chartAnim ? {duration:1200,easing:'easeInOutCubic'} : false, plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
-  });
-  const gpct=document.getElementById('gauge-pct');
-  if(!gpct) return;
-  gpct.textContent=fmtPct(pct2);
-  gpct.style.color=color;
-  gpct.style.textShadow=`0 0 18px ${color}55`;
-}
 /* Card A — "Bulan Ini vs Bulan Lalu": cumulative GMV this calendar month-to-date
    vs last calendar month over the same day window. Computed straight from allData
    (full history), independent of the KPI date picker. */
@@ -8670,9 +8587,6 @@ function setNote(ch,lbl,txt){ try{
   else           localStorage.removeItem(_nKey(ch,lbl));
 }catch(e){} }
 
-/* ── Note panel (now lives in detail panel) ── */
-function openNotePanel(ch,lbl){ openDetailPanel('note',lbl); }
-function closeNotePanel(){ closeDetailPanel(); }
 function saveCurrentNote(){
   if(!_activeNoteCtx.lbl){ 
     const trigger=document.getElementById('cdd-trigger');
@@ -9742,8 +9656,6 @@ function playPinEntrance(){
   setTimeout(() => { pin.classList.remove('pin-entering'); }, 1350);
 }
 
-/* ── Standby logo click → registration screen ── */
-function showRegState(){ /* no-op: single-state login form, always visible */ }
 function standbyToPin(){
   const sb  = document.getElementById('standby-screen');
   const pin = document.getElementById('pin-screen');
