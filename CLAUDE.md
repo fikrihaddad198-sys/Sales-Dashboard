@@ -305,10 +305,10 @@ Full audit artifact: https://claude.ai/code/artifact/bc0ba79f-aca3-435f-a2b1-47f
 - **Colour-blind status** — all delta badges carry ↑/↓ shape cue (D2D `pFmt` made consistent).
 - **Component inventory + token index** — documented in Design System section above.
 - **Chart a11y** — `role="img"` + Indonesian `aria-label` on all chart canvases (`CHART_LABELS` + `labelCharts()` at load).
-- **Empty-range state** — `#range-empty` message on KPI, Channel, All Summary, Race (single-range pages) when a valid range has no rows (`showRangeEmpty()`), cleared on page switch. (Period = 3 ranges, Compare has own empty → intentionally excluded.)
+- **Empty-range state** — `#range-empty` message on KPI, Channel, All Summary, Race, Insight (single-range pages) when a valid range has no rows (`showRangeEmpty()`), cleared on page switch. D2D has its own `.empty` message (initial + no-data). (Period + FLDT-weekly share the 3-range picker, "empty" is ambiguous across 3 independent ranges → intentionally excluded. Compare has its own empty → intentionally excluded.) 2026-07-12 audit re-confirmed: every page that can meaningfully show a binary empty state already does — no further work needed here.
 - **Metric tooltips** — plain-language `title=` on Achievement / Daily Pace / the 4 strip cards (Target GMV, Gap, Daily Target, Forecast EOM) via `METRIC_TIPS`. Hover-only (owner declined tap affordance).
 
-**⏳ Deferred (risky or own project — need owner decision):** enforce `var(--sp*)` (mass refactor, layout-regression risk), ≥44px touch targets (density trade-off), Cmd-K palette (feature), build-split + Playwright (deploy/infra), per-chart empty overlays for the other pages.
+**⏳ Deferred (risky or own project — need owner decision):** enforce `var(--sp*)` (mass refactor, layout-regression risk), ≥44px touch targets (density trade-off), Cmd-K palette (feature), build-split + Playwright (deploy/infra).
 
 Current audit composite ≈ **7.0/10** (was 6.3); heuristics ≈ **70/100** (was 62).
 
