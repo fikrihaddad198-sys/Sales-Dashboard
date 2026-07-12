@@ -162,6 +162,23 @@
   --ease-smooth: cubic-bezier(0.16,1,0.3,1);     /* gentle settle (panels/morphs) */
   --ease-bar:    cubic-bezier(0.23,1,0.32,1);    /* track / bar fills */
   --ease-inout:  cubic-bezier(0.4,0,0.2,1);      /* symmetric in-out */
+
+  /* z-index scale — aliases the values already in use, same stacking order,
+     just named. Local component-internal z-index (0-20, card content above
+     pseudo-element backgrounds, sticky table headers, etc.) stays literal —
+     this scale only covers the global full-screen/overlay layers. */
+  --z-chrome-tabs:  199;    /* channel tab-group strip */
+  --z-chrome:       200;    /* header, main-nav dock */
+  --z-chrome-mobile:210;    /* mobile bottom tab bar */
+  --z-overlay:      900;    /* kpi-modal / channel-popup backdrop */
+  --z-overlay-top:  901;    /* kpi-modal / channel-popup content */
+  --z-confirm:     9000;    /* in-app confirm dialog */
+  --z-standby:     9990;    /* standby (re-lock) screen */
+  --z-gate:        9999;    /* pin-screen, drp-popup */
+  --z-splash:     10000;    /* splash screen */
+  --z-device:     10002;    /* device picker */
+  --z-top:        10050;    /* toast-host, map-reveal */
+  --z-guard:      99999;    /* screenshot guard — always topmost */
 }
 [data-theme="light"] {
   /* ── LIGHT MODE: Cream + Forest Green (Fore = Forest) ──
@@ -611,7 +628,7 @@ body.dr-animating .reveal {
   display: flex; align-items: center;
   padding: 0 max(var(--sp6), calc((100% - 1280px) / 2 + var(--sp6)));
   gap: var(--sp4);
-  flex-shrink: 0; position: relative; z-index: 200;
+  flex-shrink: 0; position: relative; z-index: var(--z-chrome);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
 }
@@ -859,7 +876,7 @@ body.dr-animating .reveal {
   display: flex; align-items: center;
   padding: 0 max(var(--sp4), calc((100% - 1280px) / 2 + var(--sp4))); gap: 1px;
   flex-shrink: 0; overflow-x: auto; overflow-y: hidden;
-  position: relative; z-index: 199;
+  position: relative; z-index: var(--z-chrome-tabs);
   box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 4px 20px rgba(0,0,0,0.6);
 }
 .nav::after {
@@ -961,7 +978,7 @@ body.dr-animating .reveal {
     border-bottom: none;
     border-top: 1px solid rgba(201,168,76,0.10);
     box-shadow: 0 -1px 0 rgba(255,255,255,0.04), 0 -8px 24px rgba(0,0,0,0.45);
-    z-index: 210;
+    z-index: var(--z-chrome-mobile);
     background: var(--bg1);
   }
   #nav-pill { display: none; }
@@ -1057,7 +1074,7 @@ body.dr-animating .reveal {
       border-radius 0.55s var(--nav-ease),
       background-color 0.35s ease,
       box-shadow 0.55s var(--nav-ease);
-    z-index: 200;
+    z-index: var(--z-chrome);
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-backdrop-filter: blur(22px) saturate(180%);
     box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
@@ -2499,7 +2516,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 /* ─── DATE RANGE PICKER ─── */
 /* ── DATE RANGE PICKER — Liquid Glass, iOS-style ── */
 #drp-popup{
-  position:fixed;z-index:9999;
+  position:fixed;z-index:var(--z-gate);
   min-width:340px;
   padding:22px 20px 18px;
   display:none;
@@ -2964,7 +2981,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
 /* ══ PIN AUTH SCREEN ══ */
 #pin-screen {
-  position: fixed; inset: 0; z-index: 9999;
+  position: fixed; inset: 0; z-index: var(--z-gate);
   display: flex; align-items: center; justify-content: center;
   background: var(--bg, #0f0d0b);
   transition: opacity 0.4s ease, visibility 0.4s ease;
@@ -2981,7 +2998,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
    Solid black overlay shown when app goes to background (app switcher,
    screen-off, blur). Activated for non-owner sessions only. */
 #screen-guard {
-  position: fixed; inset: 0; z-index: 99999;
+  position: fixed; inset: 0; z-index: var(--z-guard);
   background: #000;
   display: none;
   pointer-events: none;
@@ -2990,7 +3007,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
 /* ═══ MAP REVEAL — neon Jakarta network intro ═══ */
 #map-reveal {
-  position: fixed; inset: 0; z-index: 10050;
+  position: fixed; inset: 0; z-index: var(--z-top);
   display: none; align-items: center; justify-content: center;
   /* Transparent background that fades up gently so the Fore logo behind
      blends THROUGH instead of being hard-covered (no flicker). */
@@ -3143,7 +3160,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
 /* ── Toast (generic, replaces native alert) ── */
 #toast-host{position:fixed;left:50%;bottom:calc(74px + env(safe-area-inset-bottom,0));
-  transform:translateX(-50%);z-index:10050;display:flex;flex-direction:column;gap:8px;
+  transform:translateX(-50%);z-index:var(--z-top);display:flex;flex-direction:column;gap:8px;
   pointer-events:none;width:max-content;max-width:min(92vw,420px)}
 .toast{background:var(--bg2);border:1px solid var(--border-md);border-radius:12px;
   padding:11px 15px;font-size:var(--fs-body);color:var(--t1);box-shadow:var(--e3);
@@ -3191,7 +3208,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 }
 
 #splash-screen {
-  position: fixed; inset: 0; z-index: 10000;
+  position: fixed; inset: 0; z-index: var(--z-splash);
   display: flex; align-items: center; justify-content: center;
   background: var(--bg, #0f0d0b);
   pointer-events: none;
@@ -3449,7 +3466,7 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
 
 /* ══ STANDBY SCREEN ══════════════════════════════════════ */
 #standby-screen {
-  position: fixed; inset: 0; z-index: 9990;
+  position: fixed; inset: 0; z-index: var(--z-standby);
   display: none;
   align-items: center; justify-content: center;
   background: var(--bg, #0f0d0b);
@@ -4111,7 +4128,7 @@ body.dashboard-locking .card {
    DEVICE PICKER  (pre-PIN performance selector)
 ══════════════════════════════════════════════════ */
 #device-screen{
-  position:fixed; inset:0; z-index:10002;
+  position:fixed; inset:0; z-index:var(--z-device);
   display:flex; align-items:center; justify-content:center;
   background:var(--bg,#0f0d0b);
   transition:opacity .4s ease, visibility .4s ease;
@@ -4286,7 +4303,7 @@ body.is-owner .owner-only { display:flex !important; }
 
 /* In-app confirm dialog */
 #confirm-overlay {
-  position:fixed; inset:0; z-index:9000; display:flex; align-items:center; justify-content:center;
+  position:fixed; inset:0; z-index:var(--z-confirm); display:flex; align-items:center; justify-content:center;
   padding:20px; background:rgba(0,0,0,0.55); backdrop-filter:blur(3px);
 }
 #confirm-overlay[hidden] { display:none; }
@@ -8292,7 +8309,7 @@ function setIfEmpty(id, val){
 
 /* ── KPI Detail Modal — FLIP card-expand ── */
 #kpi-modal-overlay {
-  position: fixed; inset: 0; z-index: 900;
+  position: fixed; inset: 0; z-index: var(--z-overlay);
   background: rgba(0,0,0,0.72);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
@@ -8301,7 +8318,7 @@ function setIfEmpty(id, val){
   display: none;
 }
 #kpi-modal {
-  position: fixed; z-index: 901;
+  position: fixed; z-index: var(--z-overlay-top);
   width: min(680px, 92vw);
   max-height: 84vh;
   overflow: hidden;
@@ -8379,8 +8396,8 @@ function setIfEmpty(id, val){
 .kpi-modal-table tr:last-child td { border-bottom: none; }
 .kpi-modal-table tr:hover td { background: var(--bg3); }
 </style>
-<div id="ch-popup-backdrop" onclick="closeChannelPopup()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.80);z-index:900;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;"></div>
-<div id="ch-popup" style="display:none;position:fixed;top:0;left:0;z-index:901;width:min(92vw,680px);max-height:82vh;overflow:hidden;border-radius:22px;background:var(--bg2);border:1px solid var(--border-md);box-shadow:0 32px 80px rgba(0,0,0,0.5);opacity:0;will-change:transform,opacity;">
+<div id="ch-popup-backdrop" onclick="closeChannelPopup()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.80);z-index:var(--z-overlay);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;"></div>
+<div id="ch-popup" style="display:none;position:fixed;top:0;left:0;z-index:var(--z-overlay-top);width:min(92vw,680px);max-height:82vh;overflow:hidden;border-radius:22px;background:var(--bg2);border:1px solid var(--border-md);box-shadow:0 32px 80px rgba(0,0,0,0.5);opacity:0;will-change:transform,opacity;">
   <div id="ch-popup-inner">
 
     <!-- ── Panel 1: Main ── -->
