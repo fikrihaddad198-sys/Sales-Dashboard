@@ -282,6 +282,10 @@ These load automatically in every session (web/iPad included) because they live 
 
 For any UI/design work, **default to `ui-ux-pro-max` + `frontend-design` first**. `impeccable` is the **last resort** — only reach for it when the user explicitly asks for it, when the user asks for "the best / most advanced," or when the first two fall short. **Always confirm with the user before using `impeccable`** (even when they ask for the best). Do not invoke it silently.
 
+**Globally-installed skills used this session (2026-07)** — several third-party design/motion skills were installed globally (`~/.claude/skills/`) and audited against this dashboard:
+- **Good fits, safe to reuse:** `web-design-guidelines`, `improve-animations`/`design-motion-principles` (motion audits — respect the documented invariants below, don't re-flag them), `apple-design` (physicality/interruptibility of real gestures — swipe nav, map pan), `redesign-existing-projects` (generic-pattern/AI-slop audit — found the Inter→Geist and z-index-token fixes already applied).
+- **Do NOT use `high-end-visual-design`** on this project — it's written for flashy Tailwind/React marketing sites (mandates heavy glass/blur, mesh gradients, glowing orbs, `py-24`+ whitespace). Applying it would directly undo the Quiet Ledger calm pass and reintroduce the exact glass/gradient "AI-slop" that `redesign-existing-projects` itself flags as bad. Evaluated and explicitly skipped 2026-07-12.
+
 ## Branch
 
 Active development: `claude/halo-skill-readiness-nlynlg`
