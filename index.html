@@ -3150,24 +3150,33 @@ tbody tr:hover .sticky-col { background: var(--bg2); }
   opacity:0;transform:translateY(8px);
   transition:opacity .22s var(--ease-out),transform .22s var(--ease-out)}
 .toast.show{opacity:1;transform:translateY(0)}
+.toast.leaving{opacity:0;transform:translateY(3px);transition:opacity .18s var(--ease-out),transform .18s var(--ease-out)}
 .toast.error{box-shadow:inset 3px 0 0 var(--red),var(--e3)}
 .toast.success{box-shadow:inset 3px 0 0 var(--success),var(--e3)}
 .toast.info{box-shadow:inset 3px 0 0 var(--gold),var(--e3)}
 [data-theme="light"] .toast{background:#fff;border-color:var(--border-md)}
 
 /* ── Data-load error banner ── */
-#data-error{display:none}
-#data-error.show{display:flex;margin:14px clamp(14px,4vw,32px);padding:14px 18px;border-radius:12px;
+#data-error{
+  display:none; opacity:0; transform:translateY(4px);
+  transition:opacity .2s var(--ease-out), transform .2s var(--ease-out), display .2s allow-discrete;
+}
+#data-error.show{display:flex;opacity:1;transform:translateY(0);margin:14px clamp(14px,4vw,32px);padding:14px 18px;border-radius:12px;
   background:var(--red-10);border:1px solid var(--red-20);box-shadow:inset 3px 0 0 var(--red);
   gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;
   font-size:var(--fs-body);color:var(--t1)}
 #data-error #data-error-retry{flex-shrink:0}
+@starting-style { #data-error.show{opacity:0;transform:translateY(4px);} }
 
 /* ── Empty date-range message ── */
-#range-empty{display:none}
-#range-empty.show{display:block;margin:14px clamp(14px,4vw,32px);padding:16px 18px;border-radius:12px;
+#range-empty{
+  display:none; opacity:0; transform:translateY(4px);
+  transition:opacity .2s var(--ease-out), transform .2s var(--ease-out), display .2s allow-discrete;
+}
+#range-empty.show{display:block;opacity:1;transform:translateY(0);margin:14px clamp(14px,4vw,32px);padding:16px 18px;border-radius:12px;
   background:var(--bg2);border:1px solid var(--border);color:var(--t2);
   font-size:var(--fs-body);text-align:center}
+@starting-style { #range-empty.show{opacity:0;transform:translateY(4px);} }
 
 @keyframes mrDraw { to { stroke-dashoffset: 0; } }
 @keyframes mrFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
@@ -3549,8 +3558,16 @@ body:not(.dashboard-ready) .fc-big {
 }
 
 /* ── SKELETON LOADING (shown while Google Sheet is fetching) ── */
-#kpi-skeleton { display: none; }
-#kpi-skeleton.show { display: block; }
+#kpi-skeleton {
+  display: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .18s var(--ease-out), transform .18s var(--ease-out), display .18s allow-discrete;
+}
+#kpi-skeleton.show { display: block; opacity: 1; transform: translateY(0); }
+@starting-style {
+  #kpi-skeleton.show { opacity: 0; transform: translateY(4px); }
+}
 .skel {
   position: relative;
   overflow: hidden;
@@ -5588,7 +5605,7 @@ function toast(msg, type){
   const t=document.createElement('div'); t.className='toast '+(type||'info'); t.textContent=msg;
   host.appendChild(t);
   requestAnimationFrame(()=>t.classList.add('show'));
-  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),240); }, 3400);
+  setTimeout(()=>{ t.classList.remove('show'); t.classList.add('leaving'); setTimeout(()=>t.remove(),180); }, 3400);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -8063,6 +8080,13 @@ function openDRP(evt, startId, endId, btnId){
   if(top + ph > window.innerHeight - 10) top = rect.top - ph - 6;
   popup.style.left = left + 'px';
   popup.style.top  = top + 'px';
+
+  // Anchor the scale-in to the trigger button, not the popup's own center —
+  // origin-x follows the button's horizontal center clamped to the popup width;
+  // origin-y flips to the bottom edge when the popup opened upward (top < rect.top).
+  const originX = Math.max(0, Math.min(pw, (rect.left + rect.width / 2) - left));
+  const originY = (top < rect.top) ? ph : 0;
+  popup.style.transformOrigin = originX + 'px ' + originY + 'px';
 
   // Show month of startVal or today
   const base = DRP.startVal ? new Date(DRP.startVal + 'T00:00') : new Date();
