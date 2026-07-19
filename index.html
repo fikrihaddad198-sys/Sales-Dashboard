@@ -4793,8 +4793,8 @@ body.is-owner .owner-only { display:flex !important; }
         <div class="chart-wrap h260"><canvas id="weekly-trend-chart"></canvas></div>
       </div>
       <div class="g2 mb14">
-        <div class="card reveal"><div class="card-hdr"><div class="card-hdr-dot"></div>Minggu Ini vs 1 Minggu Lalu</div><div id="compare-w32"></div></div>
-        <div class="card reveal reveal-delay-1"><div class="card-hdr"><div class="card-hdr-dot"></div>Minggu Ini vs 2 Minggu Lalu</div><div id="compare-w31"></div></div>
+        <div class="card reveal"><div class="card-hdr"><div class="card-hdr-dot"></div><span id="compare-w32-title">Minggu Ini vs 1 Minggu Lalu</span></div><div id="compare-w32"></div></div>
+        <div class="card reveal reveal-delay-1"><div class="card-hdr"><div class="card-hdr-dot"></div><span id="compare-w31-title">Minggu Ini vs 2 Minggu Lalu</span></div><div id="compare-w31"></div></div>
       </div>
       <div class="card reveal mb0"><div class="card-hdr"><div class="card-hdr-dot"></div>WoW Growth &amp; CAGR</div><div id="cagr-table"></div></div>
     </div>
@@ -4874,7 +4874,7 @@ body.is-owner .owner-only { display:flex !important; }
     </div>
     <div class="g2 mb14">
       <div class="card reveal"><div class="card-hdr"><div class="card-hdr-dot"></div>Cup per Kategori (3 Minggu)</div><div class="chart-wrap h240"><canvas id="fldt-group-bar"></canvas></div></div>
-      <div class="card reveal reveal-delay-1"><div class="card-hdr"><div class="card-hdr-dot"></div>Komposisi Cup — Minggu Ini</div><div class="chart-wrap h240"><canvas id="fldt-doughnut"></canvas></div></div>
+      <div class="card reveal reveal-delay-1"><div class="card-hdr"><div class="card-hdr-dot"></div><span id="fldt-cup-title">Komposisi Cup — Minggu Ini</span></div><div class="chart-wrap h240"><canvas id="fldt-doughnut"></canvas></div></div>
     </div>
     <div class="card reveal mb0"><div class="card-hdr"><div class="card-hdr-dot"></div>Tabel FLDT — 3 Minggu</div><div class="tbl-wrap"><table id="fldt-main-table"><thead><tr></tr></thead><tbody></tbody></table></div></div>
   </div>
@@ -6984,6 +6984,33 @@ function buildChTrend(){
 /* ═══════════════════════════════════════════════════
    PAGE: PERIOD
 ═══════════════════════════════════════════════════ */
+/* Truthful labels for the 3 Comparison ranges. Week names ONLY when the
+   ranges really are 3 aligned consecutive weeks anchored on the current
+   calendar week (exactly the setDefaultDates pattern); otherwise the real
+   date ranges. Index 0 = range1 (oldest) … index 2 = range3 (newest). */
+function periodLabels(){
+  const r=[1,2,3].map(n=>({s:getVal('range'+n+'s'),e:getVal('range'+n+'e')}));
+  const shift=(iso,days)=>{ if(!iso)return''; const[y,m,d]=iso.split('-').map(Number); const dt=new Date(y,m-1,d); dt.setDate(dt.getDate()+days); return toInputDate(dt); };
+  const now=new Date(), dow=now.getDay(), diffToMon=dow===0?-6:1-dow;
+  const mon=new Date(now); mon.setDate(now.getDate()+diffToMon);
+  const weekly = !!(r[2].s&&r[2].e) && r[2].s===toInputDate(mon)
+    && r[1].s===shift(r[2].s,-7)  && r[1].e===shift(r[2].e,-7)
+    && r[0].s===shift(r[2].s,-14) && r[0].e===shift(r[2].e,-14);
+  if(weekly) return { weekly:true,
+    long:['2 Minggu Lalu','1 Minggu Lalu','Minggu Ini'],
+    short:['W-2','W-1','W0'], title:['','',''] };
+  const range=x=>{ if(!x.s||!x.e) return null; const a=fmtShortDate(x.s), b=fmtShortDate(x.e); return a===b?a:a+'–'+b; };
+  return { weekly:false,
+    long:r.map((x,i)=>range(x)||('Periode '+(i+1))),
+    short:['P1','P2','P3'],
+    title:r.map(x=>range(x)||'') };
+}
+function refreshPeriodLabels(){
+  const L=periodLabels();
+  document.querySelectorAll('#weekly-mode .period-heading').forEach((el,i)=>{ el.textContent=L.long[i]; });
+  const t32=document.getElementById('compare-w32-title'); if(t32) t32.textContent=L.long[2]+' vs '+L.long[1];
+  const t31=document.getElementById('compare-w31-title'); if(t31) t31.textContent=L.long[2]+' vs '+L.long[0];
+}
 function setPeriodMode(m){
   _periodMode=m;
   document.getElementById('weekly-mode').style.display=m==='weekly'?'':'none';
@@ -7002,6 +7029,7 @@ function initPeriodPage(){
   if(periodData[1]&&periodData[2]&&periodData[3]) buildWeeklySummary();
 }
 function loadPeriod(n){
+  refreshPeriodLabels();
   const s=getVal('range'+n+'s'), e=getVal('range'+n+'e');
   if(!s||!e||!allData.length) return;
   const rows=filterData(s,e); if(!rows.length) return;
