@@ -190,6 +190,26 @@ date picker (`insight-start/end`, DRP pattern). `renderInsight()` (deduped by
   Seasonal are **qty only**, a real data limit).
 - **Pola Waktu:** `buildInsWeekday` (avg GMV by day-of-week, Mon→Sun, weekend bars in amber).
 
+## Comparison Page (`#page-period`)
+
+Nav item is **"Comparison"** (renamed 2026-07-19, was "Week to Week" — owner
+compares flexibly, e.g. a week of this month vs the same week last month).
+Weekly-mode labels are **dynamic** via `periodLabels()` (single source of
+truth): week names ("2 Minggu Lalu / 1 Minggu Lalu / Minggu Ini", short
+`W-2/W-1/W0`) appear ONLY when the 3 ranges are 3 aligned consecutive weeks
+anchored on the Monday of the current calendar week (exactly the
+`setDefaultDates` pattern); otherwise every label shows the real date range
+(`dd/mm–dd/mm`, short `P1/P2/P3` with full range in `title=`), empty slot →
+"Periode n". Consumers: card headings + the 2 compare-card title spans
+(`refreshPeriodLabels()`, called from `loadPeriod()` → runs on every range
+change), trend legend (`buildWeeklyTrend`), compare tables
+(`buildWeeklySummary`), CAGR `<th>` (`buildCagrTable`). The FLDT
+"Komposisi Cup" title (`#fldt-cup-title`) is set in `renderFldtWeekly()` at
+**build time**, NOT in the live refresh — `fldtData[1..3]` is never
+invalidated on range change (pre-existing), so a live label could describe
+ranges those charts aren't showing. Don't re-hardcode week names anywhere on
+this page.
+
 ## Navigation (`#main-nav`)
 
 Mobile (`≤768px`): fixed **bottom tab bar**, icon-only (labels hidden), gold pill behind active icon.
@@ -241,7 +261,7 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v118`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v138`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -318,7 +338,7 @@ Re-audit 2026-07-12 (same rubric, methodology re-run against current source — 
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v118` → increment to `fore-v119`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v138` → increment to `fore-v139`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
