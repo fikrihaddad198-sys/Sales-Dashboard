@@ -1649,7 +1649,7 @@ body.dr-animating .reveal {
 
 /* Period page stat cards — ghost reveal */
 .ps-card {
-  /* no backdrop-filter here: ~27 of these on Week to Week, live blur per
+  /* no backdrop-filter here: ~27 of these on Comparison, live blur per
      card tanks scroll performance on iPad Safari. The gradient fill below
      already reads as glass over the dark surface. */
   border: 1px solid transparent;
@@ -4531,8 +4531,8 @@ body.is-owner .owner-only { display:flex !important; }
   <button class="nav-btn" data-page="channel" onclick="showPage('channel',this)" aria-label="Channel">
     <span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 16l4-4 4 4 4-4"/></svg></span><span class="nav-label">Channel</span>
   </button>
-  <button class="nav-btn" data-page="period" onclick="showPage('period',this)" aria-label="Week to Week">
-    <span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><span class="nav-label">Week to Week</span>
+  <button class="nav-btn" data-page="period" onclick="showPage('period',this)" aria-label="Comparison">
+    <span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><span class="nav-label">Comparison</span>
   </button>
   <button class="nav-btn" data-page="fldt" onclick="showPage('fldt',this)" aria-label="FLDT">
     <span class="ni"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg></span><span class="nav-label">FLDT</span>
@@ -9289,7 +9289,7 @@ document.addEventListener('keydown', (e) => {
 /* ── Ghost Card: cursor-following glow ──
    One delegated pointermove walks up from the event target and updates
    --gx/--gy on every ghost-card ancestor (works for cards rebuilt
-   dynamically — KPI metric strip, Week to Week ps-cards, etc).
+   dynamically — KPI metric strip, Comparison ps-cards, etc).
 
    It also tracks the set of cards currently under the pointer. Any card
    the pointer has LEFT gets a .ghost-off class, which force-resets its
