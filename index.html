@@ -92,12 +92,13 @@
      rule, per owner request). Used by tabs, dots, cards, charts. Keep these
      in sync with the JS `TC` object below. ──
        offline = blue · online = yellow · grabfood = dark green
-       gofood = light green · shopee = orange */
+       gofood = light green · shopee = orange · tiktok = magenta */
   --tc-offline:  #4a90e2;
   --tc-online:   #eab308;
   --tc-grabfood: #15803d;
   --tc-gofood:   #6fcf6f;
   --tc-shopee:   #f97316;
+  --tc-tiktok:   #e11d69;
 
   /* Page accents — all collapse to the single gold */
   --acc-kpi:     var(--cyan);
@@ -222,6 +223,7 @@
   --tc-grabfood: #15803d;
   --tc-gofood:   #3f9e40;
   --tc-shopee:   #e0590f;
+  --tc-tiktok:   #be185d;
 
   --e1: 0 1px 2px rgba(0,0,0,0.05);
   --e2: 0 2px 8px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
@@ -1737,6 +1739,7 @@ body.dr-animating .reveal {
 .sl-pill[data-ch="gofood"] .sl-dot   { background: var(--tc-gofood); }
 .sl-pill[data-ch="grabfood"] .sl-dot { background: var(--tc-grabfood); }
 .sl-pill[data-ch="shopee"] .sl-dot   { background: var(--tc-shopee); }
+.sl-pill[data-ch="tiktok"] .sl-dot   { background: var(--tc-tiktok); }
 
 /* Card A — Bulan Ini vs Bulan Lalu */
 .mom-headline { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
@@ -1953,6 +1956,7 @@ body.dr-animating .reveal {
 [data-ch-color="gofood"]   .tab-btn.active { --acc-pill-bg: color-mix(in srgb, var(--tc-gofood) 14%, transparent);   --acc-pill-border: color-mix(in srgb, var(--tc-gofood) 32%, transparent);   --acc-pill-color: var(--tc-gofood); }
 [data-ch-color="grabfood"] .tab-btn.active { --acc-pill-bg: color-mix(in srgb, var(--tc-grabfood) 14%, transparent); --acc-pill-border: color-mix(in srgb, var(--tc-grabfood) 32%, transparent); --acc-pill-color: var(--tc-grabfood); }
 [data-ch-color="shopee"]   .tab-btn.active { --acc-pill-bg: color-mix(in srgb, var(--tc-shopee) 14%, transparent);   --acc-pill-border: color-mix(in srgb, var(--tc-shopee) 32%, transparent);   --acc-pill-color: var(--tc-shopee); }
+[data-ch-color="tiktok"]   .tab-btn.active { --acc-pill-bg: color-mix(in srgb, var(--tc-tiktok) 14%, transparent);   --acc-pill-border: color-mix(in srgb, var(--tc-tiktok) 32%, transparent);   --acc-pill-color: var(--tc-tiktok); }
 
 /* ─────────────────────────────────────────────────────
    TABLE
@@ -4684,6 +4688,7 @@ body.is-owner .owner-only { display:flex !important; }
             <span class="sl-pill" data-ch="grabfood"><span class="sl-dot"></span>GrabFood</span>
             <span class="sl-pill" data-ch="gofood"><span class="sl-dot"></span>GoFood</span>
             <span class="sl-pill" data-ch="shopee"><span class="sl-dot"></span>ShopeeFood</span>
+            <span class="sl-pill" data-ch="tiktok"><span class="sl-dot"></span>TikTok</span>
           </div>
           <div class="chart-wrap h260"><canvas id="kpi-contrib-daily-chart" role="img" aria-label="Grafik GMV per channel (bertumpuk) per hari"></canvas></div>
         </div>
@@ -4729,6 +4734,7 @@ body.is-owner .owner-only { display:flex !important; }
           <button class="tab-btn" onclick="setChTrend('gofood',this)">GoFood</button>
           <button class="tab-btn" onclick="setChTrend('grabfood',this)">GrabFood</button>
           <button class="tab-btn" onclick="setChTrend('shopee',this)">Shopee</button>
+          <button class="tab-btn" onclick="setChTrend('tiktok',this)">TikTok</button>
         </div>
       </div>
       <div class="chart-wrap h200"><canvas id="ch-trend-chart"></canvas></div>
@@ -4788,6 +4794,7 @@ body.is-owner .owner-only { display:flex !important; }
             <button class="tab-btn" onclick="setWeeklyChan('gofood',this)">GoFood</button>
             <button class="tab-btn" onclick="setWeeklyChan('grabfood',this)">GrabFood</button>
             <button class="tab-btn" onclick="setWeeklyChan('shopee',this)">Shopee</button>
+            <button class="tab-btn" onclick="setWeeklyChan('tiktok',this)">TikTok</button>
           </div>
         </div>
         <div class="chart-wrap h260"><canvas id="weekly-trend-chart"></canvas></div>
@@ -4833,6 +4840,7 @@ body.is-owner .owner-only { display:flex !important; }
             <button class="tab-btn" onclick="setCustomChan('gofood',this)">GoFood</button>
             <button class="tab-btn" onclick="setCustomChan('grabfood',this)">GrabFood</button>
             <button class="tab-btn" onclick="setCustomChan('shopee',this)">Shopee</button>
+            <button class="tab-btn" onclick="setCustomChan('tiktok',this)">TikTok</button>
           </div>
         </div>
         <div class="chart-wrap h200"><canvas id="custom-daily-chart"></canvas></div>
@@ -5333,7 +5341,7 @@ const HARI=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
 ═══════════════════════════════════════════════════ */
 const TC = {
   gmv:'#c9a84c', offline:'#4a90e2', online:'#eab308',
-  gofood:'#6fcf6f', grabfood:'#15803d', shopee:'#f97316',
+  gofood:'#6fcf6f', grabfood:'#15803d', shopee:'#f97316', tiktok:'#e11d69',
   accent:'#c9a84c', accent2:'#9a958c', amber:'#d4a05a',
   /* neutral Zinc axis text + grid (chart chrome) */
   text2:'#a1a1aa', text3:'#71717a',
@@ -5634,19 +5642,19 @@ function parseCSV(text){
     if(raw){ const parts=raw.split('/'); if(parts.length===3) d=new Date(parseInt(parts[2]),parseInt(parts[0])-1,parseInt(parts[1])); else d=new Date(raw); }
     if(!d||isNaN(d)) continue;
     row._date=d; row._dateStr=toInputDate(d);
-    const numCols=['GMV','ADT STORE','AT STORE','OFFLINE SALES','ADT OFFLINE','AT OFFLINE','ONLINE SALES','ADT ONLINE','AT ONLINE','GOFOOD SALES','ADT GOFOOD','AT GOFOOD','GRABFOOD SALES','ADT GRABFOOD','AT GRABFOOD','SHOPE FOOD SALES','ADT SHOPEFOOD','AT SHOPPE','TOTAL SOLD CUP OFFLINE','FOOD SOLD QTY','FOOD SOLD SALES','FOOD OFFLINE','LARGE OFFLINE','DIARY OFFLINE','TOPPING OFFLINE','TOTAL SOLD RTD','RTD OFFLINE','SEASONAL SOLD','TOTAL PRODUK TERJUAL','MERCHENDISE','TANPA MERCHENDISE','IPT'];
+    const numCols=['GMV','ADT STORE','AT STORE','OFFLINE SALES','ADT OFFLINE','AT OFFLINE','ONLINE SALES','ADT ONLINE','AT ONLINE','GOFOOD SALES','ADT GOFOOD','AT GOFOOD','GRABFOOD SALES','ADT GRABFOOD','AT GRABFOOD','SHOPE FOOD SALES','ADT SHOPEFOOD','AT SHOPPE','TIKTOK SALES','ADT TIKTOK','AT TIKTOK','TOTAL SOLD CUP OFFLINE','FOOD SOLD QTY','FOOD SOLD SALES','FOOD OFFLINE','LARGE OFFLINE','DIARY OFFLINE','TOPPING OFFLINE','TOTAL SOLD RTD','RTD OFFLINE','SEASONAL SOLD','TOTAL PRODUK TERJUAL','MERCHENDISE','TANPA MERCHENDISE','IPT'];
     numCols.forEach(c=>{ row['_n_'+c]=parseNum(row[c]||'0'); });
     rows.push(row);
   }
   return rows.sort((a,b)=>a._date-b._date);
 }
 function parseCSVLine(line){ const result=[]; let cur='',inQ=false; for(let i=0;i<line.length;i++){ if(line[i]==='"'){ inQ=!inQ; }else if(line[i]===','&&!inQ){ result.push(cur); cur=''; }else{ cur+=line[i]; } } result.push(cur); return result; }
-function mapRow(r){ return{ date:r._dateStr, _date:r._date, gmv:r['_n_GMV'], offline:r['_n_OFFLINE SALES'], online:r['_n_ONLINE SALES'], gofood:r['_n_GOFOOD SALES'], grabfood:r['_n_GRABFOOD SALES'], shopee:r['_n_SHOPE FOOD SALES'], adt_store:r['_n_ADT STORE'], adt_offline:r['_n_ADT OFFLINE'], adt_online:r['_n_ADT ONLINE'], adt_gofood:r['_n_ADT GOFOOD'], adt_grabfood:r['_n_ADT GRABFOOD'], adt_shopee:r['_n_ADT SHOPEFOOD'], at_store:r['_n_AT STORE'], at_offline:r['_n_AT OFFLINE'], cup_total:r['_n_TOTAL SOLD CUP OFFLINE'], food_off:r['_n_FOOD OFFLINE'], large_off:r['_n_LARGE OFFLINE'], diary_off:r['_n_DIARY OFFLINE'], topping_off:r['_n_TOPPING OFFLINE'], rtd_off:r['_n_RTD OFFLINE'], seasonal_sold:r['_n_SEASONAL SOLD'], food_qty_all:r['_n_FOOD SOLD QTY'], food_sales:r['_n_FOOD SOLD SALES'], rtd_qty_all:r['_n_TOTAL SOLD RTD'], ipt:r['_n_IPT'], offline_sales:r['_n_OFFLINE SALES'] }; }
+function mapRow(r){ return{ date:r._dateStr, _date:r._date, gmv:r['_n_GMV'], offline:r['_n_OFFLINE SALES'], online:r['_n_ONLINE SALES'], gofood:r['_n_GOFOOD SALES'], grabfood:r['_n_GRABFOOD SALES'], shopee:r['_n_SHOPE FOOD SALES'], tiktok:r['_n_TIKTOK SALES'], adt_store:r['_n_ADT STORE'], adt_offline:r['_n_ADT OFFLINE'], adt_online:r['_n_ADT ONLINE'], adt_gofood:r['_n_ADT GOFOOD'], adt_grabfood:r['_n_ADT GRABFOOD'], adt_shopee:r['_n_ADT SHOPEFOOD'], adt_tiktok:r['_n_ADT TIKTOK'], at_store:r['_n_AT STORE'], at_offline:r['_n_AT OFFLINE'], cup_total:r['_n_TOTAL SOLD CUP OFFLINE'], food_off:r['_n_FOOD OFFLINE'], large_off:r['_n_LARGE OFFLINE'], diary_off:r['_n_DIARY OFFLINE'], topping_off:r['_n_TOPPING OFFLINE'], rtd_off:r['_n_RTD OFFLINE'], seasonal_sold:r['_n_SEASONAL SOLD'], food_qty_all:r['_n_FOOD SOLD QTY'], food_sales:r['_n_FOOD SOLD SALES'], rtd_qty_all:r['_n_TOTAL SOLD RTD'], ipt:r['_n_IPT'], offline_sales:r['_n_OFFLINE SALES'] }; }
 function filterData(s,e){ const start=new Date(s); start.setHours(0,0,0,0); const end=new Date(e); end.setHours(23,59,59,999); return allData.filter(r=>r._date>=start&&r._date<=end).map(mapRow); }
 function aggregateData(rows){
   if(!rows.length) return null;
   const s=k=>rows.reduce((a,r)=>a+(r[k]||0),0);
-  return{ gmv:s('gmv'), offline:s('offline'), online:s('online'), gofood:s('gofood'), grabfood:s('grabfood'), shopee:s('shopee'), adt_store:s('adt_store'), adt_offline:s('adt_offline'), adt_online:s('adt_online'), adt_gofood:s('adt_gofood'), adt_grabfood:s('adt_grabfood'), adt_shopee:s('adt_shopee'), at_store:s('gmv')/s('adt_store'), at_offline:s('offline_sales')/s('adt_offline'), cup_total:s('cup_total'), food_off:s('food_off'), large_off:s('large_off'), diary_off:s('diary_off'), topping_off:s('topping_off'), rtd_off:s('rtd_off'), seasonal_sold:s('seasonal_sold'), food_qty_all:s('food_qty_all'), food_sales:s('food_sales'), rtd_qty_all:s('rtd_qty_all'), offline_sales:s('offline_sales'), daily:rows };
+  return{ gmv:s('gmv'), offline:s('offline'), online:s('online'), gofood:s('gofood'), grabfood:s('grabfood'), shopee:s('shopee'), tiktok:s('tiktok'), adt_store:s('adt_store'), adt_offline:s('adt_offline'), adt_online:s('adt_online'), adt_gofood:s('adt_gofood'), adt_grabfood:s('adt_grabfood'), adt_shopee:s('adt_shopee'), adt_tiktok:s('adt_tiktok'), at_store:s('gmv')/s('adt_store'), at_offline:s('offline_sales')/s('adt_offline'), cup_total:s('cup_total'), food_off:s('food_off'), large_off:s('large_off'), diary_off:s('diary_off'), topping_off:s('topping_off'), rtd_off:s('rtd_off'), seasonal_sold:s('seasonal_sold'), food_qty_all:s('food_qty_all'), food_sales:s('food_sales'), rtd_qty_all:s('rtd_qty_all'), offline_sales:s('offline_sales'), daily:rows };
 }
 
 /* ═══════════════════════════════════════════════════
@@ -6181,7 +6189,7 @@ function aggregateByStore(rows) {
     const amt = parseFloat(r.gmv) || 0;
     stores[s].revenue += amt;
     stores[s].txn += (r.adt_store || 0);
-    const chEntries = [['offline', r.offline||0], ['gofood', r.gofood||0], ['grabfood', r.grabfood||0], ['shopee', r.shopee||0]];
+    const chEntries = [['offline', r.offline||0], ['gofood', r.gofood||0], ['grabfood', r.grabfood||0], ['shopee', r.shopee||0], ['tiktok', r.tiktok||0]];
     chEntries.forEach(([ch, v]) => { stores[s].channels[ch] = (stores[s].channels[ch]||0) + (parseFloat(v)||0); });
   });
   return stores;
@@ -6194,7 +6202,7 @@ function renderCompareChannelChart(stores) {
   if (existing) existing.destroy();
 
   const names = Object.keys(stores);
-  const channels = ['offline', 'gofood', 'grabfood', 'shopee'];
+  const channels = ['offline', 'gofood', 'grabfood', 'shopee', 'tiktok'];
   const storeColors = [TC.gmv, TC.offline, TC.grabfood, TC.gofood];
   const datasets = names.map((storeName, i) => ({
     label: storeName,
@@ -6413,8 +6421,8 @@ function calcKpi(skipCharts){
   const remaining=Math.max(0,totalDays-elapsed);
   const forecastEom=data.gmv+avgDaily*remaining;
   const achPct=target?pct(data.gmv,target):0;
-  const total=data.offline+data.online+data.gofood+data.grabfood+data.shopee||1;
-  const contrib={offline:pct(data.offline,total),online:pct(data.online,total),gofood:pct(data.gofood,total),grabfood:pct(data.grabfood,total),shopee:pct(data.shopee,total)};
+  const total=data.offline+data.online+data.gofood+data.grabfood+data.shopee+(data.tiktok||0)||1;
+  const contrib={offline:pct(data.offline,total),online:pct(data.online,total),gofood:pct(data.gofood,total),grabfood:pct(data.grabfood,total),shopee:pct(data.shopee,total),tiktok:pct(data.tiktok||0,total)};
 
   document.getElementById('kpi-hero').style.display='';
 
@@ -6529,6 +6537,7 @@ function calcKpi(skipCharts){
     {name:'GrabFood', gmv:data.grabfood, val:contrib.grabfood, color:TC.grabfood},
     {name:'GoFood',   gmv:data.gofood,   val:contrib.gofood,   color:TC.gofood},
     {name:'Shopee',   gmv:data.shopee,   val:contrib.shopee,   color:TC.shopee},
+    {name:'TikTok',   gmv:data.tiktok||0,val:contrib.tiktok,   color:TC.tiktok},
   ].sort((a,b)=>b.val-a.val);
   document.getElementById('kpi-contrib').innerHTML='<div class="contrib-grid">'+contribItems.map((c,i)=>
     '<div class="contrib-ch-card" style="--ch-color:'+c.color+'" onclick="openChannelPopup(\''+c.name.toLowerCase()+'\',\''+c.name+'\',\''+c.color+'\',this)" tabindex="0" role="button">'+
@@ -6688,7 +6697,7 @@ function renderKpiInsights(o){
   // 5. SMART — channel momentum (2nd half vs 1st half of the range)
   if(rows.length>=4){
     const mid=Math.floor(rows.length/2);
-    const CH=[['Offline','offline'],['Online','online'],['GrabFood','grabfood'],['GoFood','gofood'],['ShopeeFood','shopee']];
+    const CH=[['Offline','offline'],['Online','online'],['GrabFood','grabfood'],['GoFood','gofood'],['ShopeeFood','shopee'],['TikTok','tiktok']];
     let bestCh=null, bestMom=0;
     CH.forEach(([name,key])=>{
       const a=rows.slice(0,mid).reduce((s,r)=>s+(r[key]||0),0)/Math.max(mid,1);
@@ -6731,6 +6740,7 @@ const CONTRIB_DAILY_CH=[
   {label:'GrabFood',  key:'grabfood', color:TC.grabfood},
   {label:'GoFood',    key:'gofood',   color:TC.gofood},
   {label:'ShopeeFood',key:'shopee',   color:TC.shopee},
+  {label:'TikTok',    key:'tiktok',   color:TC.tiktok},
 ];
 function buildKpiContribDaily(rows){
   destroyChart('kpiContribDaily');
@@ -6852,6 +6862,7 @@ function buildInsAtv(d){
     {n:'GrabFood',  s:d.grabfood, t:d.adt_grabfood, c:TC.grabfood},
     {n:'GoFood',    s:d.gofood,   t:d.adt_gofood,   c:TC.gofood},
     {n:'ShopeeFood',s:d.shopee,   t:d.adt_shopee,   c:TC.shopee},
+    {n:'TikTok',    s:d.tiktok||0,t:d.adt_tiktok||0,c:TC.tiktok},
   ].map(x=>({...x, atv: x.t>0 ? x.s/x.t : 0})).sort((a,b)=>b.atv-a.atv);
   const base=baseOptions();
   charts.insAtv=new Chart(document.getElementById('ins-atv-chart'),{
@@ -6875,8 +6886,8 @@ function buildInsSplit(rows,d){
   destroyChart('insSplit');
   const off=rows.map(r=>r.offline||0);
   const onl=rows.map(r=>r.online||0);
-  const del=rows.map(r=>(r.gofood||0)+(r.grabfood||0)+(r.shopee||0));
-  const totOff=d.offline, totOnl=d.online, totDel=d.gofood+d.grabfood+d.shopee;
+  const del=rows.map(r=>(r.gofood||0)+(r.grabfood||0)+(r.shopee||0)+(r.tiktok||0));
+  const totOff=d.offline, totOnl=d.online, totDel=d.gofood+d.grabfood+d.shopee+(d.tiktok||0);
   const g=totOff+totOnl+totDel||1;
   const head=document.getElementById('ins-split-headline');
   if(head) head.innerHTML=
@@ -6911,13 +6922,14 @@ function applyChannelFilter(){
   if(!_chRows.length){ showRangeEmpty(true); return; }
   showRangeEmpty(false);
   const d=aggregateData(_chRows);
-  const total=d.offline+d.gofood+d.grabfood+d.shopee||1;
+  const total=d.offline+d.gofood+d.grabfood+d.shopee+(d.tiktok||0)||1;
   const kpis=[
     {l:'Total GMV',   v:fmtRp(d.gmv),       c:TC.gmv},
     {l:'Offline',     v:fmtRp(d.offline),    c:TC.offline},
     {l:'GoFood',      v:fmtRp(d.gofood),     c:TC.gofood},
     {l:'GrabFood',    v:fmtRp(d.grabfood),   c:TC.grabfood},
     {l:'Shopee',      v:fmtRp(d.shopee),     c:TC.shopee},
+    {l:'TikTok',      v:fmtRp(d.tiktok||0),  c:TC.tiktok},
     {l:'Online Total',v:fmtRp(d.online),     c:TC.online},
     {l:'ADT Store',   v:fmtNum(d.adt_store), c:TC.amber},
     {l:'AT Offline',  v:fmtRp(d.at_offline), c:TC.accent},
@@ -6929,7 +6941,7 @@ function applyChannelFilter(){
       <div class="kpi-mini-val" style="color:${k.c}">${k.v}</div>
     </div>`).join('');
 
-  const channels=[{name:'Offline',val:d.offline,color:TC.offline},{name:'GoFood',val:d.gofood,color:TC.gofood},{name:'GrabFood',val:d.grabfood,color:TC.grabfood},{name:'Shopee',val:d.shopee,color:TC.shopee}];
+  const channels=[{name:'Offline',val:d.offline,color:TC.offline},{name:'GoFood',val:d.gofood,color:TC.gofood},{name:'GrabFood',val:d.grabfood,color:TC.grabfood},{name:'Shopee',val:d.shopee,color:TC.shopee},{name:'TikTok',val:d.tiktok||0,color:TC.tiktok}];
 
   destroyChart('chPie');
   charts.chPie=new Chart(document.getElementById('ch-pie-chart'),{
@@ -6956,7 +6968,7 @@ function applyChannelFilter(){
         <div style="font-family:var(--mono);font-size:12px;color:var(--t3);min-width:40px;text-align:right;">${fmtPct(pct(c.val,total))}</div>
       </div>`).join('')+'</div>';
 
-  const adtData=[{n:'Store',v:d.adt_store,c:TC.accent},{n:'Offline',v:d.adt_offline,c:TC.offline},{n:'Online',v:d.adt_online,c:TC.online},{n:'GoFood',v:d.adt_gofood,c:TC.gofood},{n:'GrabFood',v:d.adt_grabfood,c:TC.grabfood},{n:'Shopee',v:d.adt_shopee,c:TC.shopee}];
+  const adtData=[{n:'Store',v:d.adt_store,c:TC.accent},{n:'Offline',v:d.adt_offline,c:TC.offline},{n:'Online',v:d.adt_online,c:TC.online},{n:'GoFood',v:d.adt_gofood,c:TC.gofood},{n:'GrabFood',v:d.adt_grabfood,c:TC.grabfood},{n:'Shopee',v:d.adt_shopee,c:TC.shopee},{n:'TikTok',v:d.adt_tiktok||0,c:TC.tiktok}];
   destroyChart('chAdt');
   charts.chAdt=new Chart(document.getElementById('ch-adt-chart'),{
     type:'bar',
@@ -6971,7 +6983,7 @@ function setChTrend(key,btn){ _chTrendKey=key; document.querySelectorAll('#ch-ta
 function buildChTrend(){
   if(!_chRows.length) return;
   destroyChart('chTrend');
-  const colorMap={offline:TC.offline,gofood:TC.gofood,grabfood:TC.grabfood,shopee:TC.shopee};
+  const colorMap={offline:TC.offline,gofood:TC.gofood,grabfood:TC.grabfood,shopee:TC.shopee,tiktok:TC.tiktok};
   const color=colorMap[_chTrendKey]||TC.accent;
   charts.chTrend=new Chart(document.getElementById('ch-trend-chart'),{
     type:'line',
@@ -7056,6 +7068,7 @@ function loadPeriod(n){
             ' GoFood:   '+fmtRp(r.gofood||0),
             ' GrabFood: '+fmtRp(r.grabfood||0),
             ' Shopee:   '+fmtRp(r.shopee||0),
+            ' TikTok:   '+fmtRp(r.tiktok||0),
           ];
         }
       }
@@ -7088,7 +7101,7 @@ function buildWeeklyTrend(){
   destroyChart('weeklyTrend');
   const k=_weeklyChan;
   const L=periodLabels();
-  const isSales=['gmv','offline','online','gofood','grabfood','shopee','offline_sales'].includes(k);
+  const isSales=['gmv','offline','online','gofood','grabfood','shopee','tiktok','offline_sales'].includes(k);
   const maxLen=Math.max(periodData[1].daily.length,periodData[2].daily.length,periodData[3].daily.length);
   const labels=Array.from({length:maxLen},(_,i)=>{ const s=periodData[1].daily[i]||periodData[2].daily[i]||periodData[3].daily[i]; return s?HARI[new Date(s.date).getDay()]:'-'; });
   charts.weeklyTrend=new Chart(document.getElementById('weekly-trend-chart'),{
@@ -7102,7 +7115,7 @@ function buildWeeklyTrend(){
   });
 }
 function buildCompareTable(elId,curr,prev,lCurr,lPrev){
-  const metrics=[{l:'GMV',k:'gmv',rp:true},{l:'Offline',k:'offline',rp:true},{l:'GoFood',k:'gofood',rp:true},{l:'GrabFood',k:'grabfood',rp:true},{l:'Shopee',k:'shopee',rp:true},{l:'Online',k:'online',rp:true},{l:'ADT Store',k:'adt_store'},{l:'AT Offline',k:'at_offline',rp:true}];
+  const metrics=[{l:'GMV',k:'gmv',rp:true},{l:'Offline',k:'offline',rp:true},{l:'GoFood',k:'gofood',rp:true},{l:'GrabFood',k:'grabfood',rp:true},{l:'Shopee',k:'shopee',rp:true},{l:'TikTok',k:'tiktok',rp:true},{l:'Online',k:'online',rp:true},{l:'ADT Store',k:'adt_store'},{l:'AT Offline',k:'at_offline',rp:true}];
   const badge=(v1,v2)=>{ if(!v2) return'—'; const d=safePct(v1,v2), up=d>=0; return`<span class="badge ${up?'up':'dn'}">${up?'↑':'↓'}${Math.abs(d).toFixed(1)}%</span>`; };
   const fmtV=(v,rp)=>rp?fmtRp(v):fmtNum(v);
   const rows=metrics.map(m=>`<tr><td style="color:var(--t2);font-weight:500;">${m.l}</td><td class="td-mono">${fmtV(curr[m.k]||0,m.rp)}</td><td class="td-mono" style="color:var(--t3)">${fmtV(prev[m.k]||0,m.rp)}</td><td>${badge(curr[m.k]||0,prev[m.k]||0)}</td></tr>`).join('');
@@ -7111,7 +7124,7 @@ function buildCompareTable(elId,curr,prev,lCurr,lPrev){
 function buildCagrTable(){
   if(!periodData[1]||!periodData[2]||!periodData[3]) return;
   const L=periodLabels();
-  const metrics=[{l:'GMV',k:'gmv',rp:true},{l:'Offline',k:'offline',rp:true},{l:'GoFood',k:'gofood',rp:true},{l:'GrabFood',k:'grabfood',rp:true},{l:'Shopee',k:'shopee',rp:true},{l:'ADT Store',k:'adt_store'}];
+  const metrics=[{l:'GMV',k:'gmv',rp:true},{l:'Offline',k:'offline',rp:true},{l:'GoFood',k:'gofood',rp:true},{l:'GrabFood',k:'grabfood',rp:true},{l:'Shopee',k:'shopee',rp:true},{l:'TikTok',k:'tiktok',rp:true},{l:'ADT Store',k:'adt_store'}];
   const fmtV=(v,rp)=>rp?fmtRp(v):fmtNum(v);
   const wow=(v1,v2)=>{ if(!v2) return'—'; const d=safePct(v1,v2), up=d>=0; return`<span class="badge ${up?'up':'dn'}">${up?'↑':'↓'}${Math.abs(d).toFixed(1)}%</span>`; };
   const cagr=(v1,v3)=>{ if(!v1||!v3) return'—'; const r=(Math.pow(v3/v1,.5)-1)*100, up=r>=0; return`<span class="badge ${up?'up':'dn'}">${up?'↑':'↓'}${Math.abs(r).toFixed(1)}%</span>`; };
@@ -7136,7 +7149,7 @@ function loadCustomPeriod(n){
 }
 function buildCustomSummary(){
   const[p1,p2]=[customPeriodData[1],customPeriodData[2]];
-  const channels=[{n:'Offline',k:'offline',c:TC.offline},{n:'GoFood',k:'gofood',c:TC.gofood},{n:'GrabFood',k:'grabfood',c:TC.grabfood},{n:'Shopee',k:'shopee',c:TC.shopee}];
+  const channels=[{n:'Offline',k:'offline',c:TC.offline},{n:'GoFood',k:'gofood',c:TC.gofood},{n:'GrabFood',k:'grabfood',c:TC.grabfood},{n:'Shopee',k:'shopee',c:TC.shopee},{n:'TikTok',k:'tiktok',c:TC.tiktok}];
   destroyChart('custCompare');
   charts.custCompare=new Chart(document.getElementById('custom-compare-chart'),{
     type:'bar',
@@ -7151,7 +7164,7 @@ function setCustomChan(k,btn){ _customChan=k; document.querySelectorAll('#custom
 function buildCustomDailyChart(){
   if(!customPeriodData[1]||!customPeriodData[2]) return;
   destroyChart('custDaily');
-  const k=_customChan, isSales=['gmv','offline','online','gofood','grabfood','shopee'].includes(k);
+  const k=_customChan, isSales=['gmv','offline','online','gofood','grabfood','shopee','tiktok'].includes(k);
   const maxLen=Math.max(customPeriodData[1].daily.length,customPeriodData[2].daily.length);
   charts.custDaily=new Chart(document.getElementById('custom-daily-chart'),{
     type:'line',
@@ -7339,7 +7352,7 @@ function renderAllSumm(d1,d2){
     </div>`;
   }).join('')+'</div>';
 
-  const chans=[{n:'Offline',k:'offline',c:TC.offline},{n:'GoFood',k:'gofood',c:TC.gofood},{n:'GrabFood',k:'grabfood',c:TC.grabfood},{n:'Shopee',k:'shopee',c:TC.shopee},{n:'Online',k:'online',c:TC.online}].sort((a,b)=>(d1[b.k]||0)-(d1[a.k]||0));
+  const chans=[{n:'Offline',k:'offline',c:TC.offline},{n:'GoFood',k:'gofood',c:TC.gofood},{n:'GrabFood',k:'grabfood',c:TC.grabfood},{n:'Shopee',k:'shopee',c:TC.shopee},{n:'TikTok',k:'tiktok',c:TC.tiktok},{n:'Online',k:'online',c:TC.online}].sort((a,b)=>(d1[b.k]||0)-(d1[a.k]||0));
   const totCh=chans.reduce((a,c)=>a+(d1[c.k]||0),0)||1, maxCh=d1[chans[0].k]||1;
   document.getElementById('summ-chan-rank').innerHTML=chans.map((c,i)=>{
     const v=d1[c.k]||0, w=(v/maxCh*100).toFixed(1);
@@ -7390,6 +7403,7 @@ function renderD2D(rows,byDate){
     {label:'GOFOOD',color:TC.gofood,cols:[{h:'GoFood',fn:r=>`<span class="td-mono">${fmtRp(r.gofood)}</span>`},{h:'vs Kemarin',fn:r=>pFmt(r.gofood,byDate[prevDate(r.date,1)]?.gofood)},{h:'vs MingguLalu',fn:r=>pFmt(r.gofood,byDate[prevDate(r.date,7)]?.gofood)}]},
     {label:'GRABFOOD',color:TC.grabfood,cols:[{h:'GrabFood',fn:r=>`<span class="td-mono">${fmtRp(r.grabfood)}</span>`},{h:'vs Kemarin',fn:r=>pFmt(r.grabfood,byDate[prevDate(r.date,1)]?.grabfood)},{h:'vs MingguLalu',fn:r=>pFmt(r.grabfood,byDate[prevDate(r.date,7)]?.grabfood)}]},
     {label:'SHOPEE',color:TC.shopee,cols:[{h:'Shopee',fn:r=>`<span class="td-mono">${fmtRp(r.shopee)}</span>`},{h:'vs Kemarin',fn:r=>pFmt(r.shopee,byDate[prevDate(r.date,1)]?.shopee)},{h:'vs MingguLalu',fn:r=>pFmt(r.shopee,byDate[prevDate(r.date,7)]?.shopee)}]},
+    {label:'TIKTOK',color:TC.tiktok,cols:[{h:'TikTok',fn:r=>`<span class="td-mono">${fmtRp(r.tiktok||0)}</span>`},{h:'vs Kemarin',fn:r=>pFmt(r.tiktok,byDate[prevDate(r.date,1)]?.tiktok)},{h:'vs MingguLalu',fn:r=>pFmt(r.tiktok,byDate[prevDate(r.date,7)]?.tiktok)}]},
     {label:'FOOD CUP',color:'#b78fb0',cols:[{h:'Food',fn:r=>`<span class="td-mono">${fmtNum(r.food_off)}</span>`},{h:'vs Kemarin',fn:r=>pFmt(r.food_off,byDate[prevDate(r.date,1)]?.food_off)}]},
     {label:'LARGE',color:'#7d9bb5',cols:[{h:'Large',fn:r=>`<span class="td-mono">${fmtNum(r.large_off)}</span>`},{h:'vs Kemarin',fn:r=>pFmt(r.large_off,byDate[prevDate(r.date,1)]?.large_off)}]},
     {label:'IPT',color:TC.amber,cols:[{h:'IPT',fn:r=>`<span class="td-mono">${(r.ipt||0).toFixed(2)}</span>`},{h:'vs Kemarin',fn:r=>pFmt(r.ipt,byDate[prevDate(r.date,1)]?.ipt)}]},
@@ -7470,6 +7484,7 @@ const RACE_CHANNELS=[
   {key:'gofood',   name:'GoFood',   color:TC.gofood},
   {key:'grabfood', name:'GrabFood', color:TC.grabfood},
   {key:'shopee',   name:'Shopee',   color:TC.shopee},
+  {key:'tiktok',   name:'TikTok',   color:TC.tiktok},
 ];
 
 function initRacePage(){
@@ -8878,7 +8893,7 @@ function openChannelPopup(key, name, color, cardEl){
 
   const days=_kpiRows.map(r=>({
     date: r._date instanceof Date ? r._date.toLocaleDateString('id-ID',{day:'2-digit',month:'short'}) : String(r.date||''),
-    gmv:r[key]||0, total:(r.offline||0)+(r.gofood||0)+(r.grabfood||0)+(r.shopee||0)||1
+    gmv:r[key]||0, total:(r.offline||0)+(r.gofood||0)+(r.grabfood||0)+(r.shopee||0)+(r.tiktok||0)||1
   }));
   const labels=days.map(d=>d.date), gmvs=days.map(d=>d.gmv);
   const contribs=days.map(d=>+(d.gmv/d.total*100).toFixed(1));

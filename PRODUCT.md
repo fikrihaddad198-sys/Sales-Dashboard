@@ -10,7 +10,7 @@ Fikri (owner, ID 1) — monitors daily/weekly sales performance across all Fore 
 
 ## Product Purpose
 
-Private PWA sales intelligence dashboard for Fore Coffee Jakarta. Pulls live data from Google Sheets via a GAS backend. Gives the owner and approved staff instant visibility into GMV, channel performance (Offline, GoFood, GrabFood, Shopee, Online), store comparisons, and race-to-target progress — all offline-capable via service worker.
+Private PWA sales intelligence dashboard for Fore Coffee Jakarta. Pulls live data from Google Sheets via a GAS backend. Gives the owner and approved staff instant visibility into GMV, channel performance (Offline, GoFood, GrabFood, Shopee, TikTok, Online), store comparisons, and race-to-target progress — all offline-capable via service worker.
 
 ## Brand Personality
 

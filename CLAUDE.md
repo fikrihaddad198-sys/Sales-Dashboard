@@ -183,7 +183,7 @@ Deeper behavioral analytics — the "why/patterns" layer beyond Channel/FLDT/D2D
 date picker (`insight-start/end`, DRP pattern). `renderInsight()` (deduped by
 `_renderedPages`) filters via `filterData` → `aggregateData` and builds 3 sections:
 - **Perilaku Channel:** `buildInsAtv` (basket value = channel sales ÷ channel transactions,
-  horizontal bar) + `buildInsSplit` (Offline · Online · **Delivery = Grab+Go+Shopee**, 3-way
+  horizontal bar) + `buildInsSplit` (Offline · Online · **Delivery = Grab+Go+Shopee+TikTok**, 3-way
   stacked-area trend + % share chips).
 - **Produk & Upsell:** `renderInsAttach` (Topping/cup, Food/trx, RTD/trx ratios) +
   `renderInsProduct` (**Food revenue in Rp + % of GMV** — the only rupiah product line; RTD &
@@ -244,7 +244,7 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 **Single accent**: The entire chrome uses gold `#c9a84c`. `--cyan`, `--green`, `--pink`, `--violet`, `--blue`, `--teal` are all aliased to gold. Only `--red` and `--amber` differ (red for negative, amber for warnings).
 
 **Channel colors** (the one data-identity exception to gold-only, per owner request): each sales channel has a fixed hue used everywhere (tabs, dots, cards, charts). Defined as `--tc-*` CSS tokens in BOTH themes (light variants deepened for legibility on cream) AND mirrored in the JS `TC` object (charts can't read CSS vars) — **keep the two in sync**. Tab-pill tints derive from the tokens via `color-mix`, so each channel only needs its one token updated.
-- `--tc-offline` = blue · `--tc-online` = yellow · `--tc-grabfood` = dark green · `--tc-gofood` = light green · `--tc-shopee` = orange
+- `--tc-offline` = blue · `--tc-online` = yellow · `--tc-grabfood` = dark green · `--tc-gofood` = light green · `--tc-shopee` = orange · `--tc-tiktok` = magenta (added 2026-07-19; sheet columns `TIKTOK SALES | ADT TIKTOK | AT TIKTOK` — rows without them parse as 0, so the channel is safe pre-backfill)
 
 **Typography**: Geist (UI, swapped from Inter 2026-07 — a motion/design audit flagged Inter as the generic "AI-default" font; Geist keeps the same neutral character with more presence), JetBrains Mono (numbers/code). `Fira Sans` was dropped from the Google Fonts load at the same time — it was loaded but never referenced anywhere in the CSS.
 
@@ -261,7 +261,7 @@ Desktop (`≥769px`): a **floating dock** in BOTH states — expanded = the same
 
 ## Service Worker
 
-`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v138`.
+`sw.js` — bump `CACHE_VERSION` on **every deploy**. Currently `fore-v139`.
 
 Strategy:
 - `index.html` / navigations → Network first, cache fallback (offline)
@@ -338,7 +338,7 @@ Re-audit 2026-07-12 (same rubric, methodology re-run against current source — 
 
 ## Standing Rules
 
-1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v138` → increment to `fore-v139`, etc.)
+1. Bump `CACHE_VERSION` in `sw.js` on every deploy (currently `fore-v139` → increment to `fore-v140`, etc.)
 2. Every CSS color rule needs both dark (`:root`) and light (`[data-theme="light"]`) variants
 3. Never split index.html without explicit user request
 4. Never use `localStorage` for auth tokens — always `sessionStorage`
